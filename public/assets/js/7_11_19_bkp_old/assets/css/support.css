@@ -1,0 +1,18 @@
+.featured-item .title h4 {
+margin-bottom: 20px;
+font-size: 17px !important;
+/* letter-spacing: 1px; */
+color: #1b2b40;
+font-weight: bold;
+font-weight: 700;
+}
+
+.breadcrumb>li+li:before {
+padding: 0 5px;
+color: #d8dde2;
+content: "/\00a0";
+}
+
+.page-content {
+padding: 0px;
+}
