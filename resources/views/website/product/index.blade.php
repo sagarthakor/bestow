@@ -99,13 +99,13 @@
                     @forelse($items as $product)
                         <div class="col-6 col-md-4 col-lg-3">
                             <div class="card product-card border-0 shadow-sm h-100">
-                                <a href="{{ route('website.product.details', $product->slug) }}">
-                                    <img src="{{ asset('product_image/' . $product->default_image) }}"
+                                <a href="{{ route('website.product.details', ['slug' => $product->slug, 'vid' => $product->default_variant_id]) }}">
+                                <img src="{{ asset('product_image/' . $product->default_image) }}"
                                          class="card-img-top p-2"
                                          onerror="this.src='{{ asset('website-assets/img/placeholder.jpg') }}'">
                                 </a>
                                 <div class="card-body p-2 d-flex flex-column">
-                                    <a href="{{ route('website.product.details', $product->slug) }}"
+                                    <a href="{{ route('website.product.details', ['slug' => $product->slug, 'vid' => $product->default_variant_id]) }}"
                                        class="title text-reset small">
                                         {{ $product->clean_name ?: $product->product_name }}
                                     </a>

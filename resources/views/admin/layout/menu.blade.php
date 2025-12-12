@@ -372,6 +372,15 @@
                                 @can('formula_view')
                                     <li><a href="{{ route('admin.production.formula_list') }}">Formula Master</a></li>
                                 @endcan
+                                <li>
+                                    <a href="{{ route('admin.bukkal.list') }}">Bukkal Code</a>
+                                </li>
+                                    <li>
+                                        <a href="{{ route('admin.niwar.list') }}">Niwar Code</a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('admin.belt.list') }}">Bukkal Costing</a>
+                                    </li>
                             </ul>
                         </li>
                     @endif

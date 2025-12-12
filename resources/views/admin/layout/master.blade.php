@@ -228,4 +228,5 @@ $(document).ready(function() {
   });
 });
     </script>
+@yield('import-javascript')
 </html>

@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\Admin\BannerController;
+use App\Http\Controllers\Admin\BeltCostingController;
+use App\Http\Controllers\Admin\BukkalCodeController;
+use App\Http\Controllers\Admin\NiwarCodeController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ShippingChargeController;
 use App\Http\Controllers\AdminController;
@@ -30,6 +33,38 @@ Auth::routes();
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth'])->group(function () {
+
+    Route::prefix('bukkal')->name('admin.bukkal.')->group(function () {
+        Route::get('/list', [BukkalCodeController::class, 'index'])->name('list');
+        Route::get('/add', [BukkalCodeController::class, 'create'])->name('add');
+        Route::post('/store', [BukkalCodeController::class, 'store'])->name('store');
+        Route::get('/edit/{id}', [BukkalCodeController::class, 'edit'])->name('edit');
+        Route::post('/update/{id}', [BukkalCodeController::class, 'update'])->name('update');
+        Route::get('/delete/{id}', [BukkalCodeController::class, 'destroy'])->name('delete');
+    });
+
+    Route::get('get-bukkal-data/{id}', [BukkalCodeController::class, 'getBukkalData']);
+    Route::get('get-niwar-data/{id}', [NiwarCodeController::class, 'getNiwarData']);
+
+// Niwar Codes CRUD
+    Route::prefix('niwar')->name('admin.niwar.')->group(function () {
+        Route::get('/list', [NiwarCodeController::class, 'index'])->name('list');
+        Route::get('/add', [NiwarCodeController::class, 'create'])->name('add');
+        Route::post('/store', [NiwarCodeController::class, 'store'])->name('store');
+        Route::get('/edit/{id}', [NiwarCodeController::class, 'edit'])->name('edit');
+        Route::post('/update/{id}', [NiwarCodeController::class, 'update'])->name('update');
+        Route::get('/delete/{id}', [NiwarCodeController::class, 'destroy'])->name('delete');
+    });
+
+// Belt Costing CRUD
+    Route::prefix('belt-costing')->name('admin.belt.')->group(function () {
+        Route::get('/list', [BeltCostingController::class, 'index'])->name('list');
+        Route::get('/add', [BeltCostingController::class, 'create'])->name('add');
+        Route::post('/store', [BeltCostingController::class, 'store'])->name('store');
+        Route::get('/edit/{id}', [BeltCostingController::class, 'edit'])->name('edit');
+        Route::post('/update/{id}', [BeltCostingController::class, 'update'])->name('update');
+        Route::get('/delete/{id}', [BeltCostingController::class, 'destroy'])->name('delete');
+    });
 
     // ✅ Admin Dashboard
     Route::get('dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
@@ -165,7 +200,7 @@ Route::middleware(['auth'])->group(function () {
     //Route::get('product/add', 'AdminController@product_normal_add')->name('admin.product.add');
     Route::post('product/save', 'AdminController@product_normal_save')->name('admin.product.save');
     Route::get('product/edit/{id}', 'AdminController@product_edit')->name('admin.product.edit');
-    Route::post('product/update', 'AdminController@product_normal_update')->name('admin.product.update');
+    //Route::post('product/update', 'AdminController@product_normal_update')->name('admin.product.update');
     Route::post('product_update',['as'=>'post.product_update','uses'=>'ProductController@product_update']);
     Route::get('product/delete/{id}', 'AdminController@product_delete')->name('admin.product.delete');
     Route::get("product/add/","ProductController@product_add")->name('admin.product.add');
