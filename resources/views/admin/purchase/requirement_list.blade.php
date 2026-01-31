@@ -102,7 +102,7 @@
                                     <tr>
                                         <td   style="vertical-align: top;width: 5%;text-align: center">{{$srno}}</td>
                                         <td  style="vertical-align: top;text-align: center;width: 5%;">
-                                            <a href="{{url('requirement/view/'.$data->id)}}">{{$data->order_no}}</a></td>
+                                            <a href="{{ route('admin.requirement.view',['id' => $data->id]) }}">{{$data->order_no}}</a></td>
 
                                         <td width="10%"  style="vertical-align: top;text-align: center;width: 20%">
                                             {{date('d-m-Y h:i:s a',strtotime($data->timestamp))}}

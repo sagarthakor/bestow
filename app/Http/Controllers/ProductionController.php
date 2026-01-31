@@ -1909,7 +1909,7 @@ class ProductionController extends Controller
                         $requirement->save();
                 }
             }
-            return redirect()->route("production_process")->with("message", "request send to purchase department");
+            return redirect()->route("admin.production.process")->with("message", "request send to purchase department");
         }
 
         if ($purchaseRequiredMaterial == 0) {

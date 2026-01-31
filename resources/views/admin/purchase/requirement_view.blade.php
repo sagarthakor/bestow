@@ -52,7 +52,7 @@
                                     </div>
                                 </div>
                             @endif
-                            {{Form::model($list,['method'=>'post','route'=>'post.add_to_purchase_item'])}}
+                            {{Form::model($list,['method'=>'post','route'=>'admin.requirement.add'])}}
                             {{Form::hidden("id",null)}}
                                 <div class="col-md-4">
                                 <table class="table table-bordered">
