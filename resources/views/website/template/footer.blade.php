@@ -11,7 +11,7 @@
                     Manufacturer / Exporter / Supplier / Retailer of Kids Fancy Socks, Men's Sports Socks, Women's Ankle Socks & more.
                 </p>
                 <p class="text-muted small">
-                    <strong>Phone:</strong> +91 98765 43210<br>
+                    <strong>Phone:</strong> +91 93777 94101<br>
                     <strong>Email:</strong> info@yourcompany.com
                 </p>
             </div>
@@ -42,8 +42,7 @@
             <div class="col-md-6 col-lg-5 mb-4">
                 <h6 class="text-dark">Our Address</h6>
                 <p class="text-muted small mb-1">
-                    Shree Yogi Traders,<br>
-                    123, Industrial Area, Surat, Gujarat, India
+                    Ground Floor, Pagedar’s Wado, Sardar Bhavan Ln, near Guru classes, Kadwa Sheri,<br> Vadodara, Gujarat 390001
                 </p>
                 <h6 class="text-dark mb-0">Working Hours</h6>
                 <p class="text-muted small mb-0">

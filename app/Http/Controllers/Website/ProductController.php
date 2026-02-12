@@ -14,111 +14,95 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        /**
-         * STEP 1: BASE QUERY (GROUP BY ITEM CODE)
-         */
-        $query = product::where('status', 'product')
-            ->select(
-                'item_code',
-                DB::raw('MIN(id) as id')
-            )
-            ->groupBy('item_code');
+        $query = product::query()->where('status','product')->groupBy(['item_code','value1']);
 
-        /**
-         * STEP 2: KEYWORD SEARCH
-         */
-        if ($request->filled('keyword')) {
-            $keyword = $request->keyword;
+        if ($request->filled('category')) {
+            $category = $request->category;
+            if(!is_array($request->category)){
+                $category = [$request->category];
+            }
+            $categoryIds = category::whereIn('slug', $category)->pluck('id')->toArray();
 
-            $query->whereIn('item_code', function ($q) use ($keyword) {
-                $q->select('item_code')
-                    ->from('product')
-                    ->where('status', 'product')
-                    ->where(function ($qq) use ($keyword) {
-                        $qq->where('product_name', 'like', "%{$keyword}%")
-                            ->orWhere('slug', 'like', "%{$keyword}%");
-                    });
-            });
-        }
+            if ($categoryIds) {
 
-        /**
-         * STEP 3: CATEGORY / SUBCATEGORY FILTER
-         */
-        $categoryIds = $subcategoryIds = [];
+                $subIds = subcategory::whereIn('category', $categoryIds)
+                    ->pluck('id')->toArray();
 
-        if ($request->filled('slugs')) {
-            $categoryIds = category::whereIn('slug', (array)$request->slugs)
-                ->pluck('id')->toArray();
-        }
-
-        if ($request->filled('child_category')) {
-            $subcategoryIds = subcategory::whereIn('slug', (array)$request->child_category)
-                ->pluck('id')->toArray();
-        }
-
-        if ($categoryIds || $subcategoryIds) {
-            $query->whereIn('item_code', function ($q) use ($categoryIds, $subcategoryIds) {
-                $q->select('item_code')
-                    ->from('products')
-                    ->where('status', 'product')
-                    ->when($categoryIds, fn($qq) => $qq->whereIn('category', $categoryIds))
-                    ->when($subcategoryIds, fn($qq) => $qq->orWhereIn('subcategory', $subcategoryIds));
-            });
-        }
-
-        /**
-         * STEP 4: BRAND FILTER
-         */
-        if ($request->filled('brand')) {
-            $query->whereIn('item_code', function ($q) use ($request) {
-                $q->select('item_code')
-                    ->from('product')
-                    ->where('status', 'product')
-                    ->whereIn('brand', (array)$request->brand);
-            });
-        }
-
-        /**
-         * STEP 5: PAGINATION
-         */
-        $products = $query->orderBy('id', 'desc')->paginate(32);
-
-        /**
-         * STEP 6: PICK CORRECT VARIANT (VERY IMPORTANT)
-         */
-        $items = $products->getCollection()->map(function ($row) use ($request) {
-
-            $variantQuery = product::where('item_code', $row->item_code)
-                ->where('status', 'product');
-
-            // 🔥 keyword match wali variant pick karo
-            if ($request->filled('keyword')) {
-                $keyword = $request->keyword;
-                $variantQuery->where(function ($q) use ($keyword) {
-                    $q->where('product_name', 'like', "%{$keyword}%")
-                        ->orWhere('slug', 'like', "%{$keyword}%");
+                $query->where(function ($q) use ($categoryIds, $subIds) {
+                    $q->whereIn('category', $categoryIds)
+                        ->orWhereIn('subcategory', $subIds);
                 });
             }
+        }
 
-            // fallback
-            $variant = $variantQuery->orderBy('id')->first()
-                ?? product::where('item_code', $row->item_code)->first();
+// Subcategory Filter
+        if ($request->filled('child_category')) {
 
-            $variant->clean_name = preg_replace('/^\d+\s+\d+\s+/', '', $variant->product_name);
+            $subCategory = $request->child_category;
+            if(!is_array($request->child_category)){
+                $subCategory = [$request->child_category];
+            }
+            $subIds = subcategory::whereIn('slug', $subCategory)->pluck('id')->toArray();
+            if ($subIds) {
+                $query->whereIn('subcategory', $subIds);
+            }
+        }
 
-            return $variant;
-        });
 
-        $products->setCollection($items);
+        /* =======================
+           BRAND FILTER
+        ======================= */
+        if ($request->filled('brand')) {
+            $query->whereIn('brand', (array) $request->brand);
+        }
 
-        return view('website.product.index', [
-            'items'      => $products,
-            'categories' => category::with('subcategories')->get(),
-            'brands'     => brand::select('id','brand_name')->get(),
+        /* =======================
+           COLOR FILTER
+        ======================= */
+        if ($request->filled('color')) {
+            $query->whereIn('value1', (array) $request->color);
+        }
+
+        /* =======================
+           SIZE FILTER
+        ======================= */
+        if ($request->filled('size')) {
+            $query->whereIn('value2', (array) $request->size);
+        }
+
+        /* =======================
+           PRICE FILTER
+        ======================= */
+        if ($request->filled('max_price')) {
+            $query->where('price','<=',$request->max_price);
+        }
+
+        /* =======================
+           SORT
+        ======================= */
+        if ($request->sort == 'price_low') {
+            $query->orderBy('price','asc');
+        } elseif ($request->sort == 'price_high') {
+            $query->orderBy('price','desc');
+        } else {
+            $query->orderBy('id','desc');
+        }
+
+        $products = $query->paginate(50);
+
+        $colors = product::whereNotNull('value1')->distinct()->pluck('value1');
+        $sizes  = product::whereNotNull('value2')->distinct()->pluck('value2');
+
+        $brands = brand::all();
+
+        return view('website.product.index',[
+            'items'=>$products,
+            'categories'=>category::with('subcategories')->get(),
+            'colors'=>$colors,
+            'sizes'=>$sizes,
+            'brands'=>$brands,
         ]);
     }
-
-
 
     public function details(\Illuminate\Http\Request $request)
     {

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\category;
 use App\subcategory;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -25,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        Paginator::useBootstrap();
         view()->composer('*', function ($view) {
             $view->with('categories', Category::with('subcategories')->get());
         });

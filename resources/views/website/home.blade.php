@@ -48,7 +48,7 @@
                 <div class="row g-2">
                     @foreach($categories as $cat)
                         <div class="col-4 col-md-2">
-                            <a href="{{ route('website.product.view', ['slugs' => $cat->slug]) }}"
+                            <a href="{{ route('website.product.view', ['category' => $cat->slug]) }}"
                                class="text-decoration-none text-reset d-block">
                                 <div class="card border-0 shadow-sm h-100 text-center">
                                     <img src="{{ asset('product_category/'.$cat->category_image) }}"
