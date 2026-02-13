@@ -169,7 +169,7 @@
 
                                 <!-- IMAGE FIXED HEIGHT -->
                                 <div class="product-image-wrapper">
-                                    <a href="{{ route('website.product.details',$product->slug) }}">
+                                    <a href="{{ route('website.product.details',$product->slug) }}?variant={{ $product->id }}">
                                         <img src="{{ asset('product_image/'.$product->product_image) }}"
                                              onerror="this.src='{{ asset('website-assets/img/placeholder.jpg') }}'">
                                     </a>
@@ -177,7 +177,7 @@
 
                                 <div class="card-body p-2">
 
-                                    <a href="{{ route('website.product.details',$product->slug) }}"
+                                    <a href="{{ route('website.product.details',$product->slug) }}?variant={{ $product->id }}"
                                        class="text-dark text-decoration-none product-title">
                                         {{ $product->product_name }}
                                     </a>

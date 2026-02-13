@@ -16,6 +16,31 @@ class ProductController extends Controller
     {
         $query = product::query()->where('status','product')->groupBy(['item_code','value1']);
 
+        /* =======================
+   KEYWORD SEARCH
+======================= */
+        if ($request->filled('keyword')) {
+
+            $keyword = trim($request->keyword);
+
+            $keywords = explode(' ', $keyword);
+
+            $query->where(function ($q) use ($keywords) {
+
+                foreach ($keywords as $word) {
+                    $q->where(function ($sub) use ($word) {
+                        $sub->where('product_name', 'like', "%{$word}%")
+                            ->orWhere('item_code', 'like', "%{$word}%")
+                            ->orWhere('slug', 'like', "%{$word}%")
+                            ->orWhere('value1', 'like', "%{$word}%") // color
+                            ->orWhere('value2', 'like', "%{$word}%"); // size
+                    });
+                }
+
+            });
+        }
+
+        
         if ($request->filled('category')) {
             $category = $request->category;
             if(!is_array($request->category)){
@@ -104,131 +129,61 @@ class ProductController extends Controller
         ]);
     }
 
-    public function details(\Illuminate\Http\Request $request)
+    public function details(Request $request, $slug)
     {
-        $slug = $request->slug;
-        $product = product::where('slug', $slug)->firstOrFail();
-
-        // All variants for the same item_code
-        $itemCode = $product->item_code;
-        $variants = product::where('status', 'product','uomName')
-            ->where('item_code', $itemCode)
-            ->where('slug', '=', $slug)
-            ->select('id','slug','product_name','product_image','price','attribute1','value1','attribute2','value2','item_code')
-            ->orderBy('price','asc')
+        // Get ALL variants of this slug (same color)
+        $variants = product::where('status','product')
+            ->where('slug',$slug)
             ->get();
-        // Group by color → sizes
-        $groups = [];
+
+        if ($variants->isEmpty()) {
+            abort(404);
+        }
+
+        // If ?variant=ID exists
+        $selectedVariant = null;
+
+        if ($request->filled('variant')) {
+            $selectedVariant = $variants->firstWhere('id', $request->variant);
+        }
+
+        // fallback to first size
+        if (!$selectedVariant) {
+            $selectedVariant = $variants->first();
+        }
+
+        // Build single color group (Amazon style)
+        $variant_group = [
+            'color' => $selectedVariant->value1,
+            'image' => $selectedVariant->product_image,
+            'sizes' => []
+        ];
+
         foreach ($variants as $v) {
-            $color = $v->value1 ?: 'Default';
-            $size  = $v->value2 ?: 'FREE';
-
-            if (!isset($groups[$color])) {
-                $groups[$color] = [
-                    'color' => $color,
-                    'image' => $v->product_image,
-                    'sizes' => []
-                ];
-            }
-
-            $groups[$color]['sizes'][] = [
-                'id'            => $v->id,
-                'size'          => (string)$size,
-                'price'         => (float)$v->price,
-                'product_image' => $v->product_image,
-                'slug'          => $v->slug,
+            $variant_group['sizes'][] = [
+                'id'    => $v->id,
+                'size'  => $v->value2,
+                'price' => $v->price,
+                'image' => $v->product_image
             ];
         }
 
-        // Natural sort sizes inside each color
-        foreach ($groups as &$g) {
-            usort($g['sizes'], fn($a,$b) => strnatcasecmp($a['size'], $b['size']));
+        // Natural size sorting
+        usort($variant_group['sizes'], fn($a,$b) =>
+        strnatcasecmp($a['size'],$b['size'])
+        );
 
-            if (empty($g['image']) && !empty($g['sizes'][0]['product_image'])) {
-                $g['image'] = $g['sizes'][0]['product_image'];
-            }
-        }
-        unset($g);
-
-        $variant_groups = array_values($groups);
-
-        // Defaults
-        $defaultColor   = $variant_groups[0]['color'] ?? null;
-        $defaultSizeObj = $variant_groups[0]['sizes'][0] ?? null;
-
-        $initialImage = $defaultSizeObj['product_image'] ?? ($variant_groups[0]['image'] ?? $product->product_image);
-        $initialPrice = $defaultSizeObj['price'] ?? (float)$product->price;
-
-        // Multi images
-        $thumbs = [];
-        if (!empty($product->product_multi_image)) {
-            $thumbs = array_filter(array_map('trim', explode(',', $product->product_multi_image)));
-        }
-        if (empty($thumbs) && !empty($product->product_image)) {
-            $thumbs = [$product->product_image];
-        }
-
-        // clean name
-        $product->clean_name = $product->clean_name ?? $product->product_name;
-
-        // ⭐ AMAZON-STYLE SPECIFICATION AUTO BUILDER
-        $specs = [
-
-            'Brand'             => $product->brand_name,
-            'Model'             => $product->model,
-            'Make'              => $product->make,
-            'SKU'               => $product->sku,
-            'HSN Code'          => $product->hsn,
-            'Item Code'         => $product->item_code,
-            'UOM'               => $product->uomName->uom_name ?? null,
-
-            'Outer Diameter'    => $product->outer_diameter,
-            'Inner Diameter'    => $product->inner_diameter,
-            'Thickness'         => $product->thikness,
-
-            'Cotton'            => $product->cotton,
-            'Polyester'         => $product->polyester,
-            'Nylon'             => $product->nylon,
-            'P.P. Yarn'         => $product->p_p_yarn,
-            'Spendex'           => $product->spendex,
-            'Elastics'          => $product->elastics,
-
-            'Category'          => $product->category_name,
-            'Subcategory'       => $product->subcategory_name,
-            'Raw Material Group'=> $product->raw_material_group,
-            'Item Group'        => $product->group_no,
-
-            // Dynamic attributes
-            $product->attribute1 => $product->value1,
-            $product->attribute2 => $product->value2,
-            $product->attribute3 => $product->value3,
-            $product->attribute4 => $product->value4,
-            $product->attribute5 => $product->value5,
-            $product->attribute6 => $product->value6,
-        ];
-
-
-        // Remove empty values
-        $specs = array_filter($specs, function($v) {
-            return !is_null($v) && $v !== '';
-        });
-
-        // ⭐ DESCRIPTION HANDLING
-        $description = $product->product_description ?: $product->description;
-
-        return view('website.product.details', [
-            'product'         => $product,
-            'variant_groups'  => $variant_groups,
-            'defaultColor'    => $defaultColor,
-            'initialImage'    => $initialImage,
-            'initialPrice'    => $initialPrice,
-            'thumbs'          => $thumbs,
-
-            // 👇 NEW
-            'specs'           => $specs,
-            'description'     => $description,
+        return view('website.product.details',[
+            'product'        => $selectedVariant,
+            'variant_group'  => $variant_group,
+            'defaultSize'    => $selectedVariant->value2,
+            'initialPrice'   => $selectedVariant->price,
+            'initialImage'   => $selectedVariant->product_image,
         ]);
     }
+
+
+
 
 
 
