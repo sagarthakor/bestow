@@ -81,6 +81,18 @@
                         </a>
                     </div>
 
+                    <div class="col-lg-3 col-md-3 col-sm-6">
+                        <a href="{{ route('admin.quotation.list',['status' => 'Y']) }}">
+                            <div class="card-box widget-box-one bg-danger">
+                                <div class="wigdet-one-content">
+                                    <p class="m-0 text-uppercase font-600 font-secondary text-overflow text-dark">Sales out off stock items</p>
+                                    <h1 class="text-dark"><span data-plugin="counterup">{{$pendingQuotation}}</span></h1>
+                                    <!--                                        <p class="text-muted m-0"><b>Last:</b> 30.4k</p>-->
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
                 </div>
 
                 <!-- end row -->

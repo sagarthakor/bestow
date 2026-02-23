@@ -31,7 +31,7 @@
                     <!-- ✅ Main Category -->
                     <div class="category-header d-flex justify-content-between align-items-center p-3 bg-light"
                          data-toggle="cat-{{ $category->id }}" style="cursor: pointer;">
-                        <a href="{{ route('website.product.view', ['slugs' => $category->slug]) }}" class="text-reset">
+                        <a href="{{ route('website.product.view', ['category' => $category->slug]) }}" class="text-reset">
                             📁 {{ $category->category_name }}
                         </a>
                         <i class="la la-angle-down rotate-icon" style="cursor: pointer;"></i>
@@ -44,7 +44,7 @@
                             <div class="subcategory-item py-2 pl-4 d-flex align-items-center justify-content-between"
                                  data-target="sub-{{ $sub->id }}" style="cursor: pointer;">
 
-                                <a href="{{ route('website.product.view', ['slugs' => $category->slug, 'child_category' => $sub->slug]) }}" class="text-reset">
+                                <a href="{{ route('website.product.view', ['category' => $category->slug, 'child_category' => $sub->slug]) }}" class="text-reset">
                                     📄 {{ $sub->subcategory_name }}
                                 </a>
 
@@ -58,7 +58,7 @@
                                 <div class="child-category pl-5" id="sub-{{ $sub->id }}" style="display: none;">
                                     @foreach($sub->children as $child3)
                                         <div class="py-1">
-                                            └ <a href="{{ route('website.product.view', ['slugs' => $category->slug, 'child_category' => $child3->slug]) }}" class="text-muted">
+                                            └ <a href="{{ route('website.product.view', ['category' => $category->slug, 'child_category' => $child3->slug]) }}" class="text-muted">
                                                 📌 {{ $child3->subcategory_name }}
                                             </a>
                                         </div>

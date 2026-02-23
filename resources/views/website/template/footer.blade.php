@@ -11,8 +11,8 @@
                     Manufacturer / Exporter / Supplier / Retailer of Kids Fancy Socks, Men's Sports Socks, Women's Ankle Socks & more.
                 </p>
                 <p class="text-muted small">
-                    <strong>Phone:</strong> +91 93777 94101<br>
-                    <strong>Email:</strong> info@yourcompany.com
+                    <strong>Phone:</strong> +91 8154876897 , 9377794101<br>
+                    <strong>Email:</strong> bestowsales1@gmail.com
                 </p>
             </div>
 
