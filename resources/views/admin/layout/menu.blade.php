@@ -309,6 +309,7 @@
                                 @endcan
                                 @can('sales_report_view')
                                     <li><a href="{{ route('admin.reports.sales') }}">Sales</a></li>
+                                    <li><a href="{{ route('admin.reports.sales.out_of_stock_items') }}">Sales Out of stock Items</a></li>
                                 @endcan
                                 @can('invoice_report_view')
                                     <li><a href="{{ route('admin.reports.invoice') }}">Invoice</a></li>

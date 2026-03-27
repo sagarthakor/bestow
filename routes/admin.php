@@ -845,6 +845,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('reports')->group(function () {
         Route::get('quotation', 'ReportsController@quotation')->name('admin.reports.quotation');
         Route::get('sales', 'ReportsController@sales')->name('admin.reports.sales');
+        Route::get('sales-out-of-stock-item', 'ReportsController@salesOutOfStockItems')->name('admin.reports.sales.out_of_stock_items');
         Route::get('challan', 'ReportsController@challan')->name('admin.reports.challan');
         Route::get('invoice', 'ReportsController@invoice')->name('admin.reports.invoice');
     });

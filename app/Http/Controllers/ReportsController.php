@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\OutOfStockExport;
 use App\quotation;
 use App\salesorder;
 use App\company;
@@ -12,6 +13,7 @@ use App\Exports\invoiceExport;
 use App\Exports\quotationExport;
 use App\Exports\salesExport;
 use Excel;
+use Illuminate\Support\Facades\DB;
 use session;
 use App\delivery_challan;
 use App\Exports\challanExport;
@@ -321,6 +323,69 @@ class ReportsController extends Controller
         }*/
 
         return view("admin.reports.invoice")->with(['list' => $result, 'company' => $company_name->company_name, 'stage' => $stage]);
+    }
+
+    public function salesOutOfStockItems(Request $request)
+    {
+        $query = DB::table('salesorder_item as soi')
+            ->leftJoin('stock_status as ss', 'ss.product', '=', 'soi.product')
+            ->leftJoin('product as p', 'p.id', '=', 'soi.product')
+            ->leftJoin('salesorder as s', 's.id', '=', 'soi.soid')
+            ->select(
+                'p.product_name as product',
+                's.salaesorder_no as order_no',
+                's.customer_name as customer',
+                's.salaesorder_date as order_date',
+                DB::raw('SUM(soi.qty) as sold_qty'),
+                DB::raw('SUM(ss.qty) as stock_qty'),
+                DB::raw('(IFNULL(SUM(ss.qty),0) - IFNULL(SUM(soi.qty),0)) as balance')
+            )
+            ->whereNull('s.delete_status')
+            ->groupBy(
+                'soi.product',
+                'p.product_name',
+                's.salaesorder_no',
+                's.customer_name',
+                's.salaesorder_date'
+            )
+            ->having('balance', '<=', 0)
+            ->orderBy('s.salaesorder_date', 'desc');
+
+        // 🔍 Filters
+
+        // Product
+        if ($request->product) {
+            $query->where('p.product_name', 'like', '%' . $request->product . '%');
+        }
+
+        // ✅ Sales Order No
+        if ($request->order_no) {
+            $query->where('s.salaesorder_no', 'like', '%' . $request->order_no . '%');
+        }
+
+        // ✅ Customer Name
+        if ($request->customer) {
+            $query->where('s.customer_name', 'like', '%' . $request->customer . '%');
+        }
+
+        // ✅ Order Date Filter
+        if ($request->from_date) {
+            $query->whereDate('s.salaesorder_date', '>=', $request->from_date);
+        }
+
+        if ($request->end_date) {
+            $query->whereDate('s.salaesorder_date', '<=', $request->end_date);
+        }
+
+        $list = $query->paginate(20);
+
+        // 📥 Export
+        if ($request->export_excel) {
+            $data = $query->get();
+            return Excel::download(new OutOfStockExport($data), 'out_of_stock.xlsx');
+        }
+
+        return view('admin.reports.sales_out_of_stock', compact('list'));
     }
 
 }
