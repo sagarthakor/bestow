@@ -327,15 +327,22 @@ class ReportsController extends Controller
 
     public function salesOutOfStockItems(Request $request)
     {
+        $categories    = DB::table('category')->orderBy('category_name')->get();
+        $subcategories = DB::table('subcategory')->orderBy('subcategory_name')->get();
+
         $query = DB::table('salesorder_item as soi')
             ->leftJoin('stock_status as ss', 'ss.product', '=', 'soi.product')
             ->leftJoin('product as p', 'p.id', '=', 'soi.product')
             ->leftJoin('salesorder as s', 's.id', '=', 'soi.soid')
+            ->leftJoin('category as cat', 'cat.id', '=', 'p.category')
+            ->leftJoin('subcategory as sc', 'sc.id', '=', 'p.subcategory')
             ->select(
                 'p.product_name as product',
                 's.salaesorder_no as order_no',
                 's.customer_name as customer',
                 's.salaesorder_date as order_date',
+                'cat.category_name as category_name',
+                'sc.subcategory_name as subcategory_name',
                 DB::raw('SUM(soi.qty) as sold_qty'),
                 DB::raw('SUM(ss.qty) as stock_qty'),
                 DB::raw('(IFNULL(SUM(ss.qty),0) - IFNULL(SUM(soi.qty),0)) as balance')
@@ -346,29 +353,26 @@ class ReportsController extends Controller
                 'p.product_name',
                 's.salaesorder_no',
                 's.customer_name',
-                's.salaesorder_date'
+                's.salaesorder_date',
+                'cat.category_name',
+                'sc.subcategory_name'
             )
             ->having('balance', '<=', 0)
             ->orderBy('s.salaesorder_date', 'desc');
 
-        // 🔍 Filters
-
-        // Product
+        // Filters
         if ($request->product) {
             $query->where('p.product_name', 'like', '%' . $request->product . '%');
         }
 
-        // ✅ Sales Order No
         if ($request->order_no) {
             $query->where('s.salaesorder_no', 'like', '%' . $request->order_no . '%');
         }
 
-        // ✅ Customer Name
         if ($request->customer) {
             $query->where('s.customer_name', 'like', '%' . $request->customer . '%');
         }
 
-        // ✅ Order Date Filter
         if ($request->from_date) {
             $query->whereDate('s.salaesorder_date', '>=', $request->from_date);
         }
@@ -377,15 +381,23 @@ class ReportsController extends Controller
             $query->whereDate('s.salaesorder_date', '<=', $request->end_date);
         }
 
-        $list = $query->paginate(20);
+        if ($request->category) {
+            $query->where('p.category', $request->category);
+        }
 
-        // 📥 Export
+        if ($request->subcategory) {
+            $query->where('p.subcategory', $request->subcategory);
+        }
+
+        // Export must be checked BEFORE paginate to export all records
         if ($request->export_excel) {
             $data = $query->get();
             return Excel::download(new OutOfStockExport($data), 'out_of_stock.xlsx');
         }
 
-        return view('admin.reports.sales_out_of_stock', compact('list'));
+        $list = $query->paginate(20);
+
+        return view('admin.reports.sales_out_of_stock', compact('list', 'categories', 'subcategories'));
     }
 
 }
