@@ -27,8 +27,11 @@ class OrderController extends Controller
             return redirect()->route('website.login')->with('error', 'Please login to view orders.');
         }
 
-        // Fetch user-specific orders
-        $orders = Order::where('user_id', $user['id'])->latest()->get();
+        // Fetch user-specific orders with items
+        $orders = Order::where('user_id', $user['id'])
+            ->with('order_items.product', 'city', 'state')
+            ->latest()
+            ->get();
 
         return view('website.account.orders', compact('orders'));
     }
@@ -36,10 +39,13 @@ class OrderController extends Controller
     // Order Details (Show Items)
     public function orderDetails($id)
     {
-        $order = Order::where('id', $id)
-            ->where('user_id', auth()->id())
-            ->with('items.product')
-            ->firstOrFail();
+        $user = Session::get('user');
+
+        $query = Order::where('id', $id)->with('order_items.product', 'state', 'city');
+        if ($user) {
+            $query->where('user_id', $user['id']);
+        }
+        $order = $query->firstOrFail();
 
         return view('website.order.details', compact('order'));
     }
@@ -59,15 +65,15 @@ class OrderController extends Controller
         ]);
 
         $order = Order::where('order_number', $request->order_number)
-            ->where('customer_phone', $request->phone)
-            ->with('items.product')
+            ->where('phone', $request->phone)
+            ->with('order_items.product', 'state', 'city')
             ->first();
 
         if(!$order){
             return back()->with('error', 'Order not found! Check your Order ID & Phone number.');
         }
 
-        return view('website.order.details_guest', compact('order'));
+        return view('website.order.details', compact('order'));
     }
 
     public function cancel($id)
@@ -98,7 +104,7 @@ class OrderController extends Controller
 
     public function invoice($id)
     {
-        $order = Order::with('order_items.product')
+        $order = Order::with('order_items.product', 'state', 'city')
             ->where('id', $id)
             ->firstOrFail();
 

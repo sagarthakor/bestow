@@ -52,13 +52,13 @@
         <td>
             {{ $order->name }}<br>
             {{ $order->address }}<br>
-            {{ $order->city->city_name ?? '' }}, {{ $order->state->state_name ?? '' }} - {{ $order->pincode }}<br>
+            {{ $order->customer_city }}, {{ $order->customer_state }} - {{ $order->pincode }}<br>
             Phone: {{ $order->phone }}
         </td>
         <td>
             {{ $order->name }}<br>
             {{ $order->address }}<br>
-            {{ $order->city->city_name ?? '' }}, {{ $order->state->state_name ?? '' }} - {{ $order->pincode }}<br>
+            {{ $order->customer_city }}, {{ $order->customer_state }} - {{ $order->pincode }}<br>
             Phone: {{ $order->phone }}
         </td>
     </tr>

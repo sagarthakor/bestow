@@ -30,49 +30,25 @@ class HomeController extends Controller
             ->take(12)
             ->get();
 
-        // Helper query: group by item_code (one row per item_code)
-        $groupedSelect = [
-            'item_code','slug',
-            DB::raw('MIN(id) as id'),
-            DB::raw('MIN(product_name) as product_name'),
-            DB::raw('MIN(category) as category'),
-            DB::raw('MIN(product_image) as product_image'),
-            DB::raw('MIN(price) as price'),
-        ];
-
-        // New arrivals (latest)
+        // New Arrivals: latest one product per category (order by MAX id desc)
         $newArrivals = product::where('status', 'product')
-            ->select($groupedSelect)
-            ->groupBy('item_code','slug')
-            ->orderBy(DB::raw('MIN(id)'), 'desc')
-            ->take(12)
-            ->get()
-            ->map(function ($p) { $p->clean_name = $p->clean_name ?? $p->product_name; return $p; });
-
-        // Featured (you can change criteria later; for now: latest by item_code)
-        $featured = product::where('status', 'product')
-            ->select($groupedSelect)
-            ->groupBy('item_code','slug')
-            ->orderBy(DB::raw('MIN(id)'), 'desc')
-            ->take(8)
-            ->get()
-            ->map(function ($p) { $p->clean_name = $p->clean_name ?? $p->product_name; return $p; });
-
-        // All products (paginated) – grouped by item_code
-        $products = product::where('status','product')
-            ->select($groupedSelect)
-            ->groupBy('item_code','slug')
-            ->orderBy(DB::raw('MIN(id)'),'desc')
-            ->paginate(24);
-
-        $products->getCollection()->transform(function($p){
-            $p->clean_name = $p->clean_name ?? $p->product_name;
-            return $p;
-        });
-
+            ->select([
+                'category',
+                DB::raw('MAX(id) as id'),
+                DB::raw('MIN(item_code) as item_code'),
+                DB::raw('MIN(slug) as slug'),
+                DB::raw('MIN(product_name) as product_name'),
+                DB::raw('MIN(product_image) as product_image'),
+                DB::raw('MIN(cover_image) as cover_image'),
+                DB::raw('MIN(price) as price'),
+                DB::raw('COUNT(DISTINCT value1) as color_count'),
+            ])
+            ->groupBy('category')
+            ->orderBy(DB::raw('MAX(id)'), 'desc')
+            ->get();
 
         return view('website.home', compact(
-            'banners', 'categories', 'newArrivals', 'featured', 'products'
+            'banners', 'categories', 'newArrivals'
         ));
     }
 

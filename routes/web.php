@@ -9,56 +9,8 @@ use Illuminate\Support\Facades\File;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 
-Route::get('/resize-ecommerce-products', function () {
-    $manager = new ImageManager(new Driver());
-
-    $originalPath = public_path('product_image');
-    $smallPath = public_path('product_image/small');
-    $largePath = public_path('product_image/large');
-
-    foreach ([$smallPath, $largePath] as $dir) {
-        if (!File::exists($dir)) {
-            File::makeDirectory($dir, 0755, true);
-        }
-    }
-
-    $files = File::files($originalPath);
-
-    $count = 0;
-
-    foreach ($files as $file) {
-        try {
-            $extension = strtolower($file->getExtension());
-            if (!in_array($extension, ['jpg', 'jpeg', 'png', 'webp'])) continue;
-
-            $image = $manager->read($file->getRealPath());
-            $filename = $file->getFilename();
-
-            // === 1️⃣ Large image (1000x1000) ===
-            $large = clone $image;
-            $large->scale(width: 1000, height: 1000);
-            $canvasLarge = $manager->create(1000, 1000, 'white')->place($large, 'center');
-            $canvasLarge->save($largePath . '/' . $filename, 90);
-
-            // === 2️⃣ Small thumbnail (height 320, width auto up to 180) ===
-            $thumb = clone $image;
-            $thumb->scale(height: 320);
-            $scaledWidth = min($thumb->width(), 180);
-            $canvasSmall = $manager->create($scaledWidth, 320, 'white')->place($thumb, 'center');
-            $canvasSmall->save($smallPath . '/' . $filename, 85);
-
-            $count++;
-        } catch (\Exception $e) {
-            \Log::error('Error processing ' . $file->getFilename() . ': ' . $e->getMessage());
-        }
-    }
-
-    return " {$count} product images resized successfully!";
-});
-
 Route::get('/', function () {
-    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
-    \Illuminate\Support\Facades\Artisan::call('cache:clear');
+    return redirect()->route('website.home');
 });
 
 Route::get('/refresh-csrf', function () {

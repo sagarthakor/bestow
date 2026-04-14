@@ -74,6 +74,30 @@ class product extends Model
      */
     private $status;
 
+    /**
+     * Strip leading [size] [item_code] prefix from product_name.
+     * e.g. "5 211 YELLOW SOCKS NAVY PATTI LYCRA" → "YELLOW SOCKS NAVY PATTI LYCRA"
+     */
+    public function getCleanNameAttribute(): string
+    {
+        $name = trim($this->product_name ?? '');
+        if ($name === '') return '';
+
+        // 1. Strip leading value2 (size) if present at start
+        $size = trim($this->value2 ?? '');
+        if ($size !== '' && stripos($name, $size . ' ') === 0) {
+            $name = trim(substr($name, strlen($size)));
+        }
+
+        // 2. Strip leading item_code if present at start
+        $code = trim($this->item_code ?? '');
+        if ($code !== '' && stripos($name, $code . ' ') === 0) {
+            $name = trim(substr($name, strlen($code)));
+        }
+
+        return $name ?: trim($this->product_name ?? '');
+    }
+
     // app/Models/Product.php
 
     public function category()

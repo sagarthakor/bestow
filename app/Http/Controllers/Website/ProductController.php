@@ -14,7 +14,10 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = product::query()->where('status','product')->groupBy(['item_code','value1']);
+        $query = product::query()
+            ->where('status','product')
+            ->selectRaw('*, COUNT(DISTINCT value1) as color_count')
+            ->groupBy('item_code');
 
         /* =======================
    KEYWORD SEARCH
@@ -98,6 +101,9 @@ class ProductController extends Controller
         /* =======================
            PRICE FILTER
         ======================= */
+        if ($request->filled('min_price')) {
+            $query->where('price','>=',$request->min_price);
+        }
         if ($request->filled('max_price')) {
             $query->where('price','<=',$request->max_price);
         }
@@ -115,70 +121,118 @@ class ProductController extends Controller
 
         $products = $query->paginate(50);
 
-        $colors = product::whereNotNull('value1')->distinct()->pluck('value1');
-        $sizes  = product::whereNotNull('value2')->distinct()->pluck('value2');
+        $colors = product::where('status', 'product')
+            ->whereNotNull('value1')->where('value1', '!=', '')
+            ->distinct()->pluck('value1')
+            ->map(fn($v) => trim($v))
+            ->filter(fn($v) => $v !== '')
+            ->unique(fn($v) => strtolower($v))
+            ->values();
+
+        $sizes = product::where('status', 'product')
+            ->whereNotNull('value2')->where('value2', '!=', '')
+            ->distinct()->pluck('value2')
+            ->map(fn($v) => trim($v))
+            ->filter(fn($v) => $v !== '')
+            ->unique(fn($v) => strtolower($v))
+            ->sort(SORT_NATURAL | SORT_FLAG_CASE)
+            ->values();
 
         $brands = brand::all();
 
+        // counts per brand (unfiltered)
+        $brandCounts = product::where('status','product')
+            ->whereNotNull('brand')->where('brand','!=','')
+            ->select('brand', DB::raw('count(distinct item_code) as cnt'))
+            ->groupBy('brand')
+            ->pluck('cnt','brand');
+
+        // counts per category
+        $categoryCounts = product::where('status','product')
+            ->whereNotNull('category')->where('category','!=','')
+            ->select('category', DB::raw('count(distinct item_code) as cnt'))
+            ->groupBy('category')
+            ->pluck('cnt','category');
+
+        // price min / max for slider
+        $priceMin = (int) product::where('status','product')->min('price');
+        $priceMax = (int) product::where('status','product')->max('price');
+
         return view('website.product.index',[
-            'items'=>$products,
-            'categories'=>category::with('subcategories')->get(),
-            'colors'=>$colors,
-            'sizes'=>$sizes,
-            'brands'=>$brands,
+            'items'          => $products,
+            'categories'     => category::with('subcategories')->get(),
+            'colors'         => $colors,
+            'sizes'          => $sizes,
+            'brands'         => $brands,
+            'brandCounts'    => $brandCounts,
+            'categoryCounts' => $categoryCounts,
+            'priceMin'       => $priceMin,
+            'priceMax'       => $priceMax,
         ]);
     }
 
     public function details(Request $request, $slug)
     {
-        // Get ALL variants of this slug (same color)
-        $variants = product::where('status','product')
-            ->where('slug',$slug)
+        // Find the anchor product by slug
+        $anchor = product::where('status','product')->where('slug',$slug)->first();
+        if (!$anchor) abort(404);
+
+        // All variants that share the same item_code
+        $allVariants = product::where('status','product')
+            ->where('item_code', $anchor->item_code)
             ->get();
 
-        if ($variants->isEmpty()) {
-            abort(404);
+        // Build color groups
+        // - If value1 (color) is set  → group by value1 (multiple colors, same slug)
+        // - If value1 is empty        → group by slug (each design is its own group)
+        $colorGroups = [];
+        foreach ($allVariants as $v) {
+            $color = trim($v->value1 ?? '');
+            $groupKey = $color !== '' ? $color : $v->slug; // slug-based when no color
+
+            if (!isset($colorGroups[$groupKey])) {
+                $colorGroups[$groupKey] = [
+                    'color' => $color !== '' ? $color : $v->product_name,
+                    'slug'  => $v->slug,
+                    'image' => $v->cover_image ?: $v->product_image,
+                    'sizes' => [],
+                ];
+            }
+            if (trim($v->value2 ?? '') !== '') {
+                $colorGroups[$groupKey]['sizes'][] = [
+                    'id'    => $v->id,
+                    'size'  => $v->value2,
+                    'price' => $v->price,
+                    'image' => $v->product_image,
+                ];
+            }
         }
 
-        // If ?variant=ID exists
+        // Sort sizes naturally within each color
+        foreach ($colorGroups as &$grp) {
+            usort($grp['sizes'], fn($a,$b) => strnatcasecmp($a['size'], $b['size']));
+        }
+        unset($grp);
+        $colorGroups = array_values($colorGroups);
+
+        // Determine which variant is currently selected
         $selectedVariant = null;
-
         if ($request->filled('variant')) {
-            $selectedVariant = $variants->firstWhere('id', $request->variant);
+            $selectedVariant = $allVariants->firstWhere('id', $request->variant);
         }
-
-        // fallback to first size
         if (!$selectedVariant) {
-            $selectedVariant = $variants->first();
+            $selectedVariant = $anchor;
         }
 
-        // Build single color group (Amazon style)
-        $variant_group = [
-            'color' => $selectedVariant->value1,
-            'image' => $selectedVariant->product_image,
-            'sizes' => []
-        ];
+        $selectedColor = trim($selectedVariant->value1 ?? '') ?: 'Default';
 
-        foreach ($variants as $v) {
-            $variant_group['sizes'][] = [
-                'id'    => $v->id,
-                'size'  => $v->value2,
-                'price' => $v->price,
-                'image' => $v->product_image
-            ];
-        }
-
-        // Natural size sorting
-        usort($variant_group['sizes'], fn($a,$b) =>
-        strnatcasecmp($a['size'],$b['size'])
-        );
-
-        return view('website.product.details',[
-            'product'        => $selectedVariant,
-            'variant_group'  => $variant_group,
-            'defaultSize'    => $selectedVariant->value2,
-            'initialPrice'   => $selectedVariant->price,
-            'initialImage'   => $selectedVariant->product_image,
+        return view('website.product.details', [
+            'product'       => $selectedVariant,
+            'colorGroups'   => $colorGroups,
+            'selectedColor' => $selectedColor,
+            'defaultSize'   => $selectedVariant->value2,
+            'initialPrice'  => $selectedVariant->price,
+            'initialImage'  => $selectedVariant->product_image,
         ]);
     }
 

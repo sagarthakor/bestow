@@ -8,6 +8,25 @@ img { max-width: 100%; height: auto; }
 .product-card img { height: 160px; object-fit: contain; }
 @media(max-width:768px){ .product-card img { height: 110px; } }
 
+.product-card .img-wrap {
+    display: block;
+    position: relative;
+    overflow: hidden;
+}
+.color-count-badge {
+    position: absolute;
+    bottom: 6px;
+    left: 6px;
+    background: rgba(0,0,0,.55);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+    letter-spacing: .3px;
+    pointer-events: none;
+}
+
 .product-card .title {
     display:-webkit-box;
     -webkit-line-clamp:2;

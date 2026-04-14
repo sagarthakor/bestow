@@ -66,7 +66,6 @@ class LoginController extends Controller
     // Register Submit
     public function registerSubmit(Request $request)
     {
-        dd($request->all());
         $request->validate([
             'name'                  => 'required|string|max:255',
             'email'                 => 'required|email|unique:customers,primary_email',

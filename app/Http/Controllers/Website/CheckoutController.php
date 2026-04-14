@@ -182,16 +182,24 @@ class CheckoutController extends Controller
      */
     public function placeOrder(Request $request)
     {
-        $request->validate([
-            'payment_method'       => 'required|in:COD,razorpay',
-            'selected_address_id'  => 'nullable|exists:user_addresses,id',
+        $isManual = $request->input('address_mode') === 'manual';
 
-            'name'     => 'required_without:selected_address_id|string|max:255',
-            'phone'    => 'required_without:selected_address_id|string|max:20',
-            'address'  => 'required_without:selected_address_id|string|max:500',
-            'state_id' => 'required_without:selected_address_id|integer',
-            'city_id'  => 'required_without:selected_address_id|integer',
-            'pincode'  => 'required_without:selected_address_id|string|max:10',
+        $request->validate([
+            'payment_method'      => 'required|in:COD,razorpay',
+            'selected_address_id' => 'nullable|exists:user_addresses,id',
+
+            'name'    => 'required_without:selected_address_id|string|max:255',
+            'phone'   => 'required_without:selected_address_id|string|max:20',
+            'address' => 'required_without:selected_address_id|string|max:500',
+            'pincode' => 'required_without:selected_address_id|string|max:10',
+
+            // Dropdown mode
+            'state_id' => $isManual ? 'nullable' : 'required_without:selected_address_id|integer',
+            'city_id'  => $isManual ? 'nullable' : 'required_without:selected_address_id|integer',
+
+            // Manual mode
+            'state_name_custom' => $isManual ? 'required_without:selected_address_id|string|max:100' : 'nullable',
+            'city_name_custom'  => $isManual ? 'required_without:selected_address_id|string|max:100' : 'nullable',
 
             'save_address' => 'nullable|boolean',
             'is_default'   => 'nullable|boolean',
@@ -209,30 +217,49 @@ class CheckoutController extends Controller
         if ($request->filled('selected_address_id')) {
             $addr = UserAddress::find($request->selected_address_id);
             $addressData = $addr->only(['name','phone','address','state_id','city_id','pincode']);
+            $addressData['state_name'] = optional($addr->state)->state_name;
+            $addressData['city_name']  = optional($addr->city)->city_name;
         } else {
-            $addressData = $request->only(['name','phone','address','state_id','city_id','pincode']);
+            if ($isManual) {
+                $addressData = [
+                    'name'       => $request->name,
+                    'phone'      => $request->phone,
+                    'address'    => $request->address,
+                    'pincode'    => $request->pincode,
+                    'state_id'   => null,
+                    'city_id'    => null,
+                    'state_name' => trim($request->state_name_custom),
+                    'city_name'  => trim($request->city_name_custom),
+                ];
+            } else {
+                $addressData = $request->only(['name','phone','address','state_id','city_id','pincode']);
+                $addressData['state_name'] = null;
+                $addressData['city_name']  = null;
 
-            if ($userId && $request->boolean('save_address')) {
-                DB::transaction(function () use ($request,$userId) {
-                    if ($request->boolean('is_default')) {
-                        UserAddress::where('user_id',$userId)->update(['is_default'=>0]);
-                    }
-                    UserAddress::create([
-                        'user_id'=>$userId,
-                        'name'=>$request->name,
-                        'phone'=>$request->phone,
-                        'address'=>$request->address,
-                        'state_id'=>$request->state_id,
-                        'city_id'=>$request->city_id,
-                        'pincode'=>$request->pincode,
-                        'is_default'=>$request->boolean('is_default')?1:0,
-                    ]);
-                });
+                if ($userId && $request->boolean('save_address')) {
+                    DB::transaction(function () use ($request,$userId) {
+                        if ($request->boolean('is_default')) {
+                            UserAddress::where('user_id',$userId)->update(['is_default'=>0]);
+                        }
+                        UserAddress::create([
+                            'user_id'    => $userId,
+                            'name'       => $request->name,
+                            'phone'      => $request->phone,
+                            'address'    => $request->address,
+                            'state_id'   => $request->state_id,
+                            'city_id'    => $request->city_id,
+                            'pincode'    => $request->pincode,
+                            'is_default' => $request->boolean('is_default') ? 1 : 0,
+                        ]);
+                    });
+                }
             }
         }
 
-        /** ✅ Calculate Shipping */
-        $shippingCharge = $this->calculateShippingFee($addressData['state_id'], $subtotal);
+        /** ✅ Calculate Shipping (manual mode has no state_id → 0 charge) */
+        $shippingCharge = $addressData['state_id']
+            ? $this->calculateShippingFee($addressData['state_id'], $subtotal)
+            : 0;
         $totalAmount    = $subtotal + $shippingCharge;
 
         /** ✅ If COD → Direct Save Order & Return */
@@ -328,8 +355,10 @@ class CheckoutController extends Controller
                 'name'            => $addressData['name'],
                 'phone'           => $addressData['phone'],
                 'address'         => $addressData['address'],
-                'state_id'        => $addressData['state_id'],
-                'city_id'         => $addressData['city_id'],
+                'state_id'        => $addressData['state_id']   ?? null,
+                'city_id'         => $addressData['city_id']    ?? null,
+                'state_name'      => $addressData['state_name'] ?? null,
+                'city_name'       => $addressData['city_name']  ?? null,
                 'pincode'         => $addressData['pincode'],
 
                 'amount'          => $subtotal,
