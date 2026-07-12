@@ -1,0 +1,230 @@
+@if(!session()->has('user_id'))
+  <script type="text/javascript">
+     window.location="{{url('client')}}";
+ </script>
+ @endif
+      <div class="topbar">
+
+                <!-- LOGO -->
+                <div class="topbar-left">
+                    <a href="{{url('admin')}}" class="logo"><span>{{Session::get('software_title')}}<span></span></span><i class="mdi mdi-layers"></i></a>
+                    <!-- Image logo -->
+                    <!--<a href="index.html" class="logo">-->
+                        <!--<span>-->
+                            <!--<img src="assets/images/logo.png" alt="" height="30">-->
+                        <!--</span>-->
+                        <!--<i>-->
+                            <!--<img src="assets/images/logo_sm.png" alt="" height="28">-->
+                        <!--</i>-->
+                    <!--</a>-->
+                </div>
+
+                <!-- Button mobile view to collapse sidebar menu -->
+                <div class="navbar navbar-default" role="navigation">
+                    <div class="container">
+
+                        <!-- Navbar-left -->
+                        <ul class="nav navbar-nav navbar-left">
+                            <li>
+                                <button class="button-menu-mobile open-left waves-effect">
+                                    <i class="mdi mdi-menu"></i>
+                                </button>
+                            </li>
+                           <!--  <li class="hidden-xs">
+                                <form role="search" class="app-search">
+                                    <input type="text" placeholder="Search..."
+                                           class="form-control">
+                                    <a href=""><i class="fa fa-search"></i></a>
+                                </form>
+                            </li>
+                            <li class="hidden-xs">
+                                <a href="#" class="menu-item">New</a>
+                            </li> -->
+                           <!--  <li class="dropdown hidden-xs">
+                                <a data-toggle="dropdown" class="dropdown-toggle menu-item" href="#" aria-expanded="false">English
+                                    <span class="caret"></span></a>
+                                <ul role="menu" class="dropdown-menu">
+                                    <li><a href="#">German</a></li>
+                                    <li><a href="#">French</a></li>
+                                    <li><a href="#">Italian</a></li>
+                                    <li><a href="#">Spanish</a></li>
+                                </ul>
+                            </li> -->
+                        </ul>
+
+                        <!-- Right(Notification) -->
+                        <ul class="nav navbar-nav navbar-right">
+                            <!-- <li>
+                                <a href="#" class="right-menu-item dropdown-toggle" data-toggle="dropdown">
+                                    <i class="mdi mdi-bell"></i>
+                                    <span class="badge up bg-success">4</span>
+                                </a>
+
+                                <ul class="dropdown-menu dropdown-menu-right arrow-dropdown-menu arrow-menu-right dropdown-lg user-list notify-list">
+                                    <li>
+                                        <h5>Notifications</h5>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="user-list-item">
+                                            <div class="icon bg-info">
+                                                <i class="mdi mdi-account"></i>
+                                            </div>
+                                            <div class="user-desc">
+                                                <span class="name">New Signup</span>
+                                                <span class="time">5 hours ago</span>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="user-list-item">
+                                            <div class="icon bg-danger">
+                                                <i class="mdi mdi-comment"></i>
+                                            </div>
+                                            <div class="user-desc">
+                                                <span class="name">New Message received</span>
+                                                <span class="time">1 day ago</span>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="user-list-item">
+                                            <div class="icon bg-warning">
+                                                <i class="mdi mdi-settings"></i>
+                                            </div>
+                                            <div class="user-desc">
+                                                <span class="name">Settings</span>
+                                                <span class="time">1 day ago</span>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li class="all-msgs text-center">
+                                        <p class="m-0"><a href="#">See all Notification</a></p>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li>
+                                <a href="#" class="right-menu-item dropdown-toggle" data-toggle="dropdown">
+                                    <i class="mdi mdi-email"></i>
+                                    <span class="badge up bg-danger">8</span>
+                                </a>
+
+                                <ul class="dropdown-menu dropdown-menu-right arrow-dropdown-menu arrow-menu-right dropdown-lg user-list notify-list">
+                                    <li>
+                                        <h5>Messages</h5>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="user-list-item">
+                                            <div class="avatar">
+                                                <img src="{{asset('public/adminpanel/default/assets/images/users/avatar-2.jpg')}}" alt="">
+                                            </div>
+                                            <div class="user-desc">
+                                                <span class="name">Patricia Beach</span>
+                                                <span class="desc">There are new settings available</span>
+                                                <span class="time">2 hours ago</span>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="user-list-item">
+                                            <div class="avatar">
+                                                <img src="{{asset('public/adminpanel/default/assets/images/users/avatar-3.jpg')}}" alt="">
+                                            </div>
+                                            <div class="user-desc">
+                                                <span class="name">Connie Lucas</span>
+                                                <span class="desc">There are new settings available</span>
+                                                <span class="time">2 hours ago</span>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="user-list-item">
+                                            <div class="avatar">
+                                                <img src="{{asset('public/adminpanel/default/assets/images/users/avatar-4.jpg')}}" alt="">
+                                            </div>
+                                            <div class="user-desc">
+                                                <span class="name">Margaret Becker</span>
+                                                <span class="desc">There are new settings available</span>
+                                                <span class="time">2 hours ago</span>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li class="all-msgs text-center">
+                                        <p class="m-0"><a href="#">See all Messages</a></p>
+                                    </li>
+                                </ul>
+                            </li>
+ -->
+
+                            <li class="dropdown user-box">
+                                <a href="" class="dropdown-toggle waves-effect user-link" data-toggle="dropdown" aria-expanded="true">
+                                    <img src="{{asset('public/img_avatar.png')}}" alt="user-img" class="img-circle user-img">
+                                </a>
+
+                                <ul class="dropdown-menu dropdown-menu-right arrow-dropdown-menu arrow-menu-right user-list notify-list">
+                                    <li>
+                                        <h5>Hi, {{Session()->get('user_name')}}</h5>
+                                    </li>
+                                    <li><a href="{{url('client/user/profile')}}"><i class="ti-user m-r-5"></i> Profile</a></li>
+{{--                                    <li><a href="javascript:void(0)"><i class="ti-settings m-r-5"></i> Settings</a></li>--}}
+{{--                                    <li><a href="javascript:void(0)"><i class="ti-lock m-r-5"></i> Lock screen</a></li>->--}}
+                                    <li><a href="{{url('logout')}}"><i class="ti-power-off m-r-5"></i> Logout</a></li>
+                                </ul>
+                            </li>
+
+                        </ul> <!-- end navbar-right -->
+
+                    </div><!-- end container -->
+                </div><!-- end navbar -->
+            </div>
+     <div class="left side-menu">
+                <div class="sidebar-inner slimscrollleft">
+  <div id="sidebar-menu">
+                        <ul>
+                            <li class="menu-title">Navigation</li>
+
+                            <li class="has_sub">
+                                <a href="{{url('admin')}}" class="waves-effect"><i class="mdi mdi-view-dashboard"></i><span> Dashboard </span> </a>
+                               <!--  <ul class="list-unstyled">
+                                    <li><a href="index.html">Dashboard 1</a></li>
+                                    <li><a href="dashboard_2.html">Dashboard 2</a></li>
+                                </ul> -->
+                            </li>
+
+                            <?php
+                            echo Session::get("menu");
+                            ?>
+
+
+                          <!--    <li class="has_sub">
+                                <a href="{{url('customer-list')}}" class="waves-effect"><i class="mdi mdi-invert-colors"></i> <span> Customer Master </span></a>
+                            </li>
+
+                             <li class="has_sub">
+                                <a href="{{url('quotation-list')}}" class="waves-effect"><i class="mdi mdi-invert-colors"></i> <span> Quotation Master </span></a>
+                            </li>
+
+                             <li class="has_sub">
+                                <a href="{{url('company-list')}}" class="waves-effect"><i class="mdi mdi-invert-colors"></i> <span> Company Master </span></a>
+                            </li>
+                             <li class="has_sub">
+                                <a href="{{url('terms-list')}}" class="waves-effect"><i class="mdi mdi-invert-colors"></i> <span> Terms & Condition</span></a>
+                            </li>
+ -->
+
+
+                        </ul>
+                    </div>
+
+                       <div class="clearfix"></div>
+
+                    <div class="help-box">
+                        <h5 class="text-muted m-t-0">For Help ?</h5>
+                        <p class=""><span class="text-custom">Email:</span> <br/> bhargav@ssindia.co.in</p>
+                        <p class="m-b-0"><span class="text-custom">Call:</span> <br/> (+91) 90 990 89475</p>
+                    </div>
+
+                </div>
+                <!-- Sidebar -left -->
+
+            </div>

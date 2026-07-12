@@ -1,0 +1,62 @@
+.identity-card {
+    border: #2975BC 3px solid !important;
+    height: auto !important;
+    width: 297px !important;
+    margin: 0 auto !important;
+    background-image: none !important;
+    background-size: unset !important;
+}
+.identity-card .header {
+    width: 292px;
+    height: 155px;
+    background: #fff1cc;
+    border-bottom: 3px solid #2975BC;
+    margin-left: -1px;
+}
+.identity-card .header .logo {
+    margin: 0 auto;
+    padding-top: 1px;
+    text-align: center;
+}
+.identity-card .body {
+    min-height: 400px;
+}
+.identity-card .body .user-image {
+    width: 109px;
+    height: 109px;
+    margin: -50px auto;
+    border-radius: 100px;
+    border: solid 5px #2975BC;
+}
+.identity-card-content {
+    margin-top: 60px;
+}
+.identity-card-content ul {
+    list-style: none;
+    margin-left: 10px;
+}
+.identity-card-content-footer {
+    background: #2975BC;
+    color: #fff;
+    padding: 2px;
+    width: 292px;
+    margin-left: -1px;
+}
+@media print {
+    .identity-card .header {
+        -webkit-print-color-adjust: exact !important;
+        background-color: #fff1cc !important;
+    }
+
+    .identity-card-content-footer {
+        -webkit-print-color-adjust: exact !important;
+        background: #2975BC !important;
+        color: #fff !important;
+    }
+    .left-sidebar{
+        display: none;
+    }
+    .app-header , .btn-print{
+        display: none;
+    }
+}

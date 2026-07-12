@@ -1,0 +1,41 @@
+/* Amazon-like header */
+:root{
+    --amz-blue:#131921;
+    --amz-blue-2:#232f3e;
+    --amz-yellow:#febd69;
+}
+/* (same rules as inline <style> in layout) */
+
+.ing-spinner {
+    width: 50px;
+    height: 50px;
+    display: inline-block;
+    padding: 0;
+    border-radius: 100%;
+    border: 6px solid;
+    border-top-color: #ff5722;
+    border-bottom-color: #ff5722;
+    border-left-color: rgba(156, 0, 0, 0.15);
+    border-right-color: rgba(156, 0, 0, .15);
+    animation: spinner .8s ease-in-out infinite alternate
+}
+
+@keyframes spinner {
+    0% {
+        transform: rotate(0deg)
+    }
+
+    to {
+        transform: rotate(1turn)
+    }
+}
+.counter-component .input-group .btn {
+    padding: 0.25rem 0.5rem !important; /* Adjust the padding */
+    font-size: 0.8rem !important; /* Adjust font size */
+}
+
+.counter-component .form-control {
+    height: 30px !important; /* Reduce height */
+    font-size: 0.8rem !important; /* Match font size */
+}
+
