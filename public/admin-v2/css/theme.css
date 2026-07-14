@@ -1,0 +1,10 @@
+/* Single entry point for the v2 design system.
+   Pages should link bootstrap.min.css first, then this file:
+
+   <link rel="stylesheet" href="/admin-v2/vendor/bootstrap/bootstrap.min.css">
+   <link rel="stylesheet" href="/admin-v2/css/theme.css">
+*/
+
+@import url('fonts.css');
+@import url('tokens.css');
+@import url('components.css');

@@ -169,6 +169,38 @@ class AdminController extends Controller
         return view("admin.subcategory_add", compact("category"));
     }
 
+    /** v2 sample migration only — identical to subcategory_add() above, different view. */
+    function subcategory_add_v2()
+    {
+        $category = ['' => "select category"] + category::orderBy("category_name", "asc")->get()->pluck("category_name", "id")->toArray();
+        return view("admin.subcategory_add_v2", compact("category"));
+    }
+
+    /** v2 sample migration only — identical to subcategory_edit() above, different view. */
+    function subcategory_edit_v2(Request $request)
+    {
+        $subcategory = subcategory::find($request->id);
+        $category = ['' => "select category"] + category::orderBy("category_name", "asc")->get()->pluck("category_name", "id")->toArray();
+        return view("admin.subcategory_edit_v2", compact("category", "subcategory"));
+    }
+
+    /** v2 sample migration only — identical query to subcategory_list() below, different view. */
+    function subcategory_list_v2(Request $request)
+    {
+        $subcategory = new subcategory();
+        $subcategory = $subcategory->select('subcategory.*', 'category.category_name');
+        $subcategory = $subcategory->leftJoin('category', 'category.id', 'subcategory.category');
+        if (isset($request->subcategory_name)) {
+            $subcategory = $subcategory->where('subcategory_name', 'like', '%' . $request->subcategory_name . '%');
+        }
+        if (isset($request->category)) {
+            $subcategory = $subcategory->where('subcategory.category_name', 'like', '%' . $request->category_name . '%');
+        }
+        $result = $subcategory->paginate(10);
+
+        return view("admin.subcategory.index_v2")->with(['subcategory' => $result]);
+    }
+
     function quotation_followup_list(Request $request)
     {
         $data = new quot_followup();
@@ -2860,6 +2892,36 @@ class AdminController extends Controller
         return view("admin/category_list")->with(['data' => $result]);
     }
 
+    /**
+     * v2 design-system sample migration only (see routes/admin.php).
+     * Identical query to category_list() above — only the view differs.
+     * category_list() itself is untouched.
+     */
+    function category_list_v2(Request $request)
+    {
+        $category = new category();
+        $category = $category->select('category.*');
+        if (isset($request->category_name)) {
+            $category = $category->where('category_name', 'like', '%' . $request->category_name . '%');
+        }
+        $result = $category->paginate(10);
+
+        return view("admin.category_list_v2")->with(['data' => $result]);
+    }
+
+    /** v2 sample migration only — mirrors the 'admin.category.add' closure route. */
+    function category_add_v2()
+    {
+        return view('admin.category_add_v2');
+    }
+
+    /** v2 sample migration only — identical to category_edit() above, different view. */
+    function category_edit_v2(Request $request)
+    {
+        $data = category::find($request->id);
+        return view("admin.category_edit_v2")->with(['data' => $data]);
+    }
+
     function subcategory_list(Request $request)
     {
 
@@ -3371,6 +3433,121 @@ class AdminController extends Controller
             'monthSalesAmount' => $monthSalesAmount, 'monthInvoiceAmount' => $monthInvoiceAmount,
             'monthPurchaseAmount' => $monthPurchaseAmount,
             'recentSalesOrders' => $recentSalesOrders, 'topCustomers' => $topCustomers, 'topProducts' => $topProducts,
+        ]);
+    }
+
+    /**
+     * v2 dashboard preview only (see routes/admin.php '/v2-dashboard').
+     * Deliberately separate from dashboard() above so the live dashboard
+     * route/view/logic stays completely untouched. Duplicates the same
+     * read-only queries as dashboard() plus the chart-trend and latest-
+     * quotations data the v2 layout needs.
+     */
+    function dashboardV2(Request $request)
+    {
+        Session::put('website_id', 1);
+        $totcustomer = customers::all()->count();
+        $pendingQuotation = quotation::where("finacial_year", Session::get('finacial_year_id'))
+            ->whereNull('so_status')
+            ->count();
+        $totquotation = quotation::where("finacial_year", Session::get('finacial_year_id'))->count();
+        $totproduct = product::all()->count();
+        $totcategory = category::all()->count();
+        $totbrand = brand::all()->count();
+
+        $totsales = salesorder::where("finacial_year", Session::get('finacial_year_id'))->count();
+        $totpurchase = purchase::where("finacial_year", Session::get('finacial_year_id'))->count();
+        $totdelivery = delivery_challan::where("finacial_year", Session::get('finacial_year_id'))->count();
+        $totinvoice = invoice::where("finacial_year", Session::get('finacial_year_id'))->count();
+
+        $today = date('Y-m-d');
+        $monthStart = date('Y-m-01');
+        $monthEnd = date('Y-m-t');
+
+        $todayQuotation = quotation::whereDate('quot_date', $today)->count();
+        $todaySales = salesorder::whereDate('salaesorder_date', $today)->count();
+        $todayPurchase = purchase::whereDate('po_date', $today)->count();
+        $todayDelivery = delivery_challan::whereDate('invoice_date', $today)->count();
+        $todayInvoice = invoice::whereDate('invoice_date', $today)->count();
+
+        $todayQuotationAmount = quotation::whereDate('quot_date', $today)->sum('grand_total');
+        $todaySalesAmount = salesorder::whereDate('salaesorder_date', $today)->sum('grand_total');
+        $todayPurchaseAmount = purchase::whereDate('po_date', $today)->sum('grand_total');
+        $todayDeliveryAmount = delivery_challan::whereDate('invoice_date', $today)->sum('grand_total');
+        $todayInvoiceAmount = invoice::whereDate('invoice_date', $today)->sum('grand_total');
+
+        $monthQuotation = quotation::whereBetween('quot_date', [$monthStart, $monthEnd])->count();
+        $monthSales = salesorder::whereBetween('salaesorder_date', [$monthStart, $monthEnd])->count();
+        $monthPurchase = purchase::whereBetween('po_date', [$monthStart, $monthEnd])->count();
+        $monthDelivery = delivery_challan::whereBetween('invoice_date', [$monthStart, $monthEnd])->count();
+        $monthInvoice = invoice::whereBetween('invoice_date', [$monthStart, $monthEnd])->count();
+
+        $monthSalesAmount = salesorder::whereBetween('salaesorder_date', [$monthStart, $monthEnd])->sum('grand_total');
+        $monthInvoiceAmount = invoice::whereBetween('invoice_date', [$monthStart, $monthEnd])->sum('grand_total');
+        $monthPurchaseAmount = purchase::whereBetween('po_date', [$monthStart, $monthEnd])->sum('grand_total');
+
+        $recentSalesOrders = salesorder::whereNull('delete_status')
+            ->orderBy('id', 'desc')
+            ->limit(8)
+            ->get();
+
+        $topCustomers = invoice::select('invoice.customer', 'customers.customer_name')
+            ->selectRaw('SUM(invoice.grand_total) as total_amount, COUNT(invoice.id) as total_orders')
+            ->leftJoin('customers', 'customers.id', 'invoice.customer')
+            ->whereNull('invoice.delete_status')
+            ->whereBetween('invoice.invoice_date', [$monthStart, $monthEnd])
+            ->groupBy('invoice.customer', 'customers.customer_name')
+            ->orderByDesc('total_amount')
+            ->limit(5)
+            ->get();
+
+        $topProducts = salesorder_item::select('product.id as product_id', 'product.product_name')
+            ->selectRaw('SUM(CAST(salesorder_item.qty AS DECIMAL(12,2))) as total_qty')
+            ->join('salesorder', 'salesorder.salaesorder_no', '=', 'salesorder_item.sono')
+            ->leftJoin('product', 'product.id', '=', 'salesorder_item.product')
+            ->whereNull('salesorder.delete_status')
+            ->whereBetween('salesorder.salaesorder_date', [$monthStart, $monthEnd])
+            ->whereNotNull('product.id')
+            ->groupBy('product.id', 'product.product_name')
+            ->orderByDesc('total_qty')
+            ->limit(5)
+            ->get();
+
+        // Last 6 calendar months (oldest first), each entry always present
+        // even if a month has zero activity, so the chart never has gaps.
+        $monthlyTrend = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $rangeStart = date('Y-m-01', strtotime("-$i months"));
+            $rangeEnd = date('Y-m-t', strtotime("-$i months"));
+            $monthlyTrend[] = [
+                'label' => date('M Y', strtotime($rangeStart)),
+                'sales' => (float) salesorder::whereBetween('salaesorder_date', [$rangeStart, $rangeEnd])->sum('grand_total'),
+                'invoice' => (float) invoice::whereBetween('invoice_date', [$rangeStart, $rangeEnd])->sum('grand_total'),
+            ];
+        }
+
+        $latestQuotations = quotation::orderBy('id', 'desc')->limit(6)->get();
+
+        $company = \App\company::first();
+        \Session::put('finacial_year_id', $company->finacial_year_id);
+        \Session::put('favicon', $company->favicon);
+
+        return view('admin.index_v2')->with([
+            'totinvoice' => $totinvoice, 'totdelivery' => $totdelivery, 'totpurchase' => $totpurchase, 'totsales' => $totsales,
+            'totcustomer' => $totcustomer, 'totquotation' => $totquotation, 'totproduct' => $totproduct,
+            'totcategory' => $totcategory, 'totbrand' => $totbrand,
+            'pendingQuotation' => $pendingQuotation,
+            'todayQuotation' => $todayQuotation, 'todaySales' => $todaySales, 'todayPurchase' => $todayPurchase,
+            'todayDelivery' => $todayDelivery, 'todayInvoice' => $todayInvoice,
+            'todayQuotationAmount' => $todayQuotationAmount, 'todaySalesAmount' => $todaySalesAmount,
+            'todayPurchaseAmount' => $todayPurchaseAmount, 'todayDeliveryAmount' => $todayDeliveryAmount,
+            'todayInvoiceAmount' => $todayInvoiceAmount,
+            'monthQuotation' => $monthQuotation, 'monthSales' => $monthSales, 'monthPurchase' => $monthPurchase,
+            'monthDelivery' => $monthDelivery, 'monthInvoice' => $monthInvoice,
+            'monthSalesAmount' => $monthSalesAmount, 'monthInvoiceAmount' => $monthInvoiceAmount,
+            'monthPurchaseAmount' => $monthPurchaseAmount,
+            'recentSalesOrders' => $recentSalesOrders, 'topCustomers' => $topCustomers, 'topProducts' => $topProducts,
+            'monthlyTrend' => $monthlyTrend, 'latestQuotations' => $latestQuotations,
         ]);
     }
 
@@ -5390,6 +5567,62 @@ class AdminController extends Controller
         $result = $data->paginate(10);
 
         return view("admin/customer_list")->with(['cdata' => $result]);
+    }
+
+    /**
+     * v2 design-system sample migration only (see routes/admin.php).
+     * Same filters/query as customer_list() above — only the view differs.
+     * customer_list() itself is untouched.
+     */
+    function customer_list_v2(Request $request)
+    {
+        $data = new customers();
+        $data = $data->select('customers.*', 'city.city_name');
+        $data = $data->leftJoin('city', 'city.id', 'customers.billing_city');
+
+        if ($request->customer_name != '') {
+            $data = $data->where('customers.customer_name', 'like', '%' . $request->customer_name . '%');
+        }
+        if ($request->primary_phone != '') {
+            $data = $data->where('customers.primary_phone', 'like', '%' . $request->primary_phone . '%');
+        }
+        if ($request->primary_email != '') {
+            $data = $data->where('customers.primary_email', 'like', '%' . $request->primary_email . '%');
+        }
+        if ($request->owner_name != '') {
+            $data = $data->where('customers.owner_name', 'like', '%' . $request->owner_name . '%');
+        }
+        if ($request->owner_mobile != '') {
+            $data = $data->where('customers.owner_mobile', 'like', '%' . $request->owner_mobile . '%');
+        }
+
+        $data = $data->orderBy('customers.customer_name');
+        $result = $data->paginate(10);
+
+        return view("admin.customer_list_v2")->with(['cdata' => $result]);
+    }
+
+    /** v2 sample migration only — identical dropdown data as customer_add() above, different view. */
+    function customer_add_v2()
+    {
+        $industry = ['' => 'select industry'] + industry::query()
+                ->orderBy('industry_name')->get()->pluck('industry_name', 'id')->toArray();
+        $type = ['' => 'select type'] + type::query()
+                ->orderBy('type_name')->get()->pluck('type_name', 'id')->toArray();
+
+        $country = ['' => 'select country'] + country::orderBy('country_name', 'asc')
+                ->get()->pluck('country_name', 'id')->toArray();
+
+        $state = ['' => 'select state'] + state::orderBy('state_name', 'asc')
+                ->get()->pluck('state_name', 'id')->toArray();
+
+        $city = ['' => 'select city'] + city::orderBy('city_name', 'asc')
+                ->get()->pluck('city_name', 'id')->toArray();
+
+        $payment_terms = ['' => 'select'] + payment_terms::orderBy("id", "desc")
+                ->get()->pluck("terms_name", "days")->toArray();
+
+        return view("admin.customer_add_v2")->with(['payment_terms' => $payment_terms, 'industry' => $industry, 'type' => $type, 'country' => $country, 'state' => $state, 'city' => $city]);
     }
 
     function product_list(Request $request)

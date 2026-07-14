@@ -883,10 +883,25 @@ class ProductController extends Controller
         $m=brand::find($request->id);
         return view("admin/items/brand_edit")->with(['data'=>$m]);
     }
+
+    /** v2 sample migration only — identical to brand_edit() above, different view. */
+    function brand_edit_v2(Request $request)
+    {
+        $m=brand::find($request->id);
+        return view("admin.items.brand_edit_v2")->with(['data'=>$m]);
+    }
     function brand_list(Request $request)
     {
         $data=brand::orderBy("id","desc")->paginate(10);
         return view("admin/items/brand_list")
+            ->with(['data'=>$data]);
+    }
+
+    /** v2 sample migration only — identical query to brand_list() above, different view. */
+    function brand_list_v2(Request $request)
+    {
+        $data=brand::orderBy("id","desc")->paginate(10);
+        return view("admin.items.brand_list_v2")
             ->with(['data'=>$data]);
     }
     function brand_save(Request $request)

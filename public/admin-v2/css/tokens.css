@@ -1,0 +1,270 @@
+/* ==========================================================================
+   DESIGN TOKENS
+   Enterprise SaaS design system — Bestow ERP admin (v2)
+   Style reference: Metronic / Linear / Stripe Dashboard / Odoo Enterprise
+
+   This file defines ONLY custom properties (tokens). No component styles
+   live here — see components.css. Tokens are consumed by both Bootstrap 5
+   (via the small override block at the bottom) and our own components.css.
+
+   Theming: light is the default (:root). Dark mode activates via
+   `<html data-theme="dark">`, set/persisted by js/theme.js. If the user
+   has never chosen, we fall back to the OS preference
+   (prefers-color-scheme), scoped so it never fights an explicit choice.
+   ========================================================================== */
+
+:root {
+  /* ---- Brand ramp (indigo) --------------------------------------------- */
+  --brand-50:  #eef2ff;
+  --brand-100: #e0e7ff;
+  --brand-200: #c7d2fe;
+  --brand-300: #a5b4fc;
+  --brand-400: #818cf8;
+  --brand-500: #6366f1;
+  --brand-600: #4f46e5;
+  --brand-700: #4338ca;
+  --brand-800: #3730a3;
+  --brand-900: #312e81;
+
+  /* ---- Neutral ramp (cool slate) ----------------------------------------*/
+  --gray-0:   #ffffff;
+  --gray-50:  #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+  --gray-950: #020617;
+
+  /* ---- Semantic ramps ---------------------------------------------------*/
+  --success-50: #ecfdf5; --success-500: #10b981; --success-600: #059669; --success-700: #047857;
+  --warning-50: #fffbeb; --warning-500: #f59e0b; --warning-600: #d97706; --warning-700: #b45309;
+  --danger-50:  #fef2f2; --danger-500:  #ef4444; --danger-600:  #dc2626; --danger-700:  #b91c1c;
+  --info-50:    #f0f9ff; --info-500:    #0ea5e9; --info-600:    #0284c7; --info-700:    #0369a1;
+
+  /* ---- Semantic tokens — LIGHT (default) --------------------------------*/
+  --color-primary:        var(--brand-600);
+  --color-primary-hover:  var(--brand-700);
+  --color-primary-active: var(--brand-800);
+  --color-primary-soft:   var(--brand-50);
+  --color-primary-contrast: var(--gray-0);
+
+  --color-success: var(--success-600); --color-success-soft: var(--success-50); --color-success-text: var(--success-700);
+  --color-warning: var(--warning-600); --color-warning-soft: var(--warning-50); --color-warning-text: var(--warning-700);
+  --color-danger:  var(--danger-600);  --color-danger-soft:  var(--danger-50);  --color-danger-text:  var(--danger-700);
+  --color-info:    var(--info-600);    --color-info-soft:    var(--info-50);    --color-info-text:    var(--info-700);
+
+  --color-bg-body:     var(--gray-50);
+  --color-bg-surface:  var(--gray-0);   /* cards, tables, inputs */
+  --color-bg-elevated: var(--gray-0);   /* modals, dropdowns, popovers */
+  --color-bg-subtle:   var(--gray-100); /* table header, hover rows, chips */
+  --color-bg-inverse:  var(--gray-900);
+
+  --color-border:        var(--gray-200);
+  --color-border-strong: var(--gray-300);
+  --color-border-focus:  var(--brand-500);
+
+  --color-text-primary:   var(--gray-900);
+  --color-text-secondary: var(--gray-600);
+  --color-text-muted:     var(--gray-400);
+  --color-text-inverse:   var(--gray-0);
+  --color-text-link:      var(--brand-600);
+
+  --color-sidebar-bg:     var(--gray-900);
+  --color-sidebar-text:   var(--gray-300);
+  --color-sidebar-text-active: var(--gray-0);
+  --color-sidebar-bg-active:   rgba(255, 255, 255, 0.08);
+  --color-sidebar-border: rgba(255, 255, 255, 0.08);
+
+  --overlay-scrim: rgba(15, 23, 42, 0.55);
+
+  /* ---- Typography --------------------------------------------------------*/
+  --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-family-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+
+  --fs-xs:   0.75rem;   /* 12px — table meta, timestamps */
+  --fs-sm:   0.8125rem; /* 13px — secondary text, badges */
+  --fs-base: 0.875rem;  /* 14px — default body/UI text (SaaS-dashboard density) */
+  --fs-md:   1rem;      /* 16px — form inputs, emphasized body */
+  --fs-lg:   1.125rem;  /* 18px — card titles */
+  --fs-xl:   1.25rem;   /* 20px — section titles */
+  --fs-2xl:  1.5rem;    /* 24px — page titles */
+  --fs-3xl:  1.875rem;  /* 30px — KPI numbers */
+  --fs-4xl:  2.25rem;   /* 36px — dashboard hero numbers */
+
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+
+  --lh-tight:  1.2;
+  --lh-normal: 1.5;
+  --lh-relaxed: 1.7;
+
+  /* ---- Spacing (4px base scale) ------------------------------------------*/
+  --space-0:  0;
+  --space-1:  0.25rem; /* 4px  */
+  --space-2:  0.5rem;  /* 8px  */
+  --space-3:  0.75rem; /* 12px */
+  --space-4:  1rem;    /* 16px */
+  --space-5:  1.25rem; /* 20px */
+  --space-6:  1.5rem;  /* 24px */
+  --space-8:  2rem;    /* 32px */
+  --space-10: 2.5rem;  /* 40px */
+  --space-12: 3rem;    /* 48px */
+  --space-16: 4rem;    /* 64px */
+
+  /* ---- Radius --------------------------------------------------------------*/
+  --radius-sm:   0.25rem; /* 4px  — badges, small chips */
+  --radius-md:   0.5rem;  /* 8px  — buttons, inputs */
+  --radius-lg:   0.75rem; /* 12px — cards */
+  --radius-xl:   1rem;    /* 16px — modals, large panels */
+  --radius-full: 9999px;  /* pills, avatars */
+
+  /* ---- Elevation (soft, cool-toned shadows — not Bootstrap's default) ----*/
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 4px 10px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 10px 24px rgba(15, 23, 42, 0.12), 0 4px 8px rgba(15, 23, 42, 0.04);
+  --shadow-xl: 0 20px 40px rgba(15, 23, 42, 0.16), 0 8px 16px rgba(15, 23, 42, 0.06);
+
+  /* ---- Motion --------------------------------------------------------------*/
+  --transition-fast: 120ms ease;
+  --transition-base: 180ms ease;
+  --transition-slow: 280ms ease;
+
+  /* ---- Z-index scale ---------------------------------------------------
+     Bootstrap 5 itself occupies 1000-1090 for its own components
+     (dropdown 1000, sticky 1020, fixed 1030, offcanvas 1045,
+     modal-backdrop 1050, modal 1055, popover 1070, tooltip 1080, toast 1090).
+     Keep any app-level overlays (custom toasts, command palette, etc.)
+     at 1100+ so they never collide with Bootstrap's own stack.
+  -------------------------------------------------------------------------*/
+  --z-app-overlay: 1100;
+  --z-app-toast:   1110;
+
+  /* ---- Breakpoints (reference only — CSS vars can't be used inside
+     @media queries, these match Bootstrap 5.3 defaults exactly so the
+     numbers below are the single source of truth to copy into @media
+     rules in components.css / future page CSS)
+     xs: <576px   sm: >=576px   md: >=768px
+     lg: >=992px  xl: >=1200px  xxl: >=1400px
+  -------------------------------------------------------------------------*/
+}
+
+/* ---- Dark mode overrides ----------------------------------------------- */
+[data-theme="dark"] {
+  --color-primary:        var(--brand-500);
+  --color-primary-hover:  var(--brand-400);
+  --color-primary-active: var(--brand-300);
+  --color-primary-soft:   rgba(99, 102, 241, 0.16);
+  --color-primary-contrast: var(--gray-0);
+
+  --color-success: #34d399; --color-success-soft: rgba(16, 185, 129, 0.16); --color-success-text: #6ee7b7;
+  --color-warning: #fbbf24; --color-warning-soft: rgba(245, 158, 11, 0.16); --color-warning-text: #fcd34d;
+  --color-danger:  #f87171; --color-danger-soft:  rgba(239, 68, 68, 0.16);  --color-danger-text:  #fca5a5;
+  --color-info:    #38bdf8; --color-info-soft:    rgba(14, 165, 233, 0.16); --color-info-text:    #7dd3fc;
+
+  --color-bg-body:     #0b1120;
+  --color-bg-surface:  #111827;
+  --color-bg-elevated: #1a2438;
+  --color-bg-subtle:   #1e2a45;
+  --color-bg-inverse:  var(--gray-50);
+
+  --color-border:        #263248;
+  --color-border-strong: #34405c;
+  --color-border-focus:  var(--brand-400);
+
+  --color-text-primary:   #f1f5f9;
+  --color-text-secondary: #94a3b8;
+  --color-text-muted:     #64748b;
+  --color-text-inverse:   var(--gray-900);
+  --color-text-link:      #818cf8;
+
+  --color-sidebar-bg:     #0b1120;
+  --color-sidebar-text:   #94a3b8;
+  --color-sidebar-text-active: var(--gray-0);
+  --color-sidebar-bg-active:   rgba(255, 255, 255, 0.06);
+  --color-sidebar-border: rgba(255, 255, 255, 0.06);
+
+  --overlay-scrim: rgba(2, 6, 23, 0.7);
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.45), 0 4px 8px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.5), 0 8px 16px rgba(0, 0, 0, 0.35);
+}
+
+/* Respect OS preference only when the user hasn't made an explicit choice
+   (js/theme.js sets data-theme as soon as it runs, so this is mainly a
+   no-flash fallback for the very first paint / no-JS edge case). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --color-primary:        var(--brand-500);
+    --color-primary-hover:  var(--brand-400);
+    --color-primary-active: var(--brand-300);
+    --color-primary-soft:   rgba(99, 102, 241, 0.16);
+
+    --color-success: #34d399; --color-success-soft: rgba(16, 185, 129, 0.16); --color-success-text: #6ee7b7;
+    --color-warning: #fbbf24; --color-warning-soft: rgba(245, 158, 11, 0.16); --color-warning-text: #fcd34d;
+    --color-danger:  #f87171; --color-danger-soft:  rgba(239, 68, 68, 0.16);  --color-danger-text:  #fca5a5;
+    --color-info:    #38bdf8; --color-info-soft:    rgba(14, 165, 233, 0.16); --color-info-text:    #7dd3fc;
+
+    --color-bg-body:     #0b1120;
+    --color-bg-surface:  #111827;
+    --color-bg-elevated: #1a2438;
+    --color-bg-subtle:   #1e2a45;
+    --color-bg-inverse:  var(--gray-50);
+
+    --color-border:        #263248;
+    --color-border-strong: #34405c;
+    --color-border-focus:  var(--brand-400);
+
+    --color-text-primary:   #f1f5f9;
+    --color-text-secondary: #94a3b8;
+    --color-text-muted:     #64748b;
+    --color-text-inverse:   var(--gray-900);
+    --color-text-link:      #818cf8;
+
+    --color-sidebar-bg:     #0b1120;
+    --color-sidebar-text:   #94a3b8;
+    --color-sidebar-text-active: var(--gray-0);
+    --color-sidebar-bg-active:   rgba(255, 255, 255, 0.06);
+    --color-sidebar-border: rgba(255, 255, 255, 0.06);
+
+    --overlay-scrim: rgba(2, 6, 23, 0.7);
+  }
+}
+
+/* ---- Bridge into Bootstrap 5's own variable layer ----------------------
+   Bootstrap 5.3 reads its component colors from these `--bs-*` variables
+   at the :root level, so remapping them here means every unmodified
+   Bootstrap component (alerts, buttons, etc. before our component.css
+   overrides even apply) already inherits our palette instead of Bootstrap's
+   defaults — this is what lets Bootstrap's own dark-mode-aware utilities
+   and our token system stay in sync. */
+:root {
+  --bs-body-font-family: var(--font-family-base);
+  --bs-body-font-size: var(--fs-base);
+  --bs-body-color: var(--color-text-primary);
+  --bs-body-bg: var(--color-bg-body);
+  --bs-border-color: var(--color-border);
+  --bs-primary: var(--color-primary);
+  --bs-primary-rgb: 79, 70, 229;
+  --bs-success: var(--color-success);
+  --bs-warning: var(--color-warning);
+  --bs-danger: var(--color-danger);
+  --bs-info: var(--color-info);
+  --bs-border-radius: var(--radius-md);
+  --bs-border-radius-sm: var(--radius-sm);
+  --bs-border-radius-lg: var(--radius-lg);
+  --bs-border-radius-xl: var(--radius-xl);
+  --bs-box-shadow: var(--shadow-md);
+  --bs-box-shadow-sm: var(--shadow-sm);
+  --bs-box-shadow-lg: var(--shadow-lg);
+}

@@ -34,6 +34,31 @@ Auth::routes();
 */
 Route::middleware(['auth'])->group(function () {
 
+    // v2 design-system preview only — renders master_v2/table_master_v2 with
+    // sample content so the new layout can be reviewed with a real session.
+    // Not linked from any menu; safe to remove once Phase 3 migration starts.
+    Route::get('/v2-preview', function () {
+        return view('admin.layout.preview_v2');
+    })->name('admin.v2.preview');
+
+    // v2 dashboard preview only — see AdminController::dashboardV2().
+    // The live '/' 'admin.dashboard' route below is untouched.
+    Route::get('/v2-dashboard', 'AdminController@dashboardV2')->name('admin.v2.dashboard');
+
+    // v2 table/form redesign sample migrations only (Category + Customer).
+    // Live routes further below (admin.category.*, admin.customers.*,
+    // admin.customer.*) are completely untouched. Forms below submit to
+    // those SAME existing save/update routes, so no backend logic changed.
+     Route::prefix('v2/category')->name('admin.v2.category.')->group(function () {
+        Route::get('/list', 'AdminController@category_list_v2')->name('list');
+        Route::get('/add', 'AdminController@category_add_v2')->name('add');
+        Route::get('/edit/{id}', 'AdminController@category_edit_v2')->name('edit');
+    });
+    Route::prefix('v2/customer')->name('admin.v2.customer.')->group(function () {
+        Route::get('/list', 'AdminController@customer_list_v2')->name('list');
+        Route::get('/add', 'AdminController@customer_add_v2')->name('add');
+    });
+
     Route::prefix('bukkal')->name('admin.bukkal.')->group(function () {
         Route::get('/list', [BukkalCodeController::class, 'index'])->name('list');
         Route::get('/add', [BukkalCodeController::class, 'create'])->name('add');
