@@ -296,7 +296,7 @@
                             </ul>
                         </li>
                     @endif
-                    @if($user->hasAnyPermission(['quot_report_view', 'sales_report_view', 'invoice_report_view', 'sales_summary_report_view', 'product_wise_sales_report_view', 'salesman_wise_sales_report_view', 'stock_available_report_view', 'raw_material_pending_report_view', 'production_pending_report_view', 'stitching_pending_report_view', 'pressing_pending_report_view', 'packaging_pending_report_view']))
+                    @if($user->hasAnyPermission(['quot_report_view', 'sales_report_view', 'invoice_report_view', 'sales_summary_report_view', 'product_wise_sales_report_view', 'salesman_wise_sales_report_view', 'stock_available_report_view', 'raw_material_pending_report_view', 'production_pending_report_view', 'stitching_pending_report_view', 'pressing_pending_report_view', 'packaging_pending_report_view', 'belt_production_report_view']))
                         <li class="has_sub">
                             <a href="javascript:void(0);" class="waves-effect">
                                 <i class="mdi mdi-cart"></i>
@@ -340,6 +340,9 @@
                                 @endcan
                                 @can('packaging_pending_report_view')
                                     <li><a href="{{ route('admin.reports.packaging_pending') }}">Packing Pending</a></li>
+                                @endcan
+                                @can('belt_production_report_view')
+                                    <li><a href="{{ route('admin.reports.belt_production') }}">Belt Production</a></li>
                                 @endcan
                             </ul>
                         </li>

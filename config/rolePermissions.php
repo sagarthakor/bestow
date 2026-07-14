@@ -188,6 +188,9 @@ return [
         'Packing Pending Report' => [
             'View' => 'packaging_pending_report_view',
         ],
+        'Belt Production Report' => [
+            'View' => 'belt_production_report_view',
+        ],
     ],
 
     'Machine Master' =>[

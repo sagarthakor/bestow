@@ -1,197 +1,174 @@
-
 @extends('admin.layout.master')
 
-@section('title', 'List | Invoice')
+@section('title', 'Report | Invoice')
 
 @section('sidebar')
     @parent
-
 @endsection
 
 @section('content')
 
-    <!-- DataTables -->
-
     <style type="text/css">
-
-        nav{
-            float: right;
+        nav { float: right; }
+        .rpt-panel-heading {
+            background: #188ae2;
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 10px 16px;
+            border-radius: 3px 3px 0 0;
         }
+        .rpt-panel-body { padding: 18px 16px 6px; }
+        .rpt-panel-body label { font-weight: 600; color: #555; font-size: 12.5px; margin-bottom: 4px; }
+        .rpt-actions { padding: 0 16px 16px; text-align: right; border-top: 1px solid #eceff5; margin-top: 12px; padding-top: 14px; }
+        .rpt-stats { padding: 10px 16px; border-bottom: 1px solid #eceff5; background: #fafbfd; font-size: 13px; color: #666; }
+        .rpt-stats b { color: #222; }
+        table.rpt-table thead th { background: #f4f6fa; font-weight: 600; color: #444; border-bottom: 2px solid #e3e6ee; vertical-align: middle; }
     </style>
 
     <div class="content-page">
-        <!-- Start content -->
         <div class="content">
             <div class="container">
-
 
                 <div class="row">
                     <div class="col-xs-12">
                         <div class="page-title-box">
-                            <h4 class="page-title">Invoice Report </h4>
+                            <h4 class="page-title">Invoice Report</h4>
                             <ol class="breadcrumb p-0 m-0">
-                                <li>
-                                    <a href="{{ url('admin') }}">{{Session::get('software_title')}}</a>
-                                </li>
-                                <li>
-                                    Sales
-                                </li>
-                                <li class="active">
-                                    List
-                                </li>
+                                <li><a href="{{ url('admin') }}">{{Session::get('software_title')}}</a></li>
+                                <li>Reports</li>
+                                <li class="active">Invoice</li>
                             </ol>
                             <div class="clearfix"></div>
                         </div>
                     </div>
                 </div>
 
-                {{Form::model(request(),['method'=>'get'])}}
-
-                <div class="row">
-                    <div class="col-sm-4">
-                    </div>
-                    <div class="col-sm-4">
-
-                    </div>
+                @if(session()->has('message'))
                     <div class="row">
-                        @if(session()->has('message'))
-                            <div class="col-sm-12">
-                                <div class="alert alert-info" style="background-color: #188ae2 !important">
-                                    <strong style="color: #fff">{{session()->get('message')}}</strong>
-                                </div>
-                            </div>
-                        @endif
-
                         <div class="col-sm-12">
-
-                            <?php
-                            if(isset($_GET['msg']))
-                            {
-                            ?>
-                            <div class="alert alert-success">
-                                <strong style="color:#000">Stage Change Successfully</strong>
-                            </div>
-                            <?php
-
-                            }
-                            ?>
-                            <div class="card-box table-responsive">
-
-
-
-                                <table class="table table-striped table-bordered">
-                                    <thead>
-                                    <tr>
-                                        <td colspan="7" class="text-right">{{--<button class='btn btn-primary' type="submit" name="export_excel" value="export_excel">Export Excel</button>&nbsp;--}}<button class='mr-5 btn btn-info'>Search</button></td>
-                                    </tr>
-                                    <tr>
-                                        <th>#</th>
-                                        <th> Invoice No
-                                        </th>
-
-                                        <th>
-                                            Invoice Date
-                                        </th>
-
-                                        <th>
-                                            Customer
-                                        </th>
-                                        <th>
-                                            Salesman
-                                        </th>
-
-                                        <th>
-                                            Subject
-                                        </th>
-
-                                        <th>
-                                            Amount
-
-                                        </th>
-
-
-                                    </tr>
-
-                                    <tr>
-                                        <td>
-
-
-                                        </td>
-                                        <td>
-                                            <input type="text" value="<?php if(isset($_GET['invoice_no'])){echo $_GET['invoice_no'];} ?>" name="invoice_no"  class="listSearchContributor inputElement">
-                                        </td>
-                                        <td>
-                                            <input type="date" value="<?php if(isset($_GET['from_date'])){echo $_GET['from_date'];} ?>" name="from_date" class="listSearchContributor inputElement" id="start_date" autocomplete="off">
-
-                                            <input type="date" value="<?php if(isset($_GET['end_date'])){echo $_GET['end_date'];} ?>" name="end_date" class="listSearchContributor inputElement" id="end_date" autocomplete="off">
-                                        </td>
-                                        <td>
-                                            <input type="text" value="<?php if(isset($_GET['client_name'])){echo $_GET['client_name'];} ?>" name="client_name" class="listSearchContributor inputElement">
-                                        </td>
-                                        <td>
-                                            <input type="text" value="<?php if(isset($_GET['salesman'])){echo $_GET['salesman'];} ?>" name="salesman" class="listSearchContributor inputElement">
-                                        </td>
-                                        <td>
-                                            <input type="text" name="subject" class="listSearchContributor inputElement" value="<?php if(isset($_GET['subject'])){echo $_GET['subject'];} ?>">
-                                        </td>
-                                        <td>
-                                            <input type="text" name="amount" class="listSearchContributor inputElement" value="<?php if(isset($_GET['amount'])){echo $_GET['amount'];} ?>">
-                                        </td>
-
-
-                                    </tr>
-
-                                    </thead>
-
-
-                                    <tbody>
-
-
-                                    <?php $srno=0; ?>
-                                    <?php
-                                    $stage = array('Created' => 'Created', 'Sent' => 'Sent', 'Reviewing' => 'Reviewing', 'QuoteRivision' => 'QuoteRivision', 'Accepted' => 'Accepted', 'Invoiced' => 'Invoiced', 'Canceled' => 'Canceled');
-                                    ?>
-                                    @foreach($list as $data)
-                                        <?php $srno++; ?>
-                                        <tr>
-                                            <td style="width: 2%;vertical-align: top;text-align: center;">
-                                                {{($list->currentPage() - 1) * $list->perPage() + $loop->iteration}}
-                                            </td>
-                                            <td   style="vertical-align: top;">
-                                                @can('invoice_view')
-                                                    {{$data->invoice_number}}
-                                                @endcan
-                                            </td>
-
-                                            <td   style="vertical-align: top;width: 5%">
-                                                {{date('d-m-Y',strtotime($data->invoice_date))}}
-                                            </td>
-
-                                            <!--      <td  style="vertical-align: top;"></td>
-                                             <td  style="vertical-align: top;"></td> -->
-                                            <td  style="vertical-align: top;width: 25%">{{$data->customer_name}}</td>
-                                            <td  style="vertical-align: top;">{{$data->salesman_name}}</td>
-                                            <td  style="vertical-align: top;">{{$data->subject}}</td>
-                                            <td  style="vertical-align: top;width:2%;text-align: left;">{{number_format($data->grand_total)}}</td>
-                                        </tr>
-                                    @endforeach
-                                    </tbody>
-                                </table>
-
-                                {{$list->appends(request()->input())->links()}}
-
+                            <div class="alert alert-info" style="background-color: #188ae2 !important">
+                                <strong style="color: #fff">{{session()->get('message')}}</strong>
                             </div>
                         </div>
                     </div>
+                @endif
 
-                    <!-- end row -->
+                {{ Form::model(request(), ['method' => 'get']) }}
 
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="panel panel-default">
+                            <div class="rpt-panel-heading">Filter</div>
+                            <div class="rpt-panel-body">
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <label>Invoice No</label>
+                                        <input type="text" name="invoice_no" value="{{ request('invoice_no') }}" class="form-control" placeholder="Invoice no">
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <label>Customer</label>
+                                        <input type="text" name="client_name" value="{{ request('client_name') }}" class="form-control" placeholder="Customer name">
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <label>Salesman</label>
+                                        <input type="text" name="salesman" value="{{ request('salesman') }}" class="form-control" placeholder="Salesman name">
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <label>Status</label>
+                                        <input type="text" name="status" value="{{ request('status') }}" class="form-control" placeholder="Status">
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-top:12px;">
+                                    <div class="col-sm-3">
+                                        <label>Subject</label>
+                                        <input type="text" name="subject" value="{{ request('subject') }}" class="form-control" placeholder="Subject">
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <label>Amount</label>
+                                        <input type="text" name="amount" value="{{ request('amount') }}" class="form-control" placeholder="Amount">
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <label>From Date</label>
+                                        <input type="date" name="from_date" value="{{ request('from_date') }}" class="form-control">
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <label>To Date</label>
+                                        <input type="date" name="end_date" value="{{ request('end_date') }}" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="rpt-actions">
+                                <a href="{{ url()->current() }}" class="btn btn-default">Reset</a>
+                                <button type="submit" class="btn btn-primary">Search</button>
+                                <button type="submit" name="export_excel" value="export_excel" class="btn btn-success">Export Excel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="card-box" style="padding:0;">
 
-                </div> <!-- container -->
+                            <div class="rpt-stats">
+                                Invoices: <b>{{ number_format($totalRecords) }}</b>
+                                &nbsp;&nbsp;|&nbsp;&nbsp; Total Amount: <b>{{ number_format($totalAmount, 2) }}</b>
+                            </div>
 
-            </div> <!-- content -->
+                            <div class="table-responsive">
+                                <table class="table table-striped rpt-table">
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Invoice No</th>
+                                        <th>Invoice Date</th>
+                                        <th>Customer</th>
+                                        <th>Salesman</th>
+                                        <th>Subject</th>
+                                        <th>Amount</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    @forelse($list as $data)
+                                        <tr>
+                                            <td style="width:2%;text-align:center;">
+                                                {{ ($list->currentPage() - 1) * $list->perPage() + $loop->iteration }}
+                                            </td>
+                                            <td>
+                                                @can('invoice_view')
+                                                    {{ $data->invoice_number }}
+                                                @endcan
+                                            </td>
+                                            <td style="white-space:nowrap;">{{ $data->invoice_date ? date('d-m-Y', strtotime($data->invoice_date)) : '-' }}</td>
+                                            <td>{{ $data->customer_name ?? '-' }}</td>
+                                            <td>{{ $data->salesman_name ?? '-' }}</td>
+                                            <td>{{ $data->subject ?? '-' }}</td>
+                                            <td style="text-align:right;">{{ number_format($data->grand_total, 2) }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="7" class="text-center" style="padding:30px;color:#999;">No invoices found</td>
+                                        </tr>
+                                    @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
 
-            <script src="{{asset('/admin/assets/js/jquery.min.js')}}"></script>
+                            <div style="padding: 10px 16px;">
+                                {{ $list->appends(request()->input())->links() }}
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                {{ Form::close() }}
+
+            </div>
+        </div>
+    </div>
+
+    <script src="{{asset('/admin/assets/js/jquery.min.js')}}"></script>
 
 @endsection

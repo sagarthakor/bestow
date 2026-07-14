@@ -500,7 +500,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/edit/{id}', 'SalesController@so_edit')->name('edit');
         Route::post('/update', 'SalesController@salesorder_update1')->name('update');
         Route::get('/delete/{id}', 'SalesController@so_delete')->name('delete');
-        Route::get('/view/{id}', 'SalesController@show')->name('view');
+        Route::get('/view/{id}', 'SalesController@sales_view')->name('view');
         Route::get('/print/{id}', 'SalesController@so_print')->name('print');
         Route::get("delivery-challan/add/{id?}","DeliveryChallanController@challan_add")->name('delivery.add');
         Route::get("delivery-challan/add/{id?}/{customer?}","DeliveryChallanController@challan_add")->name('delivery.add');
@@ -885,6 +885,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('stitching-pending', 'ReportsController@stitchingPending')->name('admin.reports.stitching_pending');
         Route::get('pressing-pending', 'ReportsController@pressingPending')->name('admin.reports.pressing_pending');
         Route::get('packaging-pending', 'ReportsController@packagingPending')->name('admin.reports.packaging_pending');
+        Route::get('belt-production', 'ReportsController@beltProduction')->name('admin.reports.belt_production');
     });
 
 

@@ -9,6 +9,7 @@ use App\Exports\SalesmanWiseSalesExport;
 use App\Exports\StockAvailableExport;
 use App\Exports\RawMaterialPendingExport;
 use App\Exports\ProductionPendingExport;
+use App\Exports\BeltProductionExport;
 use App\quotation;
 use App\salesorder;
 use App\salesman;
@@ -21,7 +22,7 @@ use App\Exports\quotationExport;
 use App\Exports\salesExport;
 use Excel;
 use Illuminate\Support\Facades\DB;
-use session;
+use Session;
 use App\delivery_challan;
 use App\Exports\challanExport;
 use App\invoice;
@@ -125,19 +126,20 @@ class ReportsController extends Controller
         }
 
         $product=$product->orderBy('quotation.id','desc');
-         $result = $product->paginate(10);
         $stage = array('Created' => 'Created', 'Sent' => 'Sent', 'Reviewing' => 'Reviewing', 'QuoteRivision' => 'QuoteRivision', 'Accepted' => 'Accepted', 'Invoiced' => 'Invoiced', 'Canceled' => 'Canceled');
 
-       /* if(isset($request->tally_quotation))
-        {
-            return Excel::download(new InvoiceExport($request), 'quotation_tally.xlsx');
+        if ($request->export_excel) {
+            return Excel::download(new quotationExport($product->get()), 'QuotationReport.xlsx');
         }
-        if(isset($request->export_excel))
-        {
-            return Excel::download(new quotationExport($request), 'QuotationReport.xlsx');
-        }*/
+
+        $summary = (clone $product)->get();
+        $totalRecords = $summary->count();
+        $totalAmount = $summary->sum('grand_total');
+
+        $result = $product->paginate(10)->appends($request->all());
+
         return view('admin.reports.quotation')
-                ->with(['list'=>$result,'stage'=>$stage]);
+                ->with(['list'=>$result,'stage'=>$stage,'totalRecords'=>$totalRecords,'totalAmount'=>$totalAmount]);
     }
 
     function sales(Request $request)
@@ -184,23 +186,26 @@ class ReportsController extends Controller
         if($request->status != '')
         {
             $status=$request->status;
-            $product = $product->Where('salesorder.status','like','%'.$request->quot_stage.'%');
+            $product = $product->Where('salesorder.status','like','%'.$request->status.'%');
         }
         //echo print_r($request->all());
 
         $product=$product->orderBy("id",'desc');
         $product=$product->whereNull("delete_status");
-        $result = $product->paginate(30);
 
-        if(isset($request->export_excel))
-        {
-            return Excel::download(new salesExport($request), 'SalesReport.xlsx');
+        if ($request->export_excel) {
+            return Excel::download(new salesExport($product->get()), 'SalesReport.xlsx');
         }
 
+        $summary = (clone $product)->get();
+        $totalRecords = $summary->count();
+        $totalAmount = $summary->sum('grand_total');
+
+        $result = $product->paginate(30)->appends($request->all());
 
         $company_name=company::select('company_name')->first();
 
-        return view('admin.reports/sales')->with(['list'=>$result,'company'=>$company_name->company_name]);
+        return view('admin.reports.sales')->with(['list'=>$result,'company'=>$company_name->company_name,'totalRecords'=>$totalRecords,'totalAmount'=>$totalAmount]);
     }
 
     function challan(Request $request)
@@ -251,12 +256,16 @@ class ReportsController extends Controller
         $product = $product->where('delivery_challan.finacial_year', Session::get('finacial_year_id'));
         $product = $product->whereNull('delivery_challan.delete_status');
         $product=$product->orderBy('delivery_challan.id','desc');
-        $result = $product->paginate(30);
 
-        if(isset($request->export_excel))
-        {
-            return Excel::download(new challanExport($request), 'ChallanReport.xlsx');
+        if ($request->export_excel) {
+            return Excel::download(new challanExport($product->get()), 'ChallanReport.xlsx');
         }
+
+        $summary = (clone $product)->get();
+        $totalRecords = $summary->count();
+        $totalAmount = $summary->sum('grand_total');
+
+        $result = $product->paginate(30)->appends($request->all());
 
         $company_name = company::select('company_name')->first();
 
@@ -264,7 +273,7 @@ class ReportsController extends Controller
         $stage = array('Created' => 'Created', 'Sent' => 'Sent', 'Reviewing' => 'Reviewing', 'QuoteRivision' => 'QuoteRivision', 'Accepted' => 'Accepted', 'Invoiced' => 'Invoiced', 'Canceled' => 'Canceled');
 
 
-        return view("admin.reports.challan")->with(['list' => $result, 'company' => $company_name->company_name, 'stage' => $stage]);
+        return view("admin.reports.challan")->with(['list' => $result, 'company' => $company_name->company_name, 'stage' => $stage, 'totalRecords' => $totalRecords, 'totalAmount' => $totalAmount]);
     }
 
     function invoice(Request $request)
@@ -316,20 +325,22 @@ class ReportsController extends Controller
 
 
         $product=$product->orderBy('invoice.id','desc');
-        $result = $product->paginate(10);
-
-        $company_name = company::select('company_name')->first();
-
-
 
         $stage = array('Created' => 'Created', 'Sent' => 'Sent', 'Reviewing' => 'Reviewing', 'QuoteRivision' => 'QuoteRivision', 'Accepted' => 'Accepted', 'Invoiced' => 'Invoiced', 'Canceled' => 'Canceled');
 
-       /* if(isset($request->export_excel))
-        {
-            return Excel::download(new invoiceExport($request), 'InvoicesReport.xlsx');
-        }*/
+        if ($request->export_excel) {
+            return Excel::download(new invoiceExport($product->get()), 'InvoicesReport.xlsx');
+        }
 
-        return view("admin.reports.invoice")->with(['list' => $result, 'company' => $company_name->company_name, 'stage' => $stage]);
+        $summary = (clone $product)->get();
+        $totalRecords = $summary->count();
+        $totalAmount = $summary->sum('grand_total');
+
+        $result = $product->paginate(10)->appends($request->all());
+
+        $company_name = company::select('company_name')->first();
+
+        return view("admin.reports.invoice")->with(['list' => $result, 'company' => $company_name->company_name, 'stage' => $stage, 'totalRecords' => $totalRecords, 'totalAmount' => $totalAmount]);
     }
 
     public function salesOutOfStockItems(Request $request)
@@ -792,6 +803,64 @@ class ReportsController extends Controller
     function packagingPending(Request $request)
     {
         return $this->pendingByStage($request, 'packaging');
+    }
+
+    /**
+     * Belt Production Report.
+     * Per batch: planned qty, actual produced qty, wastage qty, and pending
+     * qty (only meaningful while status = 'N' i.e. not yet completed).
+     */
+    function beltProduction(Request $request)
+    {
+        $query = DB::table('belt_production as bp')
+            ->join('product as p', 'p.id', '=', 'bp.belt_product')
+            ->leftJoin('customers as c', 'c.id', '=', 'bp.customer')
+            ->select(
+                'bp.id',
+                'bp.batch_no',
+                'p.product_name as product',
+                'c.customer_name as customer',
+                'bp.planned_qty',
+                'bp.total_production',
+                'bp.total_wastage_nos',
+                'bp.status',
+                'bp.created_at'
+            )
+            ->selectRaw("CASE WHEN bp.status = 'N' THEN bp.planned_qty ELSE 0 END as pending_qty");
+
+        if ($request->batch_no != '') {
+            $query->where('bp.batch_no', 'like', '%' . $request->batch_no . '%');
+        }
+        if ($request->product != '') {
+            $query->where('p.product_name', 'like', '%' . $request->product . '%');
+        }
+        if ($request->customer != '') {
+            $query->where('c.customer_name', 'like', '%' . $request->customer . '%');
+        }
+        if ($request->status != '') {
+            $query->where('bp.status', $request->status);
+        }
+
+        $query->orderBy('bp.id', 'desc');
+
+        if ($request->export_excel) {
+            return Excel::download(new BeltProductionExport($query->get()), 'BeltProductionReport.xlsx');
+        }
+
+        $summary = (clone $query)->get();
+        $totalPlanned = $summary->sum('planned_qty');
+        $totalProduced = $summary->sum('total_production');
+        $totalWastage = $summary->sum('total_wastage_nos');
+        $totalPending = $summary->sum('pending_qty');
+        $pendingBatches = $summary->where('status', 'N')->count();
+        $completedBatches = $summary->where('status', 'Y')->count();
+
+        $list = $query->paginate(20)->appends($request->all());
+
+        return view('admin.reports.belt_production', compact(
+            'list', 'totalPlanned', 'totalProduced', 'totalWastage', 'totalPending',
+            'pendingBatches', 'completedBatches'
+        ));
     }
 
 }

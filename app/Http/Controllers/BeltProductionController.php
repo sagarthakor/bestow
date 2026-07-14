@@ -213,6 +213,35 @@ class BeltProductionController extends Controller
         $belt->status = 'Y';
         $belt->save();
 
+        $checkproduct = stock_status::where('product', $belt->belt_product)->first();
+
+        if (empty($checkproduct)) {
+            $status = new stock_status();
+            $status->product = $belt->belt_product;
+            $status->qty = $request->total_production;
+            $status->particular = 'Inward From Belt Production Batch : ' . $belt->batch_no;
+            $status->inward_date = date('Y-m-d');
+            $status->user_id = Session::get('user_id');
+            $status->created_time = date('d-m-Y h:i:s a');
+            $status->save();
+        } else {
+            $checkproduct->qty = $checkproduct->qty + $request->total_production;
+            $checkproduct->inward_date = date('Y-m-d');
+            $checkproduct->particular = 'Inward From Belt Production Batch : ' . $belt->batch_no;
+            $checkproduct->created_time = date('d-m-Y h:i:s a');
+            $checkproduct->save();
+        }
+
+        $book = new stock_book();
+        $book->product = $belt->belt_product;
+        $book->inward_date = date('Y-m-d');
+        $book->inward_qty = $request->total_production;
+        $book->remaining_qty = $request->total_production;
+        $book->particular = 'Inward From Belt Production Batch : ' . $belt->batch_no;
+        $book->created_time = date('d-m-Y h:i:s a');
+        $book->user_id = Session::get('user_id');
+        $book->save();
+
         return redirect()->route('admin.belt_production.list')->with('message', 'Belt production batch completed');
     }
 }

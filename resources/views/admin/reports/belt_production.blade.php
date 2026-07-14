@@ -1,6 +1,6 @@
 @extends('admin.layout.master')
 
-@section('title', 'Report | Challan')
+@section('title', 'Report | Belt Production')
 
 @section('sidebar')
     @parent
@@ -24,6 +24,8 @@
         .rpt-stats { padding: 10px 16px; border-bottom: 1px solid #eceff5; background: #fafbfd; font-size: 13px; color: #666; }
         .rpt-stats b { color: #222; }
         table.rpt-table thead th { background: #f4f6fa; font-weight: 600; color: #444; border-bottom: 2px solid #e3e6ee; vertical-align: middle; }
+        .rpt-status-completed { color: #1c8a56; font-weight: 600; }
+        .rpt-status-pending { color: #c0392b; font-weight: 600; }
     </style>
 
     <div class="content-page">
@@ -33,26 +35,16 @@
                 <div class="row">
                     <div class="col-xs-12">
                         <div class="page-title-box">
-                            <h4 class="page-title">Challan Report</h4>
+                            <h4 class="page-title">Belt Production Report</h4>
                             <ol class="breadcrumb p-0 m-0">
                                 <li><a href="{{ url('admin') }}">{{Session::get('software_title')}}</a></li>
                                 <li>Reports</li>
-                                <li class="active">Challan</li>
+                                <li class="active">Belt Production</li>
                             </ol>
                             <div class="clearfix"></div>
                         </div>
                     </div>
                 </div>
-
-                @if(session()->has('message'))
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <div class="alert alert-info" style="background-color: #188ae2 !important">
-                                <strong style="color: #fff">{{session()->get('message')}}</strong>
-                            </div>
-                        </div>
-                    </div>
-                @endif
 
                 {{ Form::model(request(), ['method' => 'get']) }}
 
@@ -63,34 +55,24 @@
                             <div class="rpt-panel-body">
                                 <div class="row">
                                     <div class="col-sm-3">
-                                        <label>Challan No</label>
-                                        <input type="text" name="invoice_no" value="{{ request('invoice_no') }}" class="form-control" placeholder="Challan no">
+                                        <label>Batch No</label>
+                                        <input type="text" name="batch_no" value="{{ request('batch_no') }}" class="form-control" placeholder="Batch no">
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <label>Product</label>
+                                        <input type="text" name="product" value="{{ request('product') }}" class="form-control" placeholder="Product name">
                                     </div>
                                     <div class="col-sm-3">
                                         <label>Customer</label>
-                                        <input type="text" name="client_name" value="{{ request('client_name') }}" class="form-control" placeholder="Customer name">
+                                        <input type="text" name="customer" value="{{ request('customer') }}" class="form-control" placeholder="Customer name">
                                     </div>
                                     <div class="col-sm-3">
                                         <label>Status</label>
-                                        <input type="text" name="status" value="{{ request('status') }}" class="form-control" placeholder="Status">
-                                    </div>
-                                    <div class="col-sm-3">
-                                        <label>Amount</label>
-                                        <input type="text" name="amount" value="{{ request('amount') }}" class="form-control" placeholder="Amount">
-                                    </div>
-                                </div>
-                                <div class="row" style="margin-top:12px;">
-                                    <div class="col-sm-3">
-                                        <label>Subject</label>
-                                        <input type="text" name="subject" value="{{ request('subject') }}" class="form-control" placeholder="Subject">
-                                    </div>
-                                    <div class="col-sm-3">
-                                        <label>From Date</label>
-                                        <input type="date" name="from_date" value="{{ request('from_date') }}" class="form-control">
-                                    </div>
-                                    <div class="col-sm-3">
-                                        <label>To Date</label>
-                                        <input type="date" name="end_date" value="{{ request('end_date') }}" class="form-control">
+                                        <select name="status" class="form-control">
+                                            <option value="">All</option>
+                                            <option value="N" {{ request('status') == 'N' ? 'selected' : '' }}>Pending</option>
+                                            <option value="Y" {{ request('status') == 'Y' ? 'selected' : '' }}>Completed</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -108,8 +90,13 @@
                         <div class="card-box" style="padding:0;">
 
                             <div class="rpt-stats">
-                                Challans: <b>{{ number_format($totalRecords) }}</b>
-                                &nbsp;&nbsp;|&nbsp;&nbsp; Total Amount: <b>{{ number_format($totalAmount, 2) }}</b>
+                                Batches: <b>{{ number_format($pendingBatches + $completedBatches) }}</b>
+                                &nbsp;&nbsp;|&nbsp;&nbsp; Pending Batches: <b>{{ number_format($pendingBatches) }}</b>
+                                &nbsp;&nbsp;|&nbsp;&nbsp; Completed Batches: <b>{{ number_format($completedBatches) }}</b>
+                                &nbsp;&nbsp;|&nbsp;&nbsp; Total Planned: <b>{{ number_format($totalPlanned, 2) }}</b>
+                                &nbsp;&nbsp;|&nbsp;&nbsp; Total Produced: <b>{{ number_format($totalProduced, 2) }}</b>
+                                &nbsp;&nbsp;|&nbsp;&nbsp; Total Wastage: <b>{{ number_format($totalWastage, 2) }}</b>
+                                &nbsp;&nbsp;|&nbsp;&nbsp; Total Pending Qty: <b>{{ number_format($totalPending, 2) }}</b>
                             </div>
 
                             <div class="table-responsive">
@@ -117,11 +104,14 @@
                                     <thead>
                                     <tr>
                                         <th>#</th>
-                                        <th>Challan No</th>
-                                        <th>Challan Date</th>
+                                        <th>Batch No</th>
+                                        <th>Product</th>
                                         <th>Customer</th>
-                                        <th>Subject</th>
-                                        <th>Amount</th>
+                                        <th>Planned Qty</th>
+                                        <th>Produced Qty</th>
+                                        <th>Wastage Qty</th>
+                                        <th>Pending Qty</th>
+                                        <th>Status</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -130,19 +120,24 @@
                                             <td style="width:2%;text-align:center;">
                                                 {{ ($list->currentPage() - 1) * $list->perPage() + $loop->iteration }}
                                             </td>
+                                            <td>{{ $data->batch_no }}</td>
+                                            <td>{{ $data->product }}</td>
+                                            <td>{{ $data->customer ?? '-' }}</td>
+                                            <td style="text-align:right;">{{ number_format($data->planned_qty, 2) }}</td>
+                                            <td style="text-align:right;">{{ number_format($data->total_production ?? 0, 2) }}</td>
+                                            <td style="text-align:right;">{{ number_format($data->total_wastage_nos ?? 0, 2) }}</td>
+                                            <td style="text-align:right;">{{ number_format($data->pending_qty, 2) }}</td>
                                             <td>
-                                                @can('delivery_challan_view')
-                                                    {{ $data->challan_number }}
-                                                @endcan
+                                                @if($data->status == 'Y')
+                                                    <span class="rpt-status-completed">Completed</span>
+                                                @else
+                                                    <span class="rpt-status-pending">Pending</span>
+                                                @endif
                                             </td>
-                                            <td style="white-space:nowrap;">{{ $data->invoice_date ? date('d-m-Y', strtotime($data->invoice_date)) : '-' }}</td>
-                                            <td>{{ $data->customer_name ?? '-' }}</td>
-                                            <td>{{ $data->subject ?? '-' }}</td>
-                                            <td style="text-align:right;">{{ number_format($data->grand_total, 2) }}</td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="text-center" style="padding:30px;color:#999;">No challans found</td>
+                                            <td colspan="9" class="text-center" style="padding:30px;color:#999;">No belt production batches found</td>
                                         </tr>
                                     @endforelse
                                     </tbody>
@@ -162,7 +157,5 @@
             </div>
         </div>
     </div>
-
-    <script src="{{asset('/admin/assets/js/jquery.min.js')}}"></script>
 
 @endsection
