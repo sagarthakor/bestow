@@ -22,13 +22,13 @@
 
 
         <!-- App css (Zircos material-design variant) -->
-        <link href="/admin/assets/css/bootstrap.min.css?v={{ filemtime(public_path('admin/assets/css/bootstrap.min.css')) }}" rel="stylesheet" type="text/css" />
-        <link href="/admin/assets/css/core-material.css?v={{ filemtime(public_path('admin/assets/css/core-material.css')) }}" rel="stylesheet" type="text/css" />
-        <link href="/admin/assets/css/components-material.css?v={{ filemtime(public_path('admin/assets/css/components-material.css')) }}" rel="stylesheet" type="text/css" />
-        <link href="/admin/assets/css/icons.css?v={{ filemtime(public_path('admin/assets/css/icons.css')) }}" rel="stylesheet" type="text/css" />
-        <link href="/admin/assets/css/pages-material.css?v={{ filemtime(public_path('admin/assets/css/pages-material.css')) }}" rel="stylesheet" type="text/css" />
-        <link href="/admin/assets/css/menu-material.css?v={{ filemtime(public_path('admin/assets/css/menu-material.css')) }}" rel="stylesheet" type="text/css" />
-        <link href="/admin/assets/css/responsive-material.css?v={{ filemtime(public_path('admin/assets/css/responsive-material.css')) }}" rel="stylesheet" type="text/css" />
+        <link href="/admin/assets/css/bootstrap.min.css?v={{ (file_exists(public_path('admin/assets/css/bootstrap.min.css')) ? filemtime(public_path('admin/assets/css/bootstrap.min.css')) : time()) }}" rel="stylesheet" type="text/css" />
+        <link href="/admin/assets/css/core-material.css?v={{ (file_exists(public_path('admin/assets/css/core-material.css')) ? filemtime(public_path('admin/assets/css/core-material.css')) : time()) }}" rel="stylesheet" type="text/css" />
+        <link href="/admin/assets/css/components-material.css?v={{ (file_exists(public_path('admin/assets/css/components-material.css')) ? filemtime(public_path('admin/assets/css/components-material.css')) : time()) }}" rel="stylesheet" type="text/css" />
+        <link href="/admin/assets/css/icons.css?v={{ (file_exists(public_path('admin/assets/css/icons.css')) ? filemtime(public_path('admin/assets/css/icons.css')) : time()) }}" rel="stylesheet" type="text/css" />
+        <link href="/admin/assets/css/pages-material.css?v={{ (file_exists(public_path('admin/assets/css/pages-material.css')) ? filemtime(public_path('admin/assets/css/pages-material.css')) : time()) }}" rel="stylesheet" type="text/css" />
+        <link href="/admin/assets/css/menu-material.css?v={{ (file_exists(public_path('admin/assets/css/menu-material.css')) ? filemtime(public_path('admin/assets/css/menu-material.css')) : time()) }}" rel="stylesheet" type="text/css" />
+        <link href="/admin/assets/css/responsive-material.css?v={{ (file_exists(public_path('admin/assets/css/responsive-material.css')) ? filemtime(public_path('admin/assets/css/responsive-material.css')) : time()) }}" rel="stylesheet" type="text/css" />
         <link rel="stylesheet" href="/admin/plugins/switchery/switchery.min.css">
 
 
