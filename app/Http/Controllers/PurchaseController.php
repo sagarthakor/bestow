@@ -79,7 +79,7 @@ class PurchaseController extends Controller
             $data=$data->orwhere("gst.gst_per","LIKE",'%'.$request->gst.'%');
         }
 
-        $data=$data->paginate(25);
+        $data=$data->paginate(session('records_per_page', 30));
         // $data=$data->paginate(is_null($pagesize) ? 1 : $pagesize);
         //dd($data);
 
@@ -611,7 +611,7 @@ class PurchaseController extends Controller
             $query->whereDate('stock_book.inward_date', '<=', $to);
         }
 
-        $status = $query->orderByDesc('stock_book.id')->paginate(10);
+        $status = $query->orderByDesc('stock_book.id')->paginate(session('records_per_page', 30));
 
         return view("admin.stock_book", ['data' => $status]);
     }
@@ -654,7 +654,7 @@ class PurchaseController extends Controller
             $status=$status->where('stock_status.qty',$request->qty);
         }
          $status=$status->orderBy('product.product_name','asc');
-         $status=$status->paginate(10);
+         $status=$status->paginate(session('records_per_page', 30));
 
         return view("admin.stock_status")
             ->with(['data'=>$status]);
@@ -791,7 +791,7 @@ class PurchaseController extends Controller
 
         $inward=$inward->orderBy('inward_item.id','desc');
 
-        $result=$inward->paginate(10);
+        $result=$inward->paginate(session('records_per_page', 30));
         return view("admin/inward_list")->with(['data'=>$result]);
     }
 
@@ -1684,7 +1684,7 @@ class PurchaseController extends Controller
 
         $product = $product->orderBy('purchase.id','desc');
         //echo print_r($request->all());
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
 
         $company_name = company::select('company_name')->first();
         return view('admin.purchase/purchase_list')
@@ -1731,7 +1731,7 @@ class PurchaseController extends Controller
         $product = $product->orderBy('purchase.id','desc');
         $product = $product->whereNull('purchase.delete_status');
         //echo print_r($request->all());
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
         //dd($result)
         $receive_detail=purchase_receive::orderBy("id","desc")->get();
 

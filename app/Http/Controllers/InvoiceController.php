@@ -75,7 +75,7 @@ class InvoiceController extends Controller
         //echo print_r($request->all());
         $product = $product->where('invoice.customer', $request->id);
         $product = $product->orderBy('invoice.id', 'desc');
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
 
         $company_name = company::select('company_name')->first();
 
@@ -531,7 +531,7 @@ class InvoiceController extends Controller
         //echo print_r($request->all());
 
         $product = $product->orderBy('invoice.id', 'desc');
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
 
         $company_name = company::select('company_name')->first();
 

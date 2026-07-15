@@ -1,4 +1,4 @@
-@extends('admin.layout.table_master')
+@extends('admin.layout.table_master_material')
 
 @section('title', 'List of Material')
 
@@ -57,6 +57,30 @@
                 @endif
                 <div class="col-sm-12">
 
+                    <div class="card-box">
+                        <h4 class="m-t-0 header-title">Filter</h4>
+                        <form method="get">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Material Name</label>
+                                        <input type="text" value="{{ request('material_name') }}" name="material_name" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>HSN Code</label>
+                                        <input type="text" value="{{ request('hsn_code') }}" name="hsn_code" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="hidden-xs">&nbsp;</label>
+                                    <button class="btn btn-primary btn-block waves-effect waves-light"><i class="mdi mdi-file-find"></i> Search</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
                     <div class="card-box table-responsive">
 
                         {{Form::open(['method'=>'get'])}}
@@ -70,18 +94,6 @@
                                     <th>HSN CODE</th>
 
                                     <th></th>
-                                </tr>
-
-                                <tr>
-                                    <td></td>
-                                    <td >
-                                        <input type="text" name="material_name" class="listSearchContributor inputElement" placeholder="Material Name" value="@if(isset($_GET['material_name'])){{$_GET['material_name']}}@endif">
-                                    </td>
-                                    <td>
-                                        <input type="text" name="hsn_code" class="listSearchContributor inputElement" placeholder="HSN CODE" value="@if(isset($_GET['hsn_code'])){{$_GET['hsn_code']}}@endif">
-                                    </td>
-
-                                    <td><button>Search</button></td>
                                 </tr>
                             </thead>
                             <tbody>

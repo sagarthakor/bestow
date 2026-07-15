@@ -1,4 +1,4 @@
-@extends('admin.layout.table_master')
+@extends('admin.layout.table_master_material')
 
 @section('title', 'List of Country')
 
@@ -26,32 +26,20 @@
                                 <li class="active">
                                     Country List
                                 </li>
+                                <li style="text-align: right;margin-bottom: 5px">
+                                    <a class="btn btn-primary" href="{{route('admin.country.add')}}">Add New</a>
+                                </li>
                             </ol>
                             <div class="clearfix"></div>
                         </div>
                     </div>
                 </div>
                 <!-- end row -->
-
-
-
-
-                <div class="row">
-                    <div class="col-sm-4">
-                    </div>
-                    <div class="col-sm-4">
-                    </div>
-
-                    <div class="col-sm-4" style="text-align: right;margin-bottom: 5px">
-                        <a class="btn btn-primary" href="{{route('admin.country.add')}}">Add New</a>
-                    </div>
-
-                </div>
                 <div class="row">
                     @if(session()->has('message'))
                         <div class="col-sm-12">
-                            <div class="alert alert-info" style="background-color: #188ae2 !important">
-                                <strong style="color: #fff">{{session()->get('message')}}</strong>
+                            <div class="alert alert-info">
+                                <strong>{{session()->get('message')}}</strong>
                             </div>
                         </div>
                     @endif
@@ -60,7 +48,7 @@
                         <div class="card-box table-responsive">
                             <form method="get">
 
-                                <table class="table table-striped table-bordered">
+                                <table class="table table-striped table-bordered table-hover">
                                     <thead>
                                     <tr>
                                         <th>Sr. </th>
@@ -86,9 +74,9 @@
 
                                             <td class="actions" width="5%">
 
-                                                <a href="{{route('admin.country.edit',['id' => $list->id])}}" class="on-default edit-row"><i class="fa fa-pencil"></i></a>
+                                                <a href="{{route('admin.country.edit',['id' => $list->id])}}" class="btn btn-xs btn-primary waves-effect"><i class="fa fa-pencil"></i> Edit</a>
 
-                                                <a href="{{route('admin.country.delete',['id' => $list->id])}}" class="on-default remove-row" onclick="return confirm('Are you sure you want to delete this item?');"><i class="fa fa-trash-o"></i></a>
+                                                <a href="{{route('admin.country.delete',['id' => $list->id])}}" class="btn btn-xs btn-danger waves-effect" onclick="return confirm('Are you sure you want to delete this item?');"><i class="fa fa-trash-o"></i> Delete</a>
 
                                             </td>
                                         </tr>
@@ -111,8 +99,5 @@
 
         </div> <!-- content -->
 
-        @extends('admin.footer')
-
-    </div>
-    @extends('admin.table_footer_script')
+@endsection
 

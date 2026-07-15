@@ -1,4 +1,4 @@
-@extends('admin.layout.table_master')
+@extends('admin.layout.table_master_material')
 
 @section('title', 'List | Subcategory')
 
@@ -48,82 +48,56 @@
 
                         <div class="row">
                             <div class="col-sm-12">
-                                <div class="card-box">
+                                <div class="card-box table-responsive">
 
-                                    <div class="table-responsive">
-                                        <table class="table table-hover table-bordered align-middle mb-0">
-                                            <thead class="thead-light">
+                                    <table class="table table-striped table-bordered table-hover dt-responsive nowrap" cellspacing="0" width="100%">
+                                        <thead>
+                                        <tr>
+                                            <th>Sr.</th>
+                                            <th>Category</th>
+                                            <th>Subcategory</th>
+                                            <th>Image</th>
+                                            <th></th>
+                                        </tr>
+                                        </thead>
+
+                                        <tbody>
+                                        @forelse($subcategory as $list)
                                             <tr>
-                                                <th style="width:5%">#</th>
-                                                <th>Category</th>
-                                                <th>Subcategory</th>
-                                                <th class="text-center" style="width:12%">Image</th>
-                                                <th class="text-center" style="width:15%">Actions</th>
+                                                <td style="width: 5%">
+                                                    {{ ($subcategory->currentPage() - 1) * $subcategory->perPage() + $loop->iteration }}
+                                                </td>
+
+                                                <td style="width: 25%">{{ $list->category_name }}</td>
+
+                                                <td style="width: 35%">{{ $list->subcategory_name }}</td>
+
+                                                <td style="text-align: center;width: 10%">
+                                                    @if(!empty($list->subcategory_image))
+                                                        <a target="_blank" href="{{ asset('subcategory/'.$list->subcategory_image) }}">
+                                                            <img src="{{ asset('subcategory/'.$list->subcategory_image) }}" height="65px" width="65px">
+                                                        </a>
+                                                    @endif
+                                                </td>
+
+                                                <td class="actions" style="width: 10%">
+                                                    @can('product_update')
+                                                        <a href="{{ route('admin.subcategory.edit', $list->id) }}" class="btn btn-xs btn-primary waves-effect"><i class="fa fa-pencil"></i> Edit</a>
+                                                    @endcan
+
+                                                    @can('product_delete')
+                                                        <a href="{{ route('admin.subcategory.delete', $list->id) }}" class="btn btn-xs btn-danger waves-effect" onclick="return confirm('Are you sure you want to delete this item?');"><i class="fa fa-trash-o"></i> Delete</a>
+                                                    @endcan
+                                                </td>
                                             </tr>
-                                            </thead>
-
-                                            <tbody>
-                                            @forelse($subcategory as $list)
-                                                <tr>
-                                                    <td class="fw-semibold">
-                                                        {{ ($subcategory->currentPage() - 1) * $subcategory->perPage() + $loop->iteration }}
-                                                    </td>
-
-                                                    <td>
-                            <span class="text-dark fw-semibold">
-                                {{ $list->category_name }}
-                            </span>
-                                                    </td>
-
-                                                    <td>
-                                                        {{ $list->subcategory_name }}
-                                                    </td>
-
-                                                    <td class="text-center">
-                                                        @if(!empty($list->subcategory_image))
-                                                            <a target="_blank" href="{{ asset('subcategory/'.$list->subcategory_image) }}">
-                                                                <img src="{{ asset('subcategory/'.$list->subcategory_image) }}"
-                                                                     style="height:60px;width:60px;object-fit:cover;"
-                                                                     class="rounded shadow-sm border">
-                                                            </a>
-                                                        @else
-                                                            <span class="badge badge-secondary">No Image</span>
-                                                        @endif
-                                                    </td>
-
-                                                    <td class="text-center">
-
-                                                        @can('product_update')
-                                                            <a href="{{ route('admin.subcategory.edit', $list->id) }}"
-                                                               class="btn btn-sm btn-outline-primary">
-                                                                <i class="fa fa-pencil"></i>
-                                                            </a>
-                                                        @endcan
-
-                                                        @can('product_delete')
-                                                            <a href="{{ route('admin.subcategory.delete', $list->id) }}"
-                                                               class="btn btn-sm btn-outline-danger"
-                                                               onclick="return confirm('Are you sure you want to delete this item?');">
-                                                                <i class="fa fa-trash"></i>
-                                                            </a>
-                                                        @endcan
-
-                                                    </td>
-                                                </tr>
-                                            @empty
-                                                <tr>
-                                                    <td colspan="5" class="text-center text-muted py-4">
-                                                        No subcategories found.
-                                                    </td>
-                                                </tr>
-                                            @endforelse
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                    <div class="mt-3">
-                                        {{ $subcategory->links() }}
-                                    </div>
+                                        @empty
+                                            <tr>
+                                                <td colspan="5" class="text-center">No subcategories found.</td>
+                                            </tr>
+                                        @endforelse
+                                        </tbody>
+                                    </table>
+                                    {{ $subcategory->links() }}
 
                                 </div>
 

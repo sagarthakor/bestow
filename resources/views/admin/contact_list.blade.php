@@ -1,4 +1,4 @@
-@extends('admin.layout.table_master')
+@extends('admin.layout.table_master_material')
 
 @section('title', 'List of Category')
 
@@ -8,30 +8,6 @@
 @endsection
 
 @section('content')
-  <style type="text/css">
-        .ajax-load{
-            background: #e1e1e1;
-            padding: 10px 0px;
-            width: 100%;
-        }
-
-        .listSearchContributor {
-            min-height: 28px;
-            width: 100%;
-            min-width: 100px;
-        }
-        .inputElement {
-            height: 30px;
-            width: 100%;
-            border-radius: 1px;
-            box-shadow: none;
-            border: 1px solid #cccccc;
-        }
-        input[type="text"].inputElement, input[type="password"].inputElement {
-            padding: 3px 8px;
-        }
-    </style>
-
     <div class="content-page">
       <!-- Start content -->
       <div class="content">
@@ -52,40 +28,77 @@
                   <li class="active">
                     Contact List
                   </li>
+                  @can('customer_contact_create')
+                      <li style="text-align: right;margin-bottom: 5px">
+                          <a class="btn btn-primary" href="{{route('admin.contact.add')}}">Add New</a>
+                      </li>
+                  @endcan
                 </ol>
                 <div class="clearfix"></div>
               </div>
             </div>
           </div>
           <!-- end row -->
-
-
-
-
-          <div class="row">
-           <div class="col-sm-4">
-           </div>
-           <div class="col-sm-4">
-           </div>
-
-              @can('customer_contact_create')
-                  <div class="col-sm-4" style="text-align: right;margin-bottom: 5px">
-                      <a class="btn btn-primary" href="{{route('admin.contact.add')}}">Add New</a>
-                  </div>
-              @endcan
-        </div>
         <div class="row">
           @if(session()->has('message'))
           <div class="col-sm-12">
-            <div class="alert alert-info" style="background-color: #188ae2 !important">
-              <strong style="color: #fff">{{session()->get('message')}}</strong>
+            <div class="alert alert-info">
+              <strong>{{session()->get('message')}}</strong>
             </div>
           </div>
           @endif
           <div class="col-sm-12">
-              <form method="get">
-                <div class="card-box table-responsive">
-              <table class="table table-striped table-bordered">
+              <div class="card-box">
+                  <h4 class="m-t-0 header-title">Filter</h4>
+                  <form method="get">
+                  <div class="row">
+                      <div class="col-md-2">
+                          <div class="form-group">
+                              <label>Contact Name</label>
+                              <input type="text" placeholder="Contact Name" class="form-control" value="<?php if(isset($_GET['contact_name'])){echo $_GET['contact_name'];} ?>" name="contact_name">
+                          </div>
+                      </div>
+                      <div class="col-md-2">
+                          <div class="form-group">
+                              <label>Primary Phone</label>
+                              <input type="text" placeholder="Primary Phone" class="form-control" name="primary_phone" value="<?php if(isset($_GET['primary_phone'])){echo $_GET['primary_phone'];} ?>">
+                          </div>
+                      </div>
+                      <div class="col-md-2">
+                          <div class="form-group">
+                              <label>Primary Email</label>
+                              <input type="text" placeholder="Primary Email" class="form-control" name="primary_email" value="<?php if(isset($_GET['primary_email'])){echo $_GET['primary_email'];} ?>">
+                          </div>
+                      </div>
+                      <div class="col-md-2">
+                          <div class="form-group">
+                              <label>Customer Name</label>
+                              <input type="text" placeholder="Customer Name" class="form-control" name="customer_name" value="<?php if(isset($_GET['customer_name'])){echo $_GET['customer_name'];} ?>">
+                          </div>
+                      </div>
+                      <div class="col-md-2">
+                          <div class="form-group">
+                              <label>Department</label>
+                              <input type="text" placeholder="Department" class="form-control" name="department" value="<?php if(isset($_GET['department'])){echo $_GET['department'];} ?>">
+                          </div>
+                      </div>
+                      <div class="col-md-2">
+                          <div class="form-group">
+                              <label>Designation</label>
+                              <input type="text" placeholder="Designation" class="form-control" name="designation" value="<?php if(isset($_GET['designation'])){echo $_GET['designation'];} ?>">
+                          </div>
+                      </div>
+                  </div>
+                  <div class="row">
+                      <div class="col-md-2">
+                          <button class="btn btn-primary waves-effect waves-light"><i class="fa fa-search"></i> Search</button>
+                      </div>
+                  </div>
+                  </form>
+              </div>
+
+              <div class="card-box table-responsive">
+              <table class="table table-striped table-bordered table-hover">
                 <thead>
                   <tr>
                     <th >Sr.</th>
@@ -95,27 +108,7 @@
                     <th>Customer Name</th>
                     <th>Department Name</th>
                     <th>Designation Name</th>
-
-                  </tr>
-
-
-
-                  <tr>
-
-                      <td><button>Search</button> </td>
-                      <td>
-                          <form method="get">
-                              <input type="text" placeholder="Contact Name" class="listSearchContributor inputElement" value="<?php if(isset($_GET['contact_name'])){echo $_GET['contact_name'];} ?>" name="contact_name">
-                      </td>
-
-                      <td><input type="text" placeholder="Primary Phone" class="listSearchContributor inputElement" name="primary_phone" value="<?php if(isset($_GET['primary_phone'])){echo $_GET['primary_phone'];} ?>"></td>
-                      <td><input type="text" placeholder="Primary Email" class="listSearchContributor inputElement" name="primary_email" value="<?php if(isset($_GET['primary_email'])){echo $_GET['primary_email'];} ?>"></td>
-
-
-                      <td><input type="text" placeholder="Customer Name" class="listSearchContributor inputElement" name="customer_name" value="<?php if(isset($_GET['customer_name'])){echo $_GET['customer_name'];} ?>"></td>
-                      <td><input type="text" placeholder="Department" class="listSearchContributor inputElement" name="department" value="<?php if(isset($_GET['department'])){echo $_GET['department'];} ?>"></td>
-                      <td><input type="text" placeholder="Designation" class="listSearchContributor inputElement" name="designation" value="<?php if(isset($_GET['designation'])){echo $_GET['designation'];} ?>">
-                      </td>
+                    <th></th>
                   </tr>
                   </thead>
 
@@ -133,7 +126,11 @@
                         <td  style="vertical-align: top;">{{$data->department}}</td>
                         <td  style="vertical-align: top;">{{$data->designation}}</td>
 
-                        <!-- <td  style="vertical-align: top;"></td> -->
+                        <td class="actions" style="vertical-align: top;white-space: nowrap;">
+                            @can('customer_contact_update')
+                                <a href="{{route('admin.contact.edit',['id' => $data->id])}}" class="btn btn-xs btn-primary waves-effect"><i class="fa fa-pencil"></i> Edit</a>
+                            @endcan
+                        </td>
 
                       </tr>
                       @endforeach
@@ -141,7 +138,6 @@
                   </table>
                   {{$cdata->appends(request()->input())->links()}}
                 </div>
-              </form>
               </div>
             </div>
 

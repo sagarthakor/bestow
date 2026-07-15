@@ -55,7 +55,7 @@ class InventoryController extends Controller
 
         }
         $product=$product->orderBy("id","desc");
-        $product=$product->paginate(10);
+        $product=$product->paginate(session('records_per_page', 30));
 
 
         // dd($product);

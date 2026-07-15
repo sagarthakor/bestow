@@ -13,7 +13,7 @@ class BuckleFormulaController extends Controller
     {
         $data = BuckleFormulaMst::with('product_item:id,product_name')
             ->search($request->search, ['product_item.product_name', 'size'])
-            ->paginate(20);
+            ->paginate(session('records_per_page', 30));
 
         return view('admin.buckle_formula.list', compact('data'));
     }

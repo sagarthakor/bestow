@@ -81,7 +81,7 @@ class BeltProductionController extends Controller
     {
         $data = BeltProduction::with(['belt_item:id,product_name', 'customer_item:id,customer_name'])
             ->orderBy('id', 'desc')
-            ->paginate(20);
+            ->paginate(session('records_per_page', 30));
 
         return view('admin.belt_production.list', compact('data'));
     }

@@ -1,7 +1,6 @@
-@extends('admin.layout.master')
+@extends('admin.layout.master_material')
 
 @section('title', 'Edit Country')
-  <script src="https://cdn.ckeditor.com/ckeditor5/20.0.0/classic/ckeditor.js"></script>
 @section('sidebar')
     @parent
 
@@ -20,7 +19,7 @@
                                     <h4 class="page-title">Country Edit </h4>
                                     <ol class="breadcrumb p-0 m-0">
                                         <li>
-                                            <a href="#">Bestow</a>
+                                            <a href="#">{{Session::get('software_title')}}</a>
                                         </li>
                                         <li>
                                             <a href="{{route('admin.country.list')}}">Country List </a>

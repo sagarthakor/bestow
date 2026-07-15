@@ -1,4 +1,4 @@
-@extends('admin.layout.master')
+@extends('admin.layout.master_material')
 
 @section('title','Batch - '.$production->batch_no .' Pressing Process')
 

@@ -373,7 +373,7 @@ class ChallanController extends Controller
         $challan=$challan->select('delivery_challan.*','customers.customer_name');
         $challan=$challan->leftJoin('customers','customers.id','delivery_challan.customer');
         $challan=$challan->orderBy('id','desc');
-        $challan=$challan->paginate(10);
+        $challan=$challan->paginate(session('records_per_page', 30));
 
         return view("admin/challan/challan_list",compact('challan'));
     }

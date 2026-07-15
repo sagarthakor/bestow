@@ -1,4 +1,4 @@
-@extends('admin.layout.table_master')
+@extends('admin.layout.table_master_material')
 
 @section('title', 'List of Users')
 
@@ -51,12 +51,12 @@
 
                             @if(session()->has('message'))
                                 <div class="col-sm-12">
-                                    <div class="alert alert-info" style="background-color: #188ae2 !important">
-                                        <strong style="color: #fff">{{session()->get('message')}}</strong>
+                                    <div class="alert alert-info">
+                                        <strong>{{session()->get('message')}}</strong>
                                     </div>
                                 </div>
                             @endif
-                            <table class="table table-striped table-bordered dt-responsive nowrap" cellspacing="0"
+                            <table class="table table-striped table-bordered table-hover dt-responsive nowrap" cellspacing="0"
                                    width="100%">
                                 <thead>
                                 <tr>
@@ -78,20 +78,9 @@
                                         <td style="width: 5%"> {{($data->currentPage() - 1) * $data->perPage() + $loop->iteration}}</td>
                                         <td style="width: 60%">{{$list->name}}</td>
                                         <td >{{$list->email}}</td>
-                                        <td class="actions" style="width: 10%">
-
-                                            <div class="dropdown">
-                                                <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Action
-                                                    <span class="caret"></span></button>
-                                                <ul class="dropdown-menu">
-                                                    <li><a href="{{route('admin.user.edit',[$list->id])}}" class="on-default edit-row">Edit</a>
-                                                    </li>
-                                                    <li><a href="{{route('admin.user.destroy',[$list->id])}}" class="on-default remove-row" onclick="return confirm('Are you sure you want to delete this item?');">Delete</a></li>
-                                                </ul>
-                                            </div>
-
-
-
+                                        <td class="actions" style="width: 10%;white-space: nowrap;">
+                                            <a href="{{route('admin.user.edit',[$list->id])}}" class="btn btn-xs btn-primary waves-effect"><i class="fa fa-pencil"></i> Edit</a>
+                                            <a href="{{route('admin.user.destroy',[$list->id])}}" class="btn btn-xs btn-danger waves-effect" onclick="return confirm('Are you sure you want to delete this item?');"><i class="fa fa-trash-o"></i> Delete</a>
 
                                         </td>
                                     </tr>

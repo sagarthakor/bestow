@@ -1,4 +1,4 @@
-@extends('admin.layout.master')
+@extends('admin.layout.master_material')
 
 @section('title', 'Add Role')
 
@@ -27,7 +27,7 @@
                                     <a href="{{route('admin.roles.list')}}">Role List </a>
                                 </li>
                                 <li>
-                                    Add User
+                                    Add Role
                                 </li>
                             </ol>
                             <div class="clearfix"></div>

@@ -110,7 +110,7 @@ class FormulaController extends Controller
     {
 
         $data=formula_mst::with('product_item:id,product_name')
-            ->search($request->search,['product_item.product_name', 'nos', 'size'])->paginate(20);
+            ->search($request->search,['product_item.product_name', 'nos', 'size'])->paginate(session('records_per_page', 30));
 
         return view("admin.formula.list",compact('data'));
     }

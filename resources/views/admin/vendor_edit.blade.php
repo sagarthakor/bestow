@@ -1,4 +1,4 @@
-@extends('admin.layout.master')
+@extends('admin.layout.master_material')
 
 @section('title', 'Edit Vendor')
 
@@ -18,18 +18,17 @@
                     <div class="row">
                      <div class="col-xs-12">
                         <div class="page-title-box">
-                            <h4 class="page-title">Add New Vendor</h4>
+                            <h4 class="page-title">Edit Vendor</h4>
                             <ol class="breadcrumb p-0 m-0">
                                 <li>
                                     <a href="#">{{Session::get('software_title')}}</a>
                                 </li>
                                 <li>
-                                    Vendor
-                                </li>
-                                <li>
                                     <a href="{{url('client/vendor/list')}}">Vendor List </a>
                                 </li>
-
+                                <li class="active">
+                                    Edit Vendor
+                                </li>
                             </ol>
                             <div class="clearfix"></div>
                         </div>
@@ -57,7 +56,7 @@
                                 @endif -->
                                 <div class="col-xs-12">
 
-                                    <div class="row justify-content-md-center">
+                                    <div class="row">
                                         {{Form::model($data,['method'=>'post','route'=>'admin.vendor.update'])}}
                                         {{Form::hidden('id',null)}}
                                         <div class="col-md-12">
@@ -163,14 +162,13 @@
 
                                                 <div class="row">
 
-                                                    <div class="col-lg-6 align-self-center">
-                                                        <div class="form-check form-check-inline" style="float: left;padding: 7px;margin: 5px;">
-                                                            {{Form::radio("tax_preference","true",['class'=>'form-check-input ember-view','value'=>'true'])}}
-                                                            <label class="form-check-label" for="ab0f36521">Taxable</label> </div>
-                                                        <div class="form-check form-check-inline" style="float: left;padding: 7px;margin: 5px;">
-                                                            {{Form::radio("tax_preference","false",['class'=>'form-check-input ember-view','value'=>'false'])}}
-                                                            <label class="form-check-label" for="af103842b">Tax Exempt</label>
-                                                        </div>
+                                                    <div class="col-lg-6">
+                                                        <label class="radio-inline">
+                                                            {{Form::radio("tax_preference","true")}} Taxable
+                                                        </label>
+                                                        <label class="radio-inline">
+                                                            {{Form::radio("tax_preference","false")}} Tax Exempt
+                                                        </label>
                                                     </div>
                                                     <div class="col-md-6">
                                                         <label>Payement Terms</label>

@@ -839,7 +839,7 @@ class UserController extends Controller
     {
         $data = User::orderBy('id','DESC')
 
-            ->paginate(15);
+            ->paginate(session('records_per_page', 30));
         return view('admin.user.index',compact('data'))
             ->with('i', ($request->input('page', 1) - 1) * 5);
     }

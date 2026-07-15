@@ -53,7 +53,7 @@ class VariationController extends Controller
         $list = variation::select("variation.*", "attribute.attribute_name")
             ->leftJoin("attribute", "attribute.id", "variation.attribute")
             ->orderBy("variation.id", "desc")
-            ->paginate(10);
+            ->paginate(session('records_per_page', 30));
 
         return view("admin/variation/index", compact("list"));
     }

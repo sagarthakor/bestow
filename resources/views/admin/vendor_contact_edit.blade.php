@@ -1,4 +1,4 @@
-@extends('admin.layout.master')
+@extends('admin.layout.master_material')
 
 @section('title', 'Edit Vendor Contact')
 
@@ -56,7 +56,7 @@
                                 @endif -->
                                 <div class="col-xs-12">
 
-                                    <div class="row justify-content-md-center">
+                                    <div class="row">
                                         {{Form::model($data,['method'=>'post','route'=>'admin.vendor.contact.update','files'=>'true'])}}
                                         {{Form::hidden('id',null)}}
                                         <div class="col-md-12">

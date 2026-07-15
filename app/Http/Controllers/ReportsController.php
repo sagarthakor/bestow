@@ -136,7 +136,7 @@ class ReportsController extends Controller
         $totalRecords = $summary->count();
         $totalAmount = $summary->sum('grand_total');
 
-        $result = $product->paginate(10)->appends($request->all());
+        $result = $product->paginate(session('records_per_page', 30))->appends($request->all());
 
         return view('admin.reports.quotation')
                 ->with(['list'=>$result,'stage'=>$stage,'totalRecords'=>$totalRecords,'totalAmount'=>$totalAmount]);
@@ -201,7 +201,7 @@ class ReportsController extends Controller
         $totalRecords = $summary->count();
         $totalAmount = $summary->sum('grand_total');
 
-        $result = $product->paginate(30)->appends($request->all());
+        $result = $product->paginate(session('records_per_page', 30))->appends($request->all());
 
         $company_name=company::select('company_name')->first();
 
@@ -265,7 +265,7 @@ class ReportsController extends Controller
         $totalRecords = $summary->count();
         $totalAmount = $summary->sum('grand_total');
 
-        $result = $product->paginate(30)->appends($request->all());
+        $result = $product->paginate(session('records_per_page', 30))->appends($request->all());
 
         $company_name = company::select('company_name')->first();
 
@@ -336,7 +336,7 @@ class ReportsController extends Controller
         $totalRecords = $summary->count();
         $totalAmount = $summary->sum('grand_total');
 
-        $result = $product->paginate(10)->appends($request->all());
+        $result = $product->paginate(session('records_per_page', 30))->appends($request->all());
 
         $company_name = company::select('company_name')->first();
 
@@ -476,7 +476,7 @@ class ReportsController extends Controller
             '))
             ->first();
 
-        $list = $query->paginate(20);
+        $list = $query->paginate(session('records_per_page', 30));
 
         return view('admin.reports.sales_out_of_stock', compact('list', 'categories', 'subcategories', 'summary'));
     }
@@ -672,7 +672,7 @@ class ReportsController extends Controller
         $totalProducts = $summary->count();
         $totalStockQty = $summary->sum('stock_qty');
 
-        $list = $query->paginate(20)->appends($request->all());
+        $list = $query->paginate(session('records_per_page', 30))->appends($request->all());
 
         return view('admin.reports.stock_available', compact('list', 'subcategories', 'totalProducts', 'totalStockQty'));
     }
@@ -780,7 +780,7 @@ class ReportsController extends Controller
             return Excel::download(new ProductionPendingExport($query->get(), $cfg['label']), 'PendingReport_' . $stage . '.xlsx');
         }
 
-        $list = $query->paginate(20)->appends($request->all());
+        $list = $query->paginate(session('records_per_page', 30))->appends($request->all());
 
         return view('admin.reports.pending_' . $stage, compact('list'));
     }
@@ -855,7 +855,7 @@ class ReportsController extends Controller
         $pendingBatches = $summary->where('status', 'N')->count();
         $completedBatches = $summary->where('status', 'Y')->count();
 
-        $list = $query->paginate(20)->appends($request->all());
+        $list = $query->paginate(session('records_per_page', 30))->appends($request->all());
 
         return view('admin.reports.belt_production', compact(
             'list', 'totalPlanned', 'totalProduced', 'totalWastage', 'totalPending',

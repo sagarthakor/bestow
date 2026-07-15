@@ -1,4 +1,4 @@
-@extends('admin.layout.table_master')
+@extends('admin.layout.table_master_material')
 
 @section('title', 'List of Company')
 
@@ -33,21 +33,11 @@
                 </div>
                 <!-- end row -->
 
-
-
-
-                <div class="row">
-                    <div class="col-sm-4">
-                    </div>
-                    <div class="col-sm-4">
-                    </div>
-
-                </div>
                 <div class="row">
                     @if(session()->has('message'))
                         <div class="col-sm-12">
-                            <div class="alert alert-info" style="background-color: #188ae2 !important">
-                                <strong style="color: #fff">{{session()->get('message')}}</strong>
+                            <div class="alert alert-info">
+                                <strong>{{session()->get('message')}}</strong>
                             </div>
                         </div>
                     @endif
@@ -55,7 +45,7 @@
 
                         <div class="card-box table-responsive">
 
-                            <table class="table table-striped table-bordered">
+                            <table class="table table-striped table-bordered table-hover">
                                 <thead>
                                 <tr>
                                     <th >Sr.</th>
@@ -85,7 +75,7 @@
                                         <td  style="vertical-align: top;width: 5%">
 
 
-                                            <a class="table-btn"  href="{{route('admin.company.edit',$data->id)}}"title="edit"><i class="fa fa-pencil" style="font-size: 20px;"></i></a>
+                                            <a class="btn btn-xs btn-primary waves-effect" href="{{route('admin.company.edit',$data->id)}}" title="edit"><i class="fa fa-pencil"></i> Edit</a>
 
                                         </td>
                                     </tr>

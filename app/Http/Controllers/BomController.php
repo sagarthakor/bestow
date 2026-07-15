@@ -355,7 +355,7 @@ class BomController extends Controller
     	}
     	$bom=$bom->where('status','bom');
     	$bom=$bom->orderBy('id','desc');
-    	$bom=$bom->paginate(10);
+    	$bom=$bom->paginate(session('records_per_page', 30));
 
     	return view("admin/bom/bom_list",compact('bom'));
     }

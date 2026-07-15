@@ -1,4 +1,4 @@
-@extends('admin.layout.table_master')
+@extends('admin.layout.table_master_material')
 
 @section('title', 'List | Stock')
 
@@ -48,6 +48,36 @@
 
                     <div class="col-sm-12">
 
+                        <div class="card-box">
+                            <h4 class="m-t-0 header-title">Filter</h4>
+                            <form method="get">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Product Name</label>
+                                            <input type="text" value="{{ request('product_name') }}" name="product_name" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Qty</label>
+                                            <input type="text" value="{{ request('qty') }}" name="qty" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Date</label>
+                                            <input type="date" value="{{ request('created_time') }}" name="created_time" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="hidden-xs">&nbsp;</label>
+                                        <button class="btn btn-primary btn-block waves-effect waves-light"><i class="mdi mdi-file-find"></i> Search</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
                         <div class="card-box table-responsive">
                             <form method="get">
                                 <table class="table table-striped table-bordered">
@@ -58,19 +88,6 @@
                                         <th>Qty</th>
                                         <th>Date</th>
 
-                                    </tr>
-
-                                    <tr>
-                                        <td><button>Search</button></td>
-                                        <td>
-                                            <input type="text" class="listSearchContributor inputElement" name="product_name" value="@if(isset($_GET['product_name'])){{$_GET['product_name']}}@endif">
-                                        </td>
-                                        <td>
-                                            <input type="text" class="listSearchContributor inputElement" name="qty" value="@if(isset($_GET['qty'])){{$_GET['qty']}}@endif">
-                                        </td>
-                                        <td>
-                                            <input type="date" class="listSearchContributor inputElement" name="created_time" value="@if(isset($_GET['created_time'])){{$_GET['created_time']}}@endif">
-                                        </td>
                                     </tr>
                                     </thead>
                                     <tbody>

@@ -1,22 +1,3 @@
-<style>
-    .topbar .topbar-left {
-        background: #496ebf !important;
-        float: left;
-        text-align: center;
-        height: 60px;
-        position: relative;
-        width: 250px;
-        z-index: 1;
-    }
-    .navbar-default {
-        background-color: #496ebf !important;
-        border-radius: 0;
-        border: none;
-        margin-bottom: 0;
-        padding: 0 20px;
-        box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
-    }
-</style>
 <!-- Loader -->
 <div id="preloader">
     <div id="status">
@@ -213,7 +194,7 @@
                 <ul>
                     <li class="menu-title">Navigation</li>
 
-                    <li class="has_sub">
+                    <li>
                         <a href="{{ route('admin.dashboard') }}" class="waves-effect"><i class="mdi mdi-view-dashboard">
                             </i><span class="badge badge-success pull-right"></span> <span> Dashboard </span>
                         </a>
@@ -502,7 +483,7 @@
                         </li>
                     @endcan
                     @can('company_view')
-                        <li class="has_sub">
+                        <li>
                             <a href="{{ route('admin.company.list') }}" class="waves-effect">
                                 <i class="mdi mdi-hospital-building"></i>
                                 <span>Company Details </span></a></li>

@@ -54,7 +54,7 @@
                                 @endif -->
                                 <div class="col-xs-12">
 
-                                    <div class="row justify-content-md-center">
+                                    <div class="row">
                                         {{Form::open(['method'=>'post','route'=>'post.vendor_contact_save','files'=>'true'])}}
                                         <div class="col-md-12">
                                             <div class="demo-box">

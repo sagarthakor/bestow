@@ -12,13 +12,6 @@ use App\variation;
 use Illuminate\Support\Facades\Route;
 
 
-Route::get('/', function () {
-    return "✅ Admin Panel Loaded Successfully!";
-})->name('admin.home');
-
-Route::get('/dashboard', function () {
-    return "✅ Admin Dashboard Page!";
-})->name('admin.dashboard');
 
 /*
 |--------------------------------------------------------------------------
@@ -497,6 +490,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('quotation/save', 'AdminController@quot_save')->name('admin.quotation.save');
     Route::get('quotation/edit/{id}', 'AdminController@quotation_edit')->name('admin.quotation.edit');
     Route::post('quotation/update', 'AdminController@quot_update')->name('admin.quotation.update');
+    // post.quot_update: the same handler under the name expected by the leftover
+    // Form::model(...) wrapper in quotation_preview / invoice_view / deliverychallan_view.
+    // Those forms have no real submit button (their "Save" buttons trigger separate
+    // JS/AJAX calls) but the route name still needs to resolve for the page to render.
+    Route::post('quotation/update-legacy', 'AdminController@quot_update')->name('post.quot_update');
     Route::get('quotation/delete/{id}', 'AdminController@quotation_delete')->name('admin.quotation.delete');
 
     Route::get('quotation/duplicate/{id}', 'AdminController@quotation_duplicate')->name('admin.quotation.duplicate');

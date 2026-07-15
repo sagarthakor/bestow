@@ -97,7 +97,7 @@ class DeliveryChallanController extends Controller
         $product = $product->where('delivery_challan.customer', $request->id);
         $product = $product->whereNull('delivery_challan.delete_status');
         $product=$product->orderBy('delivery_challan.id','desc');
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
 
         $company_name = company::select('company_name')->first();
 
@@ -1438,7 +1438,7 @@ class DeliveryChallanController extends Controller
         //$product = $product->where('delivery_challan.finacial_year', Session::get('finacial_year_id'));
         $product=$product->orderBy('delivery_challan.id','desc');
         $product = $product->whereNull('delivery_challan.delete_status');
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
 
         $company_name = company::select('company_name')->first();
 
@@ -1499,7 +1499,7 @@ class DeliveryChallanController extends Controller
         $product = $product->where('delivery_challan_without.finacial_year', Session::get('finacial_year_id'));
         $product=$product->orderBy('delivery_challan_without.id','desc');
         $product = $product->whereNull('delivery_challan.delete_status');
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
 
         $company_name = company::select('company_name')->first();
 

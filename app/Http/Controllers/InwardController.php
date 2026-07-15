@@ -293,7 +293,7 @@ class InwardController extends Controller
         }
 
         $status = $status->orderBy('stock_status.created_time', 'desc');
-        $status = $status->paginate(10);
+        $status = $status->paginate(session('records_per_page', 30));
 
         return view("admin.stock.stock_status")
             ->with(['data' => $status]);

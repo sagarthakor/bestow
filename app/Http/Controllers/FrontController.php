@@ -161,7 +161,7 @@ class FrontController extends Controller
         if (isset($request->subcategory)) {
             $product = $product->where("subcategory.subcategory_name", $request->subcategory);
         }
-        $product = $product->paginate(30);
+        $product = $product->paginate(session('records_per_page', 30));
 
         //dd($product);
         $subcategory = subcategory::orderBy("subcategory_name", "asc")->get();
@@ -1076,7 +1076,7 @@ class FrontController extends Controller
         $variation = variation::get();
 
         $product = item_group::where("subcategory", $request->subid)
-            ->paginate(30);
+            ->paginate(session('records_per_page', 30));
 
         return view("front.subcategory_product", compact('subcate', 'categories', 'subcategories', 'product_attribute', 'variation', 'product'));
     }

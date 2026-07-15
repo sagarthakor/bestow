@@ -1,4 +1,4 @@
-@extends('admin.layout.table_master')
+@extends('admin.layout.table_master_material')
 
 @section('title', 'List of Vendor Contact')
 
@@ -27,7 +27,10 @@
                                         Vendor
                                     </li>
                                     <li class="active">
-                                        Vendro Contact List
+                                        Vendor Contact List
+                                    </li>
+                                    <li style="text-align: right;margin-bottom: 5px">
+                                        <a class="btn btn-primary" href="{{url('client/vendor/contact/add')}}">Add New</a>
                                     </li>
                                 </ol>
                                 <div class="clearfix"></div>
@@ -35,37 +38,66 @@
                         </div>
                     </div>
                     <!-- end row -->
-
-
-
-
-                    <div class="row">
-                       <div class="col-sm-4">
-                       </div>
-                       <div class="col-sm-4">
-                       </div>
-                       <div class="col-sm-4" style="text-align: right;margin-bottom: 5px">
-                        <a class="btn btn-primary" href="{{url('client/vendor/contact/add')}}">Add New</a>
-                    </div>
-
-
-
-
-                        </div>
                 <div class="row">
                     @if(session()->has('message'))
                     <div class="col-sm-12">
-                        <div class="alert alert-info" style="background-color: #188ae2 !important">
-                            <strong style="color: #fff">{{session()->get('message')}}</strong>
+                        <div class="alert alert-info">
+                            <strong>{{session()->get('message')}}</strong>
                         </div>
                     </div>
                     @endif
                     <div class="col-sm-12">
 
-                        <div class="card-box table-responsive">
+                        <div class="card-box">
+                            <h4 class="m-t-0 header-title">Filter</h4>
+                            {{Form::open(['method'=>'get'])}}
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Contact Name</label>
+                                        <input type="text" class="form-control" value="<?php if(isset($_GET['contact_name'])){echo $_GET['contact_name'];} ?>" name="contact_name">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Primary Phone</label>
+                                        <input type="text" class="form-control" value="<?php if(isset($_GET['primary_phone'])){echo $_GET['primary_phone'];} ?>" name="primary_phone">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Primary Email</label>
+                                        <input type="text" class="form-control" value="<?php if(isset($_GET['primary_email'])){echo $_GET['primary_email'];} ?>" name="primary_email">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Vendor Name</label>
+                                        <input type="text" class="form-control" name="customer_name" value="<?php if(isset($_GET['customer_name'])){echo $_GET['customer_name'];} ?>">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Department Name</label>
+                                        <input type="text" class="form-control" name="department" value="<?php if(isset($_GET['department'])){echo $_GET['department'];} ?>">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Designation Name</label>
+                                        <input type="text" class="form-control" name="designation" value="<?php if(isset($_GET['designation'])){echo $_GET['designation'];} ?>">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <button class="btn btn-primary waves-effect waves-light"><i class="fa fa-search"></i> Search</button>
+                                </div>
+                            </div>
+                        </div>
 
-                          {{Form::open(['method'=>'get'])}}
-                            <table class="table table-striped table-bordered">
+                        <div class="card-box table-responsive">
+                            <table class="table table-striped table-bordered table-hover">
                                 <thead>
                                     <tr>
                                       <th >Sr.</th>
@@ -75,18 +107,8 @@
                                       <th>Vendor Name</th>
                                       <th>Department Name</th>
                                       <th>Designation Name</th>
-
+                                      <th></th>
                                   </tr>
-                                    <tr>
-                                        <td><button>Search</button></td>
-                                        <td><input type="text"  class="listSearchContributor inputElement" value="<?php if(isset($_GET['contact_name'])){echo $_GET['contact_name'];} ?>" name="contact_name"></td>
-                                        <td><input type="text"  class="listSearchContributor inputElement" value="<?php if(isset($_GET['primary_phone'])){echo $_GET['primary_phone'];} ?>" name="primary_phone"></td>
-                                        <td><input type="text"  class="listSearchContributor inputElement" value="<?php if(isset($_GET['primary_email'])){echo $_GET['primary_email'];} ?>" name="primary_email"></td>
-
-                                        <td><input type="text"  class="listSearchContributor inputElement" name="customer_name" value="<?php if(isset($_GET['customer_name'])){echo $_GET['customer_name'];} ?>"></td>
-                                        <td> <input type="text" class="listSearchContributor inputElement" name="department" value="<?php if(isset($_GET['department'])){echo $_GET['department'];} ?>"></td>
-                                        <td><input type="text" class="listSearchContributor inputElement" name="designation" value="<?php if(isset($_GET['designation'])){echo $_GET['designation'];} ?>"></td>
-                                    </tr>
                               </thead>
 
 
@@ -105,7 +127,14 @@
                                   <td  style="vertical-align: top;">{{$data->department}}</td>
                                   <td  style="vertical-align: top;">{{$data->designation}}</td>
 
-                        <!-- <td  style="vertical-align: top;"></td> -->
+                                  <td class="actions" style="vertical-align: top;white-space: nowrap;">
+                                      @can('vendor_contact_update')
+                                          <a href="{{route('admin.vendor.contact.edit',['id' => $data->id])}}" class="btn btn-xs btn-primary waves-effect"><i class="fa fa-pencil"></i> Edit</a>
+                                      @endcan
+                                      @can('vendor_contact_delete')
+                                          <a href="{{route('admin.vendor.contact.delete',['id' => $data->id])}}" class="btn btn-xs btn-danger waves-effect" onclick="return confirm('Are you sure you want to delete this item?');"><i class="fa fa-trash-o"></i> Delete</a>
+                                      @endcan
+                                  </td>
 
                   </tr>
                   @endforeach

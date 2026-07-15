@@ -91,7 +91,7 @@ class SalesmanController extends Controller
     }
     function index(Request $request)
     {
-        $list=salesman::orderBy("id","desc")->paginate(10);
+        $list=salesman::orderBy("id","desc")->paginate(session('records_per_page', 30));
         return view("admin.salesman.list",compact('list'));
     }
 }

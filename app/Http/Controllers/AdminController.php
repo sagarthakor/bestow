@@ -196,7 +196,7 @@ class AdminController extends Controller
         if (isset($request->category)) {
             $subcategory = $subcategory->where('subcategory.category_name', 'like', '%' . $request->category_name . '%');
         }
-        $result = $subcategory->paginate(10);
+        $result = $subcategory->paginate(session('records_per_page', 30));
 
         return view("admin.subcategory.index_v2")->with(['subcategory' => $result]);
     }
@@ -206,7 +206,7 @@ class AdminController extends Controller
         $data = new quot_followup();
         $data = $data->select("quot_followup.*");
         $data = $data->orderBy("id", "desc");
-        $data = $data->paginate(10);
+        $data = $data->paginate(session('records_per_page', 30));
 
         $company_name = company::select('company_name')->first();
 
@@ -261,7 +261,7 @@ class AdminController extends Controller
 
     function payment_terms(Request $request)
     {
-        $data = payment_terms::orderBy("id", "desc")->paginate(10);
+        $data = payment_terms::orderBy("id", "desc")->paginate(session('records_per_page', 30));
 
         return view("admin.terms.payment.index", compact("data"));
     }
@@ -433,7 +433,7 @@ class AdminController extends Controller
 
         }
         $mat = $mat->orderBy("material_name", "asc");
-        $result = $mat->paginate(10);
+        $result = $mat->paginate(session('records_per_page', 30));
 
         return view("admin/material_list")->with(['data' => $result]);
     }
@@ -833,7 +833,7 @@ class AdminController extends Controller
         if (isset($request->designation)) {
             $contact = $contact->where('contact.designation', 'like', '%' . $request->designation . '%');
         }
-        $result = $contact->paginate(10);
+        $result = $contact->paginate(session('records_per_page', 30));
 
         return view("admin/contact_list")->with(['cdata' => $result]);
     }
@@ -856,7 +856,7 @@ class AdminController extends Controller
         if (isset($request->designation)) {
             $contact = $contact->where('vendor_contact.designation', 'like', '%' . $request->designation . '%');
         }
-        $result = $contact->paginate(10);
+        $result = $contact->paginate(session('records_per_page', 30));
 
         return view("admin/vendor_contact_list")->with(['cdata' => $result]);
     }
@@ -888,7 +888,7 @@ class AdminController extends Controller
             $contact = $contact->where('contact.designation', 'like', '%' . $request->designation . '%');
         }
         $contact = $contact->where('contact.customer', $request->id);
-        $result = $contact->paginate(10);
+        $result = $contact->paginate(session('records_per_page', 30));
 
         return view("admin/contact_list_preview")->with(['cdata' => $result]);
     }
@@ -923,7 +923,7 @@ class AdminController extends Controller
 
         $contact = $contact->where('vendor_contact.vendor', $request->id);
 
-        $result = $contact->paginate(10);
+        $result = $contact->paginate(session('records_per_page', 30));
 
         return view("admin/vendor_list_preview")->with(['cdata' => $result]);
     }
@@ -1111,7 +1111,7 @@ class AdminController extends Controller
         $product = $product;
         $product = $product->where('status', 'product');
         //echo print_r($request->all());
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
         //dd($result);
 
         return view("admin/search_product")
@@ -1142,7 +1142,7 @@ class AdminController extends Controller
             $data = $data->orwhere("gst.gst_per", "LIKE", '%' . $request->gst . '%');
         }
         $data = $data->where("product.status", "product");
-        $data = $data->paginate(25);
+        $data = $data->paginate(session('records_per_page', 30));
         // $data=$data->paginate(is_null($pagesize) ? 1 : $pagesize);
         //dd($data);
 
@@ -1200,7 +1200,7 @@ class AdminController extends Controller
 
     function type_list()
     {
-        $list = type::orderBy("type_name", "asc")->get();
+        $list = type::orderBy("type_name", "asc")->paginate(session('records_per_page', 30));
         return view("admin/type_list")->with(['data' => $list]);
     }
 
@@ -1272,7 +1272,7 @@ class AdminController extends Controller
 
     function industry_list()
     {
-        $list = industry::orderBy("industry_name", "asc")->paginate(10);
+        $list = industry::orderBy("industry_name", "asc")->paginate(session('records_per_page', 30));
         return view("admin/industry_list")->with(['data_list' => $list]);
     }
 
@@ -2575,7 +2575,7 @@ class AdminController extends Controller
 
         $data = $data->orderBy("vendor.vendor_name", 'asc');
         //echo print_r($request->all());
-        $result = $data->paginate(10);
+        $result = $data->paginate(session('records_per_page', 30));
 
         return view("admin/vendor_list")->with(['cdata' => $result]);
     }
@@ -2664,7 +2664,7 @@ class AdminController extends Controller
             $gst = $gst->paginate($gst1);
         } else {
 
-            $gst = $gst->paginate(10);
+            $gst = $gst->paginate(session('records_per_page', 30));
         }
 
         return view("admin/gst_list")->with(['cdata' => $gst]);
@@ -2721,7 +2721,7 @@ class AdminController extends Controller
 
         }
 
-        $data = $uom->paginate(10);
+        $data = $uom->paginate(session('records_per_page', 30));
 
         return view("admin/uom_list")->with(['data' => $data]);
 
@@ -2887,7 +2887,7 @@ class AdminController extends Controller
         if (isset($request->category_name)) {
             $category = $category->where('category_name', 'like', '%' . $request->category_name . '%');
         }
-        $result = $category->paginate(10);
+        $result = $category->paginate(session('records_per_page', 30));
 
         return view("admin/category_list")->with(['data' => $result]);
     }
@@ -2904,7 +2904,7 @@ class AdminController extends Controller
         if (isset($request->category_name)) {
             $category = $category->where('category_name', 'like', '%' . $request->category_name . '%');
         }
-        $result = $category->paginate(10);
+        $result = $category->paginate(session('records_per_page', 30));
 
         return view("admin.category_list_v2")->with(['data' => $result]);
     }
@@ -2934,7 +2934,7 @@ class AdminController extends Controller
         if (isset($request->category)) {
             $subcategory = $subcategory->where('subcategory.category_name', 'like', '%' . $request->category_name . '%');
         }
-        $result = $subcategory->paginate(10);
+        $result = $subcategory->paginate(session('records_per_page', 30));
 
         return view("admin/subcategory/index")->with(['subcategory' => $result]);
     }
@@ -3073,7 +3073,7 @@ class AdminController extends Controller
         if (isset($request->state)) {
             $state = $state->where('state.state_name', 'like', '%' . $request->state . '%');
         }
-        $data = $state->paginate(10);
+        $data = $state->paginate(session('records_per_page', 30));
 
         return view("admin/state_list")->with(['data' => $data]);
     }
@@ -3091,7 +3091,7 @@ class AdminController extends Controller
 
         }
 
-        $data = $city->paginate(10);
+        $data = $city->paginate(session('records_per_page', 30));
         // /dd($data);
         return view("admin/city_list")->with(['data' => $data]);
     }
@@ -3142,7 +3142,7 @@ class AdminController extends Controller
         if (isset($request->country)) {
             $country = $country->where('country_name', 'like', '%' . $request->country . '%');
         }
-        $data = $country->paginate(10);
+        $data = $country->paginate(session('records_per_page', 30));
         // $data=country::orderBy('country_name','asc')->get();
         return view('admin/country_list')->with(['data' => $data]);
     }
@@ -3311,7 +3311,7 @@ class AdminController extends Controller
 
         }
 
-        $product = $product->paginate(10);
+        $product = $product->paginate(session('records_per_page', 30));
 
         return view('admin/service_list')->with(['data' => $product]);
     }
@@ -3332,6 +3332,14 @@ class AdminController extends Controller
     function dashboard(Request $request)
     {
         Session::put('website_id', 1);
+
+        // Financial year must be in session before any query below filters by it —
+        // previously this was set at the end of the method, so a fresh session
+        // (no prior page load) computed every count against a null financial year.
+        $company = \App\company::first();
+        \Session::put('finacial_year_id', $company->finacial_year_id);
+        \Session::put('favicon', $company->favicon);
+
         $totcustomer = customers::all()->count();
         $pendingQuotation = quotation::where("finacial_year", Session::get('finacial_year_id'))
             ->whereNull('so_status')
@@ -3414,9 +3422,30 @@ class AdminController extends Controller
             ->orderBy('service_renewal.support_expiry_date', 'desc')
             ->get();
 
-        $company = \App\company::first();
-        \Session::put('finacial_year_id', $company->finacial_year_id);
-        \Session::put('favicon', $company->favicon);
+        // Sales trend for the last 14 days (single series, feeds the dashboard chart)
+        $trendDays = 13;
+        $trendStart = date('Y-m-d', strtotime("-{$trendDays} days"));
+        $salesTrendRaw = salesorder::selectRaw('DATE(salaesorder_date) as d, SUM(grand_total) as amt')
+            ->whereDate('salaesorder_date', '>=', $trendStart)
+            ->whereNull('delete_status')
+            ->groupBy('d')
+            ->pluck('amt', 'd');
+
+        $salesTrendLabels = [];
+        $salesTrendData = [];
+        for ($i = $trendDays; $i >= 0; $i--) {
+            $d = date('Y-m-d', strtotime("-{$i} days"));
+            $salesTrendLabels[] = date('d M', strtotime($d));
+            $salesTrendData[] = round((float) ($salesTrendRaw[$d] ?? 0), 2);
+        }
+
+        // Yesterday counts, so Today's Performance can show a day-over-day trend
+        $yesterday = date('Y-m-d', strtotime('-1 day'));
+        $yesterdaySales = salesorder::whereDate('salaesorder_date', $yesterday)->count();
+        $yesterdayInvoice = invoice::whereDate('invoice_date', $yesterday)->count();
+        $yesterdayPurchase = purchase::whereDate('po_date', $yesterday)->count();
+        $yesterdayDelivery = delivery_challan::whereDate('invoice_date', $yesterday)->count();
+        $yesterdayQuotation = quotation::whereDate('quot_date', $yesterday)->count();
 
         return view('admin/index')->with([
             'totinvoice' => $totinvoice, 'totdelivery' => $totdelivery, 'totpurchase' => $totpurchase, 'totsales' => $totsales,
@@ -3433,6 +3462,10 @@ class AdminController extends Controller
             'monthSalesAmount' => $monthSalesAmount, 'monthInvoiceAmount' => $monthInvoiceAmount,
             'monthPurchaseAmount' => $monthPurchaseAmount,
             'recentSalesOrders' => $recentSalesOrders, 'topCustomers' => $topCustomers, 'topProducts' => $topProducts,
+            'salesTrendLabels' => $salesTrendLabels, 'salesTrendData' => $salesTrendData,
+            'yesterdaySales' => $yesterdaySales, 'yesterdayInvoice' => $yesterdayInvoice,
+            'yesterdayPurchase' => $yesterdayPurchase, 'yesterdayDelivery' => $yesterdayDelivery,
+            'yesterdayQuotation' => $yesterdayQuotation,
         ]);
     }
 
@@ -3594,6 +3627,9 @@ class AdminController extends Controller
     {
         $data = company::find($request->id);
 
+        $request->validate([
+            'records_per_page' => 'nullable|integer|min:1|max:500',
+        ]);
 
         if (isset($request->logo)) {
             $request->validate([
@@ -3645,7 +3681,9 @@ class AdminController extends Controller
         $data->city = $request->city;
         $data->pincode = $request->pincode;
         $data->pan_no = $request->pan_no;
+        $data->records_per_page = $request->records_per_page ?: 30;
         if ($data->save()) {
+            Session::put('records_per_page', $data->records_per_page);
             return redirect()->route('admin.company.list')->with('message', 'company details update successfully');
         } else {
             return back();
@@ -5033,7 +5071,7 @@ class AdminController extends Controller
         //echo print_r($request->all());
 
         $product = $product->orderBy('quotation.id', 'desc');
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
 
         $company_name = company::select('company_name')->first();
 
@@ -5132,7 +5170,7 @@ class AdminController extends Controller
         }
         //echo print_r($request->all());
         $product = $product->orderBy('quotation.id', 'desc');
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
 
         $company_name = company::select('company_name')->first();
 
@@ -5177,7 +5215,7 @@ class AdminController extends Controller
         $product = $product->orderBy('quotation.id', 'desc');
 
         //echo print_r($request->all());
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
 
         return view('admin.quot_list_preview')->with(['list' => $result]);
     }
@@ -5220,7 +5258,7 @@ class AdminController extends Controller
         $product = $product->orderBy('quotation.id', 'desc');
 
         //echo print_r($request->all());
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
 
         $company_name = company::select('company_name')->first();
 
@@ -5564,7 +5602,7 @@ class AdminController extends Controller
         }
         //echo print_r($request->all());
         $data = $data->orderBy('customers.customer_name');
-        $result = $data->paginate(10);
+        $result = $data->paginate(session('records_per_page', 30));
 
         return view("admin/customer_list")->with(['cdata' => $result]);
     }
@@ -5597,7 +5635,7 @@ class AdminController extends Controller
         }
 
         $data = $data->orderBy('customers.customer_name');
-        $result = $data->paginate(10);
+        $result = $data->paginate(session('records_per_page', 30));
 
         return view("admin.customer_list_v2")->with(['cdata' => $result]);
     }
@@ -5669,7 +5707,7 @@ class AdminController extends Controller
 
         }
         $product = $product->orderBy("id", "desc");
-        $product = $product->paginate(10);
+        $product = $product->paginate(session('records_per_page', 30));
 
 
         // dd($product);
@@ -5716,7 +5754,7 @@ class AdminController extends Controller
         }
 
         $product = $product->where('product.status', 'product');
-        $product = $product->paginate(10);
+        $product = $product->paginate(session('records_per_page', 30));
 
 
         // dd($product);

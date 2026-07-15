@@ -1,4 +1,4 @@
-@extends('admin.layout.master')
+@extends('admin.layout.master_material')
 
 @section('title', 'Edit Company')
 
@@ -96,6 +96,13 @@
                                                           <div class="form-group">
                                                                     <label class="control-label">Mobile No</label>
                                                                     {{Form::text('mobile',null,['class'=>'form-control'])}}
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                          <div class="form-group">
+                                                                    <label class="control-label">Records Per Page</label>
+                                                                    {{Form::number('records_per_page',null,['class'=>'form-control','min'=>1,'max'=>500])}}
+                                                                    <p class="text-muted m-b-0"><small>Number of rows shown per page across all listing tables.</small></p>
                                                             </div>
                                                         </div>
                                                         <div class="col-md-12">

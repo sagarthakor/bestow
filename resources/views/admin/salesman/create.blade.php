@@ -1,4 +1,4 @@
-@extends('admin.layout.master')
+@extends('admin.layout.master_material')
 
 @section('title', 'Add New | Salesman')
 
@@ -8,8 +8,6 @@
 @endsection
 
 @section('content')
-    <script src="https://cdn.ckeditor.com/ckeditor5/20.0.0/classic/ckeditor.js"></script>
-
     <div class="content-page">
         <!-- Start content -->
         <div class="content">
@@ -68,7 +66,7 @@
 
                                 <div class="col-xs-12">
 
-                                    <div class="row justify-content-md-center">
+                                    <div class="row">
                                         {{Form::open(['method'=>'post','route'=>'admin.salesman.save','files'=>'true'])}}
                                         <div class="col-md-12">
                                             <div class="demo-box">
@@ -161,24 +159,6 @@
 
         <script src="{{asset('public/adminpanel/default/assets/js/jquery-1.12.4.js')}}"></script>
         <script>
-            ClassicEditor
-                .create( document.querySelector( '#editor' ) )
-                .catch( error => {
-                    console.error( error );
-                } );
-
-            ClassicEditor
-                .create( document.querySelector( '#editor2' ) )
-                .catch( error => {
-                    console.error( error );
-                } );
-
-            ClassicEditor
-                .create( document.querySelector( '#editor3' ) )
-                .catch( error => {
-                    console.error( error );
-                } );
-
             $("#copy_billing").click(function(){
 
                 var billing_city=$("#billing_city").val();

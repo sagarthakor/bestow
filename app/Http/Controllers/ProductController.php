@@ -208,7 +208,7 @@ class ProductController extends Controller
 
         }
         $product=$product->orderBy("id","desc");
-        $product=$product->paginate(10);
+        $product=$product->paginate(session('records_per_page', 30));
 
 
         // dd($product);
@@ -641,7 +641,7 @@ class ProductController extends Controller
 
     function item_group_list(Request $request)
     {
-        $group=item_group::orderBy("id","desc")->paginate(10);
+        $group=item_group::orderBy("id","desc")->paginate(session('records_per_page', 30));
         return view("admin.items.group_list")->with(['data'=>$group]);
     }
 
@@ -892,7 +892,7 @@ class ProductController extends Controller
     }
     function brand_list(Request $request)
     {
-        $data=brand::orderBy("id","desc")->paginate(10);
+        $data=brand::orderBy("id","desc")->paginate(session('records_per_page', 30));
         return view("admin/items/brand_list")
             ->with(['data'=>$data]);
     }
@@ -900,7 +900,7 @@ class ProductController extends Controller
     /** v2 sample migration only — identical query to brand_list() above, different view. */
     function brand_list_v2(Request $request)
     {
-        $data=brand::orderBy("id","desc")->paginate(10);
+        $data=brand::orderBy("id","desc")->paginate(session('records_per_page', 30));
         return view("admin.items.brand_list_v2")
             ->with(['data'=>$data]);
     }
@@ -1177,21 +1177,21 @@ class ProductController extends Controller
 
     function manufacturer_list(Request $request)
     {
-        $data=manufacturer::orderBy("id","desc")->paginate(10);
+        $data=manufacturer::orderBy("id","desc")->paginate(session('records_per_page', 30));
         return view("admin/items/manufacturer_list")
             ->with(['data'=>$data]);
     }
 
     function packer_list(Request $request)
     {
-        $data=packer::orderBy("id","desc")->paginate(10);
+        $data=packer::orderBy("id","desc")->paginate(session('records_per_page', 30));
         return view("admin/items/packer_list")
             ->with(['data'=>$data]);
     }
 
     function importer_list(Request $request)
     {
-        $data=importer::orderBy("id","desc")->paginate(10);
+        $data=importer::orderBy("id","desc")->paginate(session('records_per_page', 30));
         return view("admin/items/importer_list")
             ->with(['data'=>$data]);
     }

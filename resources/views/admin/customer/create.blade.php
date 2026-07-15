@@ -1,4 +1,4 @@
-@extends('admin.layout.master')
+@extends('admin.layout.master_material')
 
 @section('title', 'Add Customer')
 
@@ -47,7 +47,7 @@
 
                                 <div class="col-xs-12">
 
-                                    <div class="row justify-content-md-center">
+                                    <div class="row">
                                         {{Form::open(['method'=>'post','route'=>'admin.customer.save'])}}
                                         <div class="col-md-12">
                                             <div class="demo-box">
@@ -158,14 +158,13 @@
                                                 </div>
                                                 <div class="row">
 
-                                                    <div class="col-lg-6 align-self-center">
-                                                        <div class="form-check form-check-inline" style="float: left;padding: 7px;margin: 5px;">
-                                                            <input type="radio" value="true" name="tax_preference" class="form-check-input ember-view">
-                                                            <label class="form-check-label" for="ab0f36521">Taxable</label> </div>
-                                                        <div class="form-check form-check-inline" style="float: left;padding: 7px;margin: 5px;">
-                                                            <input type="radio" value="false" name="tax_preference" class="form-check-input ember-view">
-                                                            <label class="form-check-label" for="af103842b">Tax Exempt</label>
-                                                        </div>
+                                                    <div class="col-lg-6">
+                                                        <label class="radio-inline">
+                                                            <input type="radio" value="true" name="tax_preference"> Taxable
+                                                        </label>
+                                                        <label class="radio-inline">
+                                                            <input type="radio" value="false" name="tax_preference"> Tax Exempt
+                                                        </label>
                                                     </div>
                                                     <div class="col-md-6">
                                                         <label>Payement Terms</label>

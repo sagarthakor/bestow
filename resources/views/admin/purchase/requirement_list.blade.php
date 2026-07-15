@@ -1,4 +1,4 @@
-@extends('admin.layout.table_master')
+@extends('admin.layout.table_master_material')
 
 @section('title', 'List | Purchase Request')
 
@@ -45,6 +45,48 @@
 
                     <div class="col-sm-12">
 
+                        <div class="card-box">
+                            <h4 class="m-t-0 header-title">Filter</h4>
+                            <form method="get">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Order No</label>
+                                            <input type="text" value="{{ request('request_no') }}" name="request_no" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>From Date</label>
+                                            <input type="date" class="form-control" name="from_date" value="@if(isset($_GET['from_date'])) {{date('Y-m-d',strtotime($_GET['from_date']))}} @endif">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>To Date</label>
+                                            <input type="date" class="form-control" name="to_date" value="@if(isset($_GET['to_date'])) {{$_GET['to_date']}} @endif">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>User</label>
+                                            <input type="text" value="{{ request('user') }}" name="user" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Purchase No.</label>
+                                            <input type="text" value="{{ request('purchase_no') }}" name="purchase_no" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="hidden-xs">&nbsp;</label>
+                                        <button class="btn btn-primary btn-block waves-effect waves-light"><i class="mdi mdi-file-find"></i> Search</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
                         <div class="card-box table-responsive">
                             {{Form::open(['method'=>'get'])}}
                             <table class="table table-striped table-bordered">
@@ -62,31 +104,6 @@
 
                                     <th>User</th>
                                     <th>Purchase No.</th>
-
-                                </tr>
-                                <tr>
-                                    <td>
-                                    </td>
-                                    <td>
-                                        <input type="text" value="<?php if(isset($_GET['request_no'])){echo $_GET['request_no'];} ?>" name="request_no" class="form-control">
-                                    </td>
-                                    <td>
-                                        <div class="form-group">
-                                            <div>
-                                                <div class="input-daterange input-group" id="date-range">
-                                                    <input type="date" class="form-control" name="from_date" value="@if(isset($_GET['from_date'])) {{date('Y-m-d',strtotime($_GET['from_date']))}} @endif">
-                                                    <span class="input-group-addon bg-custom text-white b-0">to</span>
-                                                    <input type="date" class="form-control" name="to_date" value="@if(isset($_GET['to_date'])) {{$_GET['to_date']}} @endif">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <input type="text" value="<?php if(isset($_GET['user'])){echo $_GET['user'];} ?>" name="user"  class="form-control">
-                                    </td>
-                                    <td>
-                                        <input type="text" value="<?php if(isset($_GET['purchase_no'])){echo $_GET['purchase_no'];} ?>" name="purchase_no"  class="form-control">
-                                    </td>
 
                                 </tr>
                                 </thead>

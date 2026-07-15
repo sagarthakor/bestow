@@ -88,7 +88,7 @@ class SalesController extends Controller
         $product = $product->Where('salesorder.customer',$request->id);
         $product=$product->orderBy("id",'desc');
         $product=$product->whereNull("delete_status");
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
 
         $company_name=company::select('company_name')->first();
 
@@ -707,7 +707,7 @@ class SalesController extends Controller
         }
 
         // 🔹 Fetch and compute custom status
-        $result = $query->orderByDesc('salesorder.id')->paginate(30);
+        $result = $query->orderByDesc('salesorder.id')->paginate(session('records_per_page', 30));
 
         foreach ($result as $order) {
             $order->computed_status = 'done';

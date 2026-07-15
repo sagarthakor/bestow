@@ -7,7 +7,7 @@
         <meta name="author" content="{{Session::get('software_title')}} - @yield('title')">
 
         <!-- App favicon -->
-        <link rel="shortcut icon" href="/assets/images/favicon.ico">
+        <link rel="shortcut icon" href="/admin/assets/images/favicon.ico">
         <!-- App title -->
         <title>@yield('title') - {{env('APP_NAME')}}</title>
 
@@ -15,13 +15,13 @@
 		<link rel="stylesheet" href="/admin/plugins/morris/morris.css">
 
         <!-- App css -->
-        <link href="/admin/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-        <link href="/admin/assets/css/core.css" rel="stylesheet" type="text/css" />
-        <link href="/admin/assets/css/components.css" rel="stylesheet" type="text/css" />
-        <link href="/admin/assets/css/icons.css" rel="stylesheet" type="text/css" />
-        <link href="/admin/assets/css/pages.css" rel="stylesheet" type="text/css" />
-        <link href="/admin/assets/css/menu.css" rel="stylesheet" type="text/css" />
-        <link href="/admin/assets/css/responsive.css" rel="stylesheet" type="text/css" />
+        <link href="/admin/assets/css/bootstrap.min.css?v={{ filemtime(public_path('admin/assets/css/bootstrap.min.css')) }}" rel="stylesheet" type="text/css" />
+        <link href="/admin/assets/css/core.css?v={{ filemtime(public_path('admin/assets/css/core.css')) }}" rel="stylesheet" type="text/css" />
+        <link href="/admin/assets/css/components.css?v={{ filemtime(public_path('admin/assets/css/components.css')) }}" rel="stylesheet" type="text/css" />
+        <link href="/admin/assets/css/icons.css?v={{ filemtime(public_path('admin/assets/css/icons.css')) }}" rel="stylesheet" type="text/css" />
+        <link href="/admin/assets/css/pages.css?v={{ filemtime(public_path('admin/assets/css/pages.css')) }}" rel="stylesheet" type="text/css" />
+        <link href="/admin/assets/css/menu.css?v={{ filemtime(public_path('admin/assets/css/menu.css')) }}" rel="stylesheet" type="text/css" />
+        <link href="/admin/assets/css/responsive.css?v={{ filemtime(public_path('admin/assets/css/responsive.css')) }}" rel="stylesheet" type="text/css" />
 		<link rel="stylesheet" href="/admin/plugins/switchery/switchery.min.css">
 
         <!-- HTML5 Shiv and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -35,7 +35,7 @@
         <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 {{--  <link rel="stylesheet" href="//resources/demos/style.css">--}}
 
-        <script src="/admin/assets/js/modernizr.min.js')}}"></script>
+        <script src="/admin/assets/js/modernizr.min.js"></script>
         <style type="text/css">
            table th{
                 text-align:center !important;

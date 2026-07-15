@@ -1,4 +1,4 @@
-@extends('admin.layout.table_master')
+@extends('admin.layout.table_master_material')
 
 @section('title', 'Dashboard')
 
@@ -7,6 +7,226 @@
 @endsection
 
 @section('content')
+
+    <style>
+        .dash-card-hover {
+            transition: transform .18s ease, box-shadow .18s ease;
+        }
+        .dash-card-hover:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 24px rgba(35, 45, 65, 0.12);
+        }
+        .dash-trend {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 8px;
+            padding: 2px 9px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.9);
+        }
+        .dash-trend.up { color: #1b8a3f; }
+        .dash-trend.down { color: #d3283f; }
+        .dash-trend.flat { color: #6c7a89; }
+        .dash-trend .mdi { font-size: 14px; }
+
+        /* Solid-color stat cards: readable white text instead of dark text on a
+           semi-transparent pastel background (the theme's default widget-two-*). */
+        .dash-stat {
+            border: none !important;
+            color: #fff;
+        }
+        .dash-stat .wigdet-two-content p.dash-stat-label {
+            color: rgba(255, 255, 255, 0.85);
+            letter-spacing: .03em;
+        }
+        .dash-stat .wigdet-two-content h2 {
+            color: #fff;
+        }
+        .dash-stat .wigdet-two-content p.dash-stat-sub {
+            color: rgba(255, 255, 255, 0.8) !important;
+            font-size: 12px;
+            max-width: 62%;
+        }
+        .dash-stat .widget-two-icon {
+            color: rgba(255, 255, 255, 0.95) !important;
+            border-color: rgba(255, 255, 255, 0.55) !important;
+        }
+        .dash-stat-blue   { background-color: #3b7ddd; }
+        .dash-stat-green  { background-color: #17b06c; }
+        .dash-stat-cyan   { background-color: #1a9cb0; }
+        .dash-stat-orange { background-color: #f0762b; }
+        .dash-stat-purple { background-color: #7148d6; }
+        .dash-stat-red    { background-color: #e6486a; }
+        .dash-stat-teal   { background-color: #17a08f; }
+
+        /* Header action buttons: right-aligned, spaced, solid readable colors. */
+        .dash-actions {
+            display: flex;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .dash-actions .btn {
+            border: none !important;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .dash-btn-quotation { background-color: #3b7ddd !important; color: #fff !important; }
+        .dash-btn-quotation:hover { background-color: #2f68bd !important; color: #fff !important; }
+        .dash-btn-sales { background-color: #17b06c !important; color: #fff !important; }
+        .dash-btn-sales:hover { background-color: #13985d !important; color: #fff !important; }
+        .dash-btn-purchase { background-color: #f0762b !important; color: #fff !important; }
+        .dash-btn-purchase:hover { background-color: #d9631d !important; color: #fff !important; }
+        @media (max-width: 767px) {
+            .dash-actions { justify-content: flex-start; }
+        }
+        .dash-glance-row {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f3fa;
+        }
+        .dash-glance-row:last-child { border-bottom: none; }
+        .dash-glance-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #fff;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .dash-glance-label {
+            flex: 1;
+            color: #6c7a89;
+            font-size: 13px;
+        }
+        .dash-glance-value {
+            font-weight: 700;
+            font-size: 15px;
+        }
+        #salesTrendChart {
+            width: 100% !important;
+        }
+
+        .dash-alert {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 14px rgba(35, 45, 65, 0.1);
+        }
+        .dash-alert-warning {
+            background-color: #f0762b;
+            color: #fff;
+        }
+        .dash-alert-icon {
+            font-size: 26px;
+            flex-shrink: 0;
+        }
+        .dash-alert-body {
+            flex: 1;
+            font-size: 14px;
+        }
+        .dash-alert-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: #fff;
+            font-weight: 700;
+            white-space: nowrap;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 14px;
+            border-radius: 20px;
+            transition: background .15s ease;
+        }
+        .dash-alert-action:hover {
+            background: rgba(255, 255, 255, 0.32);
+            color: #fff;
+            text-decoration: none;
+        }
+
+        /* Chart legend for the monthly-breakdown donut. */
+        .dash-legend {
+            list-style: none;
+            margin: 30px 0 0;
+            padding: 0;
+        }
+        .dash-legend li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #6c7a89;
+            padding: 6px 0;
+        }
+        .dash-legend li b {
+            margin-left: auto;
+            color: #313a46;
+        }
+        .dash-legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* "View all" link under a colored panel's table. */
+        .dash-view-all {
+            display: block;
+            text-align: right;
+            font-weight: 600;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        /* Avatar-style people list (Top Customers), matching the reference's
+           Messages panel: colored circle initial + name + subtext. */
+        .dash-people-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .dash-people-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f3fa;
+        }
+        .dash-people-item:last-child { border-bottom: none; }
+        .dash-people-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+        .dash-people-name {
+            margin: 0;
+            font-weight: 600;
+            font-size: 13.5px;
+            color: #313a46;
+        }
+        .dash-people-sub {
+            margin: 0;
+            font-size: 12px;
+            color: #98a6ad;
+        }
+    </style>
 
     <div class="content-page">
         <!-- Start content -->
@@ -30,341 +250,393 @@
                 </div>
                 <!-- end row -->
 
-                <style type="text/css">
-                    .dash-section-title { margin: 28px 0 14px; font-weight: 600; color: #8a92a5; text-transform: uppercase; font-size: 12.5px; letter-spacing: .8px; }
-                    .dash-section-title:first-of-type { margin-top: 5px; }
-
-                    /* Greeting header */
-                    .greet-card {
-                        display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
-                        background: #fff; border-radius: 12px; padding: 22px 26px; margin-bottom: 10px;
-                        box-shadow: 0 2px 10px rgba(30,40,60,.06); border: 1px solid #eef0f5;
-                    }
-                    .greet-card h3 { margin: 0; font-weight: 700; color: #2b2f3a; }
-                    .greet-card .greet-date { color: #8a92a5; font-size: 13px; margin-top: 3px; }
-                    .greet-actions a { margin-left: 8px; }
-                    .greet-actions a:first-child { margin-left: 0; }
-
-                    /* KPI hero cards (Today's Performance) */
-                    .kpi-card {
-                        display: block; position: relative; overflow: hidden; border-radius: 12px; padding: 20px 22px; color: #fff;
-                        margin-bottom: 24px; box-shadow: 0 4px 14px rgba(0,0,0,.12);
-                        transition: transform .18s ease, box-shadow .18s ease;
-                    }
-                    .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 10px 22px rgba(0,0,0,.18); color: #fff; }
-                    .kpi-card .kpi-icon { position: absolute; right: 14px; top: 12px; font-size: 46px; opacity: .25; }
-                    .kpi-card .kpi-value { font-size: 26px; font-weight: 700; line-height: 1.1; }
-                    .kpi-card .kpi-label { text-transform: uppercase; font-size: 12px; letter-spacing: .4px; opacity: .9; margin-top: 4px; }
-                    .kpi-card .kpi-sub { font-size: 12px; opacity: .8; margin-top: 6px; }
-                    .kpi-red    { background: linear-gradient(135deg,#ff7875,#e74a3b); }
-                    .kpi-green  { background: linear-gradient(135deg,#3ddc97,#1cc88a); }
-                    .kpi-blue   { background: linear-gradient(135deg,#6c8ef5,#4e73df); }
-                    .kpi-orange { background: linear-gradient(135deg,#ffc266,#f6a623); }
-                    .kpi-purple { background: linear-gradient(135deg,#9d7bea,#6f42c1); }
-
-                    .row-fifth { display: flex; flex-wrap: wrap; margin-left: -15px; margin-right: -15px; }
-                    .col-fifth { width: 20%; padding-left: 15px; padding-right: 15px; }
-                    @media (max-width: 991px) { .col-fifth { width: 33.333%; } }
-                    @media (max-width: 767px) { .col-fifth { width: 50%; } }
-
-                    /* Snapshot cards */
-                    .snap-card {
-                        display: flex; align-items: center; background: #fff; border-radius: 12px; padding: 18px 20px;
-                        margin-bottom: 24px; box-shadow: 0 2px 10px rgba(30,40,60,.06); border: 1px solid #eef0f5;
-                    }
-                    .snap-icon {
-                        flex: 0 0 48px; width: 48px; height: 48px; border-radius: 10px; display: flex;
-                        align-items: center; justify-content: center; font-size: 22px; color: #fff; margin-right: 14px;
-                    }
-                    .snap-value { font-size: 22px; font-weight: 700; color: #2b2f3a; }
-                    .snap-label { font-size: 12px; color: #8a92a5; text-transform: uppercase; letter-spacing: .3px; }
-                    .snap-sub { font-size: 12px; color: #b0b6c3; margin-top: 2px; }
-
-                    /* Generic panel card */
-                    .panel-card { background: #fff; border-radius: 12px; padding: 20px 22px; margin-bottom: 24px; box-shadow: 0 2px 10px rgba(30,40,60,.06); border: 1px solid #eef0f5; }
-                    .panel-card h4 { margin: 0 0 16px; font-weight: 700; font-size: 15px; color: #2b2f3a; }
-                    .panel-card h4 i { margin-right: 6px; }
-                    .panel-card .view-all { float: right; font-size: 12.5px; font-weight: 600; }
-
-                    .table-clean th { border-top: 0 !important; background: #f8f9fc; color: #8a92a5; font-size: 11.5px; text-transform: uppercase; letter-spacing: .3px; }
-                    .table-clean td { vertical-align: middle !important; }
-
-                    .status-pill { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
-                    .status-created   { background: #eaf1ff; color: #4e73df; }
-                    .status-approved  { background: #e6f9f1; color: #17a673; }
-                    .status-delivered { background: #e6f9f1; color: #1cc88a; }
-                    .status-cancelled { background: #fdeaea; color: #d63b40; }
-                    .status-default   { background: #f1f2f6; color: #6b7280; }
-
-                    .glance-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px dashed #eef0f5; }
-                    .glance-row:last-child { border-bottom: 0; }
-                    .glance-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 8px; }
-                    .glance-label { color: #555; font-size: 13px; }
-                    .glance-value { font-weight: 700; color: #2b2f3a; font-size: 13px; }
-
-                    .alert-box { display: flex; align-items: center; text-align: center; flex-direction: column; padding: 18px 10px; }
-                    .alert-box .alert-icon { font-size: 40px; margin-bottom: 10px; }
-
-                    .rank-badge {
-                        display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px;
-                        border-radius: 6px; font-weight: 700; font-size: 12px; color: #fff; margin-right: 10px; flex: 0 0 26px;
-                    }
-                    .rank-1 { background: #e74a3b; }
-                    .rank-2 { background: #6b7280; }
-                    .rank-3 { background: #f6a623; }
-                    .rank-other { background: #b0b6c3; }
-                    .lb-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f4f5f8; }
-                    .lb-row:last-child { border-bottom: 0; }
-                    .lb-name { display: flex; align-items: center; font-size: 13.5px; color: #2b2f3a; font-weight: 600; }
-                    .lb-sub { font-size: 11.5px; color: #b0b6c3; }
-                    .lb-value { font-weight: 700; color: #e74a3b; font-size: 13.5px; }
-
-                    .inv-grid { display: flex; flex-wrap: wrap; margin: -6px; }
-                    .inv-cell { flex: 1 1 33%; margin: 6px; padding: 14px; border-radius: 10px; text-align: center; }
-                    .inv-cell .inv-value { font-size: 22px; font-weight: 700; }
-                    .inv-cell .inv-label { font-size: 11px; text-transform: uppercase; color: #8a92a5; letter-spacing: .3px; margin-top: 2px; }
-                    .inv-purple { background: #f2edfc; } .inv-purple .inv-value { color: #6f42c1; }
-                    .inv-blue   { background: #eaf1ff; } .inv-blue .inv-value { color: #4e73df; }
-                    .inv-pink   { background: #fdeef5; } .inv-pink .inv-value { color: #e83e8c; }
-                </style>
-
                 @php
                     $hour = (int) date('G');
                     $greeting = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Evening');
                 @endphp
 
-                <div class="greet-card">
-                    <div>
-                        <h3>{{ $greeting }}, {{ Auth::user()->name ?? 'Admin' }} 👋</h3>
-                        <div class="greet-date">{{ date('l, d F Y') }}</div>
-                    </div>
-                    <div class="greet-actions">
-                        <a href="{{ route('admin.quotation.add') }}" class="btn btn-primary btn-sm"><i class="mdi mdi-plus"></i> New Quotation</a>
-                        <a href="{{ route('admin.sales.create') }}" class="btn btn-success btn-sm"><i class="mdi mdi-plus"></i> New Sales Order</a>
-                        <a href="{{ route('admin.purchase.add') }}" class="btn btn-warning btn-sm"><i class="mdi mdi-plus"></i> New Purchase</a>
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div class="card-box">
+                            <h3 class="m-t-0 m-b-0">{{ $greeting }}, {{ Auth::user()->name ?? 'Admin' }}</h3>
+                            <p class="text-muted m-b-0">{{ date('l, d F Y') }}</p>
+                            <div class="dash-actions">
+                                <a href="{{ route('admin.quotation.add') }}" class="btn dash-btn-quotation waves-effect waves-light"><i class="mdi mdi-plus"></i> New Quotation</a>
+                                <a href="{{ route('admin.sales.create') }}" class="btn dash-btn-sales waves-effect waves-light"><i class="mdi mdi-plus"></i> New Sales Order</a>
+                                <a href="{{ route('admin.purchase.add') }}" class="btn dash-btn-purchase waves-effect waves-light"><i class="mdi mdi-plus"></i> New Purchase</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
+                <!-- end row -->
 
-                <h5 class="dash-section-title">Today's Performance</h5>
-                <div class="row-fifth">
+                @if(($pendingQuotation ?? 0) > 0)
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div class="dash-alert dash-alert-warning">
+                                <i class="mdi mdi-alert-circle-outline dash-alert-icon"></i>
+                                <div class="dash-alert-body">
+                                    <strong>{{ $pendingQuotation }}</strong> quotation(s) awaiting conversion.
+                                </div>
+                                <a href="{{ route('admin.quotation.list',['status' => 'Y']) }}" class="dash-alert-action">View pending <i class="mdi mdi-arrow-right"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- end row -->
+                @endif
 
-                    <div class="col-fifth">
-                        <a href="{{ route('admin.sales.list') }}" class="kpi-card kpi-red">
-                            <i class="mdi mdi-cart-outline kpi-icon"></i>
-                            <div class="kpi-value">{{ $todaySales ?? 0 }}</div>
-                            <div class="kpi-label">Sales Orders</div>
-                            <div class="kpi-sub">₹{{ number_format($todaySalesAmount ?? 0) }} value</div>
-                        </a>
-                    </div>
-                    <div class="col-fifth">
-                        <a href="{{ route('admin.invoice.list') }}" class="kpi-card kpi-green">
-                            <i class="mdi mdi-receipt kpi-icon"></i>
-                            <div class="kpi-value">{{ $todayInvoice ?? 0 }}</div>
-                            <div class="kpi-label">Invoices</div>
-                            <div class="kpi-sub">₹{{ number_format($todayInvoiceAmount ?? 0) }} value</div>
-                        </a>
-                    </div>
-                    <div class="col-fifth">
-                        <a href="{{ route('admin.purchase.list') }}" class="kpi-card kpi-blue">
-                            <i class="mdi mdi-truck kpi-icon"></i>
-                            <div class="kpi-value">{{ $todayPurchase ?? 0 }}</div>
-                            <div class="kpi-label">Purchase Orders</div>
-                            <div class="kpi-sub">₹{{ number_format($todayPurchaseAmount ?? 0) }} value</div>
-                        </a>
-                    </div>
-                    <div class="col-fifth">
-                        <a href="{{ route('admin.challan.list') }}" class="kpi-card kpi-orange">
-                            <i class="mdi mdi-truck-delivery kpi-icon"></i>
-                            <div class="kpi-value">{{ $todayDelivery ?? 0 }}</div>
-                            <div class="kpi-label">Delivery Challans</div>
-                            <div class="kpi-sub">₹{{ number_format($todayDeliveryAmount ?? 0) }} value</div>
-                        </a>
-                    </div>
-                    <div class="col-fifth">
-                        <a href="{{ route('admin.quotation.list') }}" class="kpi-card kpi-purple">
-                            <i class="mdi mdi-file-document-box kpi-icon"></i>
-                            <div class="kpi-value">{{ $todayQuotation ?? 0 }}</div>
-                            <div class="kpi-label">Quotations</div>
-                            <div class="kpi-sub">₹{{ number_format($todayQuotationAmount ?? 0) }} value</div>
-                        </a>
-                    </div>
+                <h4 class="m-t-20 m-b-20">Today's Performance</h4>
+                <div class="row">
+
+                    @php
+                        $perfCards = [
+                            ['route' => 'admin.sales.list', 'icon' => 'mdi-cart-outline', 'class' => 'dash-stat-blue', 'label' => 'Sales Orders', 'today' => $todaySales ?? 0, 'yesterday' => $yesterdaySales ?? 0, 'amount' => $todaySalesAmount ?? 0],
+                            ['route' => 'admin.invoice.list', 'icon' => 'mdi-receipt', 'class' => 'dash-stat-green', 'label' => 'Invoices', 'today' => $todayInvoice ?? 0, 'yesterday' => $yesterdayInvoice ?? 0, 'amount' => $todayInvoiceAmount ?? 0],
+                            ['route' => 'admin.purchase.list', 'icon' => 'mdi-truck', 'class' => 'dash-stat-cyan', 'label' => 'Purchase Orders', 'today' => $todayPurchase ?? 0, 'yesterday' => $yesterdayPurchase ?? 0, 'amount' => $todayPurchaseAmount ?? 0],
+                            ['route' => 'admin.challan.list', 'icon' => 'mdi-truck-delivery', 'class' => 'dash-stat-orange', 'label' => 'Deliveries', 'today' => $todayDelivery ?? 0, 'yesterday' => $yesterdayDelivery ?? 0, 'amount' => $todayDeliveryAmount ?? 0],
+                            ['route' => 'admin.quotation.list', 'icon' => 'mdi-file-document-box', 'class' => 'dash-stat-purple', 'label' => 'Quotations', 'today' => $todayQuotation ?? 0, 'yesterday' => $yesterdayQuotation ?? 0, 'amount' => $todayQuotationAmount ?? 0],
+                        ];
+                    @endphp
+
+                    @foreach($perfCards as $card)
+                        <div class="col-lg-2 col-md-4 col-sm-6">
+                            <a href="{{ route($card['route']) }}" class="card-box widget-box-two dash-card-hover dash-stat {{ $card['class'] }}" style="display:block;">
+                                <i class="mdi {{ $card['icon'] }} widget-two-icon"></i>
+                                <div class="wigdet-two-content">
+                                    <p class="m-0 text-uppercase font-600 font-secondary text-overflow dash-stat-label" title="{{ $card['label'] }}">{{ $card['label'] }}</p>
+                                    @php $diff = $card['today'] - $card['yesterday']; @endphp
+                                    <h2>{{ $card['today'] }}
+                                        <small>
+                                            @if($diff == 0)
+                                                <i class="mdi mdi-minus dash-stat-sub"></i>
+                                            @else
+                                                <i class="mdi mdi-arrow-{{ $diff > 0 ? 'up' : 'down' }} text-{{ $diff > 0 ? 'success' : 'danger' }}"></i>
+                                            @endif
+                                        </small>
+                                    </h2>
+                                    <p class="m-0 dash-stat-sub">Last: {{ $card['yesterday'] }}</p>
+                                    <p class="m-0 dash-stat-sub">₹{{ number_format($card['amount']) }} today</p>
+                                </div>
+                            </a>
+                        </div><!-- end col -->
+                    @endforeach
 
                 </div>
+                <!-- end row -->
 
-                <h5 class="dash-section-title">{{ date('F') }} Snapshot</h5>
+                <h4 class="m-t-20 m-b-20">{{ date('F') }} Snapshot</h4>
                 <div class="row">
                     <div class="col-lg-4 col-md-6">
-                        <div class="snap-card">
-                            <span class="snap-icon" style="background:#4e73df;"><i class="mdi mdi-cart-outline"></i></span>
-                            <span>
-                                <div class="snap-value">₹{{ number_format($monthSalesAmount ?? 0) }}</div>
-                                <div class="snap-label">Monthly Sales</div>
-                                <div class="snap-sub">{{ $monthSales ?? 0 }} orders</div>
-                            </span>
+                        <div class="card-box widget-box-two dash-card-hover dash-stat dash-stat-blue">
+                            <i class="mdi mdi-cart-outline widget-two-icon"></i>
+                            <div class="wigdet-two-content">
+                                <p class="m-0 text-uppercase font-600 font-secondary text-overflow dash-stat-label" title="Monthly Sales">Monthly Sales</p>
+                                <h2>₹{{ number_format($monthSalesAmount ?? 0) }}</h2>
+                                <p class="m-0 dash-stat-sub"><b>Orders:</b> {{ $monthSales ?? 0 }}</p>
+                            </div>
+                        </div>
+                    </div><!-- end col -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card-box widget-box-two dash-card-hover dash-stat dash-stat-red">
+                            <i class="mdi mdi-receipt widget-two-icon"></i>
+                            <div class="wigdet-two-content">
+                                <p class="m-0 text-uppercase font-600 font-secondary text-overflow dash-stat-label" title="Monthly Invoices">Monthly Invoices</p>
+                                <h2>₹{{ number_format($monthInvoiceAmount ?? 0) }}</h2>
+                                <p class="m-0 dash-stat-sub"><b>Invoices:</b> {{ $monthInvoice ?? 0 }}</p>
+                            </div>
+                        </div>
+                    </div><!-- end col -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card-box widget-box-two dash-card-hover dash-stat dash-stat-teal">
+                            <i class="mdi mdi-account-multiple widget-two-icon"></i>
+                            <div class="wigdet-two-content">
+                                <p class="m-0 text-uppercase font-600 font-secondary text-overflow dash-stat-label" title="Total Customers">Total Customers</p>
+                                <h2>{{ $totcustomer ?? 0 }}</h2>
+                                <p class="m-0 dash-stat-sub"><b>Purchase Orders:</b> {{ $monthPurchase ?? 0 }} this month</p>
+                            </div>
+                        </div>
+                    </div><!-- end col -->
+                </div>
+                <!-- end row -->
+
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="card-box">
+                            <h4 class="header-title m-t-0 m-b-20">Sales Trend <small class="text-muted">(Last 14 Days)</small></h4>
+                            <canvas id="salesTrendChart" height="120"></canvas>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-md-6">
-                        <div class="snap-card">
-                            <span class="snap-icon" style="background:#e74a3b;"><i class="mdi mdi-receipt"></i></span>
-                            <span>
-                                <div class="snap-value">₹{{ number_format($monthInvoiceAmount ?? 0) }}</div>
-                                <div class="snap-label">Monthly Invoices</div>
-                                <div class="snap-sub">{{ $monthInvoice ?? 0 }} invoices</div>
-                            </span>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-md-6">
-                        <div class="snap-card">
-                            <span class="snap-icon" style="background:#36b9cc;"><i class="mdi mdi-account-multiple"></i></span>
-                            <span>
-                                <div class="snap-value">{{ $totcustomer ?? 0 }}</div>
-                                <div class="snap-label">Total Customers</div>
-                                <div class="snap-sub">{{ $monthPurchase ?? 0 }} purchase orders this month</div>
-                            </span>
+
+                    <div class="col-lg-6">
+                        <div class="card-box">
+                            <h4 class="header-title m-t-0 m-b-20">{{ date('F') }} Breakdown <small class="text-muted">(This Month)</small></h4>
+                            @php
+                                $glance = [
+                                    ['color' => '#7266ba', 'label' => 'Quotations', 'value' => $monthQuotation ?? 0],
+                                    ['color' => '#188ae2', 'label' => 'Sales Orders', 'value' => $monthSales ?? 0],
+                                    ['color' => '#00acc1', 'label' => 'Purchase Orders', 'value' => $monthPurchase ?? 0],
+                                    ['color' => '#f0762b', 'label' => 'Delivery Challans', 'value' => $monthDelivery ?? 0],
+                                    ['color' => '#17b06c', 'label' => 'Invoices', 'value' => $monthInvoice ?? 0],
+                                ];
+                            @endphp
+                            <div class="row">
+                                <div class="col-sm-7">
+                                    <canvas id="monthDonutChart" height="220"></canvas>
+                                </div>
+                                <div class="col-sm-5">
+                                    <ul class="dash-legend">
+                                        @foreach($glance as $g)
+                                            <li>
+                                                <span class="dash-legend-dot" style="background-color: {{ $g['color'] }};"></span>
+                                                {{ $g['label'] }} <b>{{ $g['value'] }}</b>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+                <!-- end row -->
 
                 <div class="row">
                     <div class="col-lg-8">
-                        <div class="panel-card">
-                            <h4><i class="mdi mdi-clock"></i> Recent Sales Orders <a href="{{ route('admin.sales.list') }}" class="view-all">View all &rarr;</a></h4>
-                            <div class="table-responsive">
-                                <table class="table table-clean">
-                                    <thead>
-                                        <tr>
-                                            <th>SO No</th>
-                                            <th>Customer</th>
-                                            <th>Date</th>
-                                            <th>Amount</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                    @forelse($recentSalesOrders ?? [] as $so)
-                                        <tr>
-                                            <td><a href="{{ route('admin.sales.view', $so->id) }}">{{ $so->salaesorder_no }}</a></td>
-                                            <td>{{ $so->customer_name }}</td>
-                                            <td>{{ $so->salaesorder_date ? date('d-m-Y', strtotime($so->salaesorder_date)) : '-' }}</td>
-                                            <td>₹{{ number_format($so->grand_total ?? 0) }}</td>
-                                            <td>
-                                                @php
-                                                    $statusClass = [
-                                                        'Created' => 'status-created', 'Approved' => 'status-approved',
-                                                        'Delivered' => 'status-delivered', 'Cancelled' => 'status-cancelled',
-                                                    ][$so->status] ?? 'status-default';
-                                                @endphp
-                                                <span class="status-pill {{ $statusClass }}">{{ $so->status ?? '-' }}</span>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr><td colspan="5" class="text-center" style="padding:24px;color:#999;">No sales orders yet</td></tr>
-                                    @endforelse
-                                    </tbody>
-                                </table>
+                        <div class="panel panel-color panel-primary">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Recent Sales Orders</h3>
+                            </div>
+                            <div class="panel-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover m-0">
+                                        <thead>
+                                            <tr>
+                                                <th>SO No</th>
+                                                <th>Customer</th>
+                                                <th>Date</th>
+                                                <th>Amount</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        @forelse($recentSalesOrders ?? [] as $so)
+                                            <tr>
+                                                <td><a href="{{ route('admin.sales.view', $so->id) }}">{{ $so->salaesorder_no }}</a></td>
+                                                <td>{{ $so->customer_name }}</td>
+                                                <td>{{ $so->salaesorder_date ? date('d-m-Y', strtotime($so->salaesorder_date)) : '-' }}</td>
+                                                <td>₹{{ number_format($so->grand_total ?? 0) }}</td>
+                                                <td>
+                                                    @php
+                                                        $statusClass = [
+                                                            'Created' => 'badge-info', 'Approved' => 'badge-primary',
+                                                            'Delivered' => 'badge-success', 'Cancelled' => 'badge-danger',
+                                                        ][$so->status] ?? 'badge-default';
+                                                    @endphp
+                                                    <span class="badge {{ $statusClass }}">{{ $so->status ?? '-' }}</span>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr><td colspan="5" class="text-center text-muted">No sales orders yet</td></tr>
+                                        @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <a href="{{ route('admin.sales.list') }}" class="dash-view-all">View all sales orders <i class="mdi mdi-arrow-right"></i></a>
                             </div>
                         </div>
                     </div>
 
                     <div class="col-lg-4">
-                        <div class="panel-card">
-                            <h4><i class="mdi mdi-view-list"></i> This Month at a Glance</h4>
-                            <div class="glance-row">
-                                <span class="glance-label"><span class="glance-dot" style="background:#6f42c1;"></span>Quotations</span>
-                                <span class="glance-value">{{ $monthQuotation ?? 0 }}</span>
+                        <div class="panel panel-color panel-purple">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Top Customers <span class="panel-sub-title">({{ date('F') }})</span></h3>
                             </div>
-                            <div class="glance-row">
-                                <span class="glance-label"><span class="glance-dot" style="background:#e74a3b;"></span>Sales Orders</span>
-                                <span class="glance-value">{{ $monthSales ?? 0 }}</span>
-                            </div>
-                            <div class="glance-row">
-                                <span class="glance-label"><span class="glance-dot" style="background:#4e73df;"></span>Purchase Orders</span>
-                                <span class="glance-value">{{ $monthPurchase ?? 0 }}</span>
-                            </div>
-                            <div class="glance-row">
-                                <span class="glance-label"><span class="glance-dot" style="background:#f6a623;"></span>Delivery Challans</span>
-                                <span class="glance-value">{{ $monthDelivery ?? 0 }}</span>
-                            </div>
-                            <div class="glance-row">
-                                <span class="glance-label"><span class="glance-dot" style="background:#1cc88a;"></span>Invoices</span>
-                                <span class="glance-value">{{ $monthInvoice ?? 0 }}</span>
-                            </div>
-                        </div>
-
-                        <div class="panel-card">
-                            <h4><i class="mdi mdi-bell-outline"></i> Pending Quotations</h4>
-                            <div class="alert-box">
-                                @if(($pendingQuotation ?? 0) > 0)
-                                    <i class="mdi mdi-alert-circle alert-icon" style="color:#f6a623;"></i>
-                                    <div><b>{{ $pendingQuotation }}</b> quotation(s) awaiting conversion</div>
-                                    <a href="{{ route('admin.quotation.list',['status' => 'Y']) }}" style="margin-top:8px;display:inline-block;">View pending &rarr;</a>
-                                @else
-                                    <i class="mdi mdi-check-circle alert-icon" style="color:#1cc88a;"></i>
-                                    <div>All quotations converted</div>
-                                @endif
+                            <div class="panel-body">
+                                <div class="dash-people-list">
+                                    @forelse($topCustomers ?? [] as $i => $c)
+                                        <div class="dash-people-item">
+                                            <span class="dash-people-avatar" style="background-color: {{ ['#7266ba', '#188ae2', '#00acc1', '#f0762b', '#17b06c'][$i % 5] }};">
+                                                {{ strtoupper(substr($c->customer_name ?? '?', 0, 1)) }}
+                                            </span>
+                                            <div class="dash-people-body">
+                                                <p class="dash-people-name">{{ $c->customer_name ?? 'Unknown' }}</p>
+                                                <p class="dash-people-sub">₹{{ number_format($c->total_amount ?? 0) }}</p>
+                                            </div>
+                                        </div>
+                                    @empty
+                                        <p class="text-muted text-center m-0">No invoices recorded this month</p>
+                                    @endforelse
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                <!-- end row -->
 
                 <div class="row">
-                    <div class="col-lg-4">
-                        <div class="panel-card">
-                            <h4><i class="mdi mdi-trophy"></i> Top Products <small style="color:#b0b6c3;font-weight:400;">({{ date('F') }})</small></h4>
-                            @forelse($topProducts ?? [] as $i => $p)
-                                <div class="lb-row">
-                                    <span class="lb-name">
-                                        <span class="rank-badge {{ $i == 0 ? 'rank-1' : ($i == 1 ? 'rank-2' : ($i == 2 ? 'rank-3' : 'rank-other')) }}">{{ $i + 1 }}</span>
-                                        {{ $p->product_name ?? 'Unknown' }}
-                                    </span>
-                                    <span class="lb-sub">{{ number_format($p->total_qty, 0) }} sold</span>
+                    <div class="col-lg-8">
+                        <div class="panel panel-color panel-info">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Top Products <span class="panel-sub-title">({{ date('F') }})</span></h3>
+                            </div>
+                            <div class="panel-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover m-0">
+                                        <tbody>
+                                        @forelse($topProducts ?? [] as $i => $p)
+                                            <tr>
+                                                <td>
+                                                    @php
+                                                        $rankClass = $i == 0 ? 'badge-danger' : ($i == 1 ? 'badge-default' : ($i == 2 ? 'badge-warning' : 'badge-info'));
+                                                    @endphp
+                                                    <span class="badge {{ $rankClass }}">{{ $i + 1 }}</span>
+                                                    {{ $p->product_name ?? 'Unknown' }}
+                                                </td>
+                                                <td class="text-right text-muted">{{ number_format($p->total_qty, 0) }} sold</td>
+                                            </tr>
+                                        @empty
+                                            <tr><td class="text-center text-muted">No sales recorded this month</td></tr>
+                                        @endforelse
+                                        </tbody>
+                                    </table>
                                 </div>
-                            @empty
-                                <p style="color:#999;">No sales recorded this month</p>
-                            @endforelse
+                            </div>
                         </div>
                     </div>
 
                     <div class="col-lg-4">
-                        <div class="panel-card">
-                            <h4><i class="mdi mdi-account-star"></i> Top Customers <small style="color:#b0b6c3;font-weight:400;">({{ date('F') }})</small></h4>
-                            @forelse($topCustomers ?? [] as $i => $c)
-                                <div class="lb-row">
-                                    <span class="lb-name">
-                                        <span class="rank-badge {{ $i == 0 ? 'rank-1' : ($i == 1 ? 'rank-2' : ($i == 2 ? 'rank-3' : 'rank-other')) }}">{{ $i + 1 }}</span>
-                                        {{ $c->customer_name ?? 'Unknown' }}
-                                    </span>
-                                    <span class="lb-value">₹{{ number_format($c->total_amount ?? 0) }}</span>
+                        <div class="card-box">
+                            <h4 class="header-title m-t-0">Inventory Overview</h4>
+                            <div class="row text-center">
+                                <div class="col-xs-4">
+                                    <h2 class="m-b-0">{{ $totproduct ?? 0 }}</h2>
+                                    <p class="text-muted m-0">Products</p>
                                 </div>
-                            @empty
-                                <p style="color:#999;">No invoices recorded this month</p>
-                            @endforelse
-                        </div>
-                    </div>
-
-                    <div class="col-lg-4">
-                        <div class="panel-card">
-                            <h4><i class="mdi mdi-cube-outline"></i> Inventory Overview</h4>
-                            <div class="inv-grid">
-                                <div class="inv-cell inv-purple">
-                                    <div class="inv-value">{{ $totproduct ?? 0 }}</div>
-                                    <div class="inv-label">Products</div>
+                                <div class="col-xs-4">
+                                    <h2 class="m-b-0">{{ $totcategory ?? 0 }}</h2>
+                                    <p class="text-muted m-0">Categories</p>
                                 </div>
-                                <div class="inv-cell inv-blue">
-                                    <div class="inv-value">{{ $totcategory ?? 0 }}</div>
-                                    <div class="inv-label">Categories</div>
-                                </div>
-                                <div class="inv-cell inv-pink">
-                                    <div class="inv-value">{{ $totbrand ?? 0 }}</div>
-                                    <div class="inv-label">Brands</div>
+                                <div class="col-xs-4">
+                                    <h2 class="m-b-0">{{ $totbrand ?? 0 }}</h2>
+                                    <p class="text-muted m-0">Brands</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                <!-- end row -->
 
             </div> <!-- container -->
 
         </div> <!-- content -->
+
+        <script src="/admin/plugins/chart.js/chart.min.js"></script>
+        <script>
+            (function () {
+                var canvas = document.getElementById('salesTrendChart');
+                if (!canvas || typeof Chart === 'undefined') return;
+
+                var labels = @json($salesTrendLabels ?? []);
+                var data = @json($salesTrendData ?? []);
+
+                var ctx = canvas.getContext('2d');
+                var gradient = ctx.createLinearGradient(0, 0, 0, 260);
+                gradient.addColorStop(0, 'rgba(24, 138, 226, 0.28)');
+                gradient.addColorStop(1, 'rgba(24, 138, 226, 0)');
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Sales',
+                            data: data,
+                            borderColor: '#188ae2',
+                            backgroundColor: gradient,
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            pointHoverRadius: 5,
+                            pointHitRadius: 12,
+                            pointHoverBackgroundColor: '#188ae2',
+                            pointHoverBorderColor: '#fff',
+                            pointHoverBorderWidth: 2,
+                            lineTension: 0.35,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        legend: { display: false },
+                        tooltips: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: '#fff',
+                            titleFontColor: '#313a46',
+                            bodyFontColor: '#313a46',
+                            borderColor: '#e3eaef',
+                            borderWidth: 1,
+                            displayColors: false,
+                            callbacks: {
+                                label: function (tooltipItem) {
+                                    return '₹' + Number(tooltipItem.yLabel).toLocaleString('en-IN');
+                                }
+                            }
+                        },
+                        scales: {
+                            xAxes: [{
+                                gridLines: { display: false },
+                                ticks: { fontColor: '#98a6ad', maxRotation: 0, autoSkip: true, maxTicksLimit: 7 }
+                            }],
+                            yAxes: [{
+                                gridLines: { color: '#f1f3fa', drawBorder: false },
+                                ticks: {
+                                    fontColor: '#98a6ad',
+                                    beginAtZero: true,
+                                    callback: function (v) {
+                                        return v >= 1000 ? (v / 1000) + 'k' : v;
+                                    }
+                                }
+                            }]
+                        }
+                    }
+                });
+            })();
+
+            (function () {
+                var canvas = document.getElementById('monthDonutChart');
+                if (!canvas || typeof Chart === 'undefined') return;
+
+                var glanceLabels = @json(collect($glance ?? [])->pluck('label'));
+                var glanceValues = @json(collect($glance ?? [])->pluck('value'));
+                var glanceColors = @json(collect($glance ?? [])->pluck('color'));
+
+                new Chart(canvas.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: glanceLabels,
+                        datasets: [{
+                            data: glanceValues,
+                            backgroundColor: glanceColors,
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        legend: { display: false },
+                        cutoutPercentage: 68,
+                        tooltips: {
+                            backgroundColor: '#fff',
+                            titleFontColor: '#313a46',
+                            bodyFontColor: '#313a46',
+                            borderColor: '#e3eaef',
+                            borderWidth: 1,
+                            displayColors: true
+                        }
+                    }
+                });
+            })();
+        </script>
 
 @endsection

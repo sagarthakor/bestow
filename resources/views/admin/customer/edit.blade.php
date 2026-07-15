@@ -1,4 +1,4 @@
-@extends('admin.layout.master')
+@extends('admin.layout.master_material')
 
 @section('title', 'Edit | Customer')
 
@@ -8,17 +8,6 @@
 @endsection
 
 @section('content')
-    <style>
-        .error
-        {
-            border: 1px solid red !important;
-        }
-        .help-block
-        {
-            color: red !important;
-        }
-    </style>
-
     <div class="content-page">
         <!-- Start content -->
         <div class="content">
@@ -54,7 +43,7 @@
 
                                 <div class="col-xs-12">
 
-                                    <div class="row justify-content-md-center">
+                                    <div class="row">
                                         {{Form::model($data,['method'=>'post','route'=>'admin.customer.update'])}}
                                         {{Form::hidden('id',null)}}
                                         <div class="col-md-12">
@@ -165,23 +154,23 @@
                                                 </div>
                                                 <div class="row">
 
-                                                    <div class="col-lg-6 align-self-center">
-                                                        <div class="form-check form-check-inline" style="float: left;padding: 7px;margin: 5px;">
+                                                    <div class="col-lg-6">
+                                                        <label class="radio-inline">
                                                             @if($data->tax_preference=="true")
-                                                                <input type="radio" checked="checked" value="true" name="tax_preference" class="form-check-input ember-view">
+                                                                <input type="radio" checked="checked" value="true" name="tax_preference">
                                                             @else
-                                                                <input type="radio" value="true" name="tax_preference" class="form-check-input ember-view">
+                                                                <input type="radio" value="true" name="tax_preference">
                                                             @endif
-
-                                                            <label class="form-check-label" for="ab0f36521">Taxable</label> </div>
-                                                        <div class="form-check form-check-inline" style="float: left;padding: 7px;margin: 5px;">
+                                                            Taxable
+                                                        </label>
+                                                        <label class="radio-inline">
                                                             @if($data->tax_preference=="false")
-                                                            <input type="radio" checked="checked" value="false" name="tax_preference" class="form-check-input ember-view">
+                                                                <input type="radio" checked="checked" value="false" name="tax_preference">
                                                             @else
-                                                                <input type="radio" value="false" name="tax_preference" class="form-check-input ember-view">
+                                                                <input type="radio" value="false" name="tax_preference">
                                                             @endif
-                                                            <label class="form-check-label" for="af103842b">Tax Exempt</label>
-                                                        </div>
+                                                            Tax Exempt
+                                                        </label>
                                                     </div>
                                                     <div class="col-md-6">
                                                         <label>Payement Terms</label>

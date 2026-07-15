@@ -166,7 +166,7 @@ class ProductionController extends Controller
         $list=$list->where("production.machine",$request->id);
         $list=$list->where("production.production_status","Y");
         $list=$list->orderBy("production.id", "desc");
-        $list=$list->paginate(20);
+        $list=$list->paginate(session('records_per_page', 30));
 
         return view("admin.production.machineWiseCompleteBatch", compact("list", "machine"));
 
@@ -179,7 +179,7 @@ class ProductionController extends Controller
             ->leftJoin("product", "product.id", "production.finish_product")
             ->where("production_status","=","Y")
             ->orderBy("production.id", "desc")
-            ->paginate(10);
+            ->paginate(session('records_per_page', 30));
 
         $machine=machine::orderBy("machine_name","asc")->get();
 
@@ -194,7 +194,7 @@ class ProductionController extends Controller
             ->leftJoin("product", "product.id", "washing.finish_product")
             ->where("washing_status","=","Y")
             ->orderBy("washing.id", "desc")
-            ->paginate(10);
+            ->paginate(session('records_per_page', 30));
 
         $machine=washing_machine::orderBy("machine_name","asc")->get();
 
@@ -209,7 +209,7 @@ class ProductionController extends Controller
             ->leftJoin("product", "product.id", "pressing.finish_product")
             ->where("pressing_status","=","Y")
             ->orderBy("pressing.id", "desc")
-            ->paginate(10);
+            ->paginate(session('records_per_page', 30));
 
         $machine=pressing_machine::orderBy("machine_name","asc")->get();
 
@@ -224,7 +224,7 @@ class ProductionController extends Controller
             ->leftJoin("product", "product.id", "packaging.finish_product")
             ->where("packaging_status","=","Y")
             ->orderBy("packaging.id", "desc")
-            ->paginate(10);
+            ->paginate(session('records_per_page', 30));
 
         $machine=packaging_machine::orderBy("machine_name","asc")->get();
 
@@ -239,7 +239,7 @@ class ProductionController extends Controller
                 ->leftJoin("product", "product.id", "stitching.finish_product")
                 ->where("stitching_status","=","Y")
                 ->orderBy("stitching.id", "desc")
-                ->paginate(10);
+                ->paginate(session('records_per_page', 30));
 
             $machine=stitching_machine::orderBy("machine_name","asc")->get();
 
@@ -1169,7 +1169,7 @@ class ProductionController extends Controller
             $production=$production->where("pressing.pressing_status","like",'%'.$request->status.'%');
         }
         $production=$production->orderBy("pressing.id", "desc");
-        $production=$production->paginate(20);
+        $production=$production->paginate(session('records_per_page', 30));
 
         return view("admin.production.pressingAllMachineWiseBatch", compact("production", "machine"));
 
@@ -1216,7 +1216,7 @@ class ProductionController extends Controller
             $production=$production->where("washing.washing_status","like",'%'.$request->status.'%');
         }
         $production=$production->orderBy("washing.id", "desc");
-        $production=$production->paginate(20);
+        $production=$production->paginate(session('records_per_page', 30));
 
         return view("admin.production.washingAllMachineWiseBatch", compact("production", "machine"));
 
@@ -1264,7 +1264,7 @@ class ProductionController extends Controller
             $production=$production->where("packaging.packaging_status","like",'%'.$request->status.'%');
         }
         $production=$production->orderBy("packaging.id", "desc");
-        $production=$production->paginate(20);
+        $production=$production->paginate(session('records_per_page', 30));
 
         return view("admin.production.packagingAllMachineWiseBatch", compact("production", "machine"));
 
@@ -1312,7 +1312,7 @@ class ProductionController extends Controller
             $production=$production->where("stitching.stitching_status","like",'%'.$request->status.'%');
         }
         $production=$production->orderBy("stitching.id", "desc");
-        $production=$production->paginate(20);
+        $production=$production->paginate(session('records_per_page', 30));
 
         return view("admin.production.stitchingAllMachineWiseBatch", compact("production", "machine"));
 
@@ -1354,7 +1354,7 @@ class ProductionController extends Controller
         }
         $list=$list->where("stitching.machine",$request->id);
         $list=$list->orderBy("washing.id", "desc");
-        $list=$list->paginate(20);
+        $list=$list->paginate(session('records_per_page', 30));
 
         return view("admin.production.stitchingAllMachineWiseBatch", compact("list", "machine"));
 
@@ -1401,7 +1401,7 @@ class ProductionController extends Controller
         $list=$list->where("washing.machine",$request->id);
         $list=$list->where("washing.washing_status","Y");
         $list=$list->orderBy("washing.id", "desc");
-        $list=$list->paginate(20);
+        $list=$list->paginate(session('records_per_page', 30));
 
         return view("admin.production.washingCompleteMachineWiseBatch", compact("list", "machine"));
 
@@ -1448,7 +1448,7 @@ class ProductionController extends Controller
         $list=$list->where("pressing.machine",$request->id);
         $list=$list->where("pressing.pressing_status","Y");
         $list=$list->orderBy("pressing.id", "desc");
-        $list=$list->paginate(20);
+        $list=$list->paginate(session('records_per_page', 30));
 
         return view("admin.production.pressingCompleteMachineWiseBatch", compact("list", "machine"));
 
@@ -1495,7 +1495,7 @@ class ProductionController extends Controller
         $list=$list->where("packaging.machine",$request->id);
         $list=$list->where("packaging.packaging_status","Y");
         $list=$list->orderBy("packaging.id", "desc");
-        $list=$list->paginate(20);
+        $list=$list->paginate(session('records_per_page', 30));
 
         return view("admin.production.packagingCompleteMachineWiseBatch", compact("list", "machine"));
 
@@ -1542,7 +1542,7 @@ class ProductionController extends Controller
         $list=$list->where("stitching.machine",$request->id);
         $list=$list->where("stitching.stitching_status","Y");
         $list=$list->orderBy("stitching.id", "desc");
-        $list=$list->paginate(20);
+        $list=$list->paginate(session('records_per_page', 30));
 
         return view("admin.production.stitchingCompleteMachineWiseBatch", compact("list", "machine"));
 
@@ -1586,7 +1586,7 @@ class ProductionController extends Controller
         $list=$list->where("packaging.machine",$request->id);
         $list=$list->where("packaging.packaging_status","N");
         $list=$list->orderBy("packaging.id", "desc");
-        $list=$list->paginate(20);
+        $list=$list->paginate(session('records_per_page', 30));
 
         return view("admin.production.packagingPendingMachineWiseBatch", compact("list", "machine"));
 
@@ -1630,7 +1630,7 @@ class ProductionController extends Controller
         $list=$list->where("washing.machine",$request->id);
         $list=$list->where("washing.washing_status","N");
         $list=$list->orderBy("washing.id", "desc");
-        $list=$list->paginate(20);
+        $list=$list->paginate(session('records_per_page', 30));
 
         return view("admin.production.washingPendingMachineWiseBatch", compact("list", "machine"));
 
@@ -1674,7 +1674,7 @@ class ProductionController extends Controller
         $list=$list->where("pressing.machine",$request->id);
         $list=$list->where("pressing.pressing_status","N");
         $list=$list->orderBy("pressing.id", "desc");
-        $list=$list->paginate(20);
+        $list=$list->paginate(session('records_per_page', 30));
 
         return view("admin.production.pressingPendingMachineWiseBatch", compact("list", "machine"));
 
@@ -1718,7 +1718,7 @@ class ProductionController extends Controller
         $list=$list->where("stitching.machine",$request->id);
         $list=$list->where("stitching.stitching_status","N");
         $list=$list->orderBy("stitching.id", "desc");
-        $list=$list->paginate(20);
+        $list=$list->paginate(session('records_per_page', 30));
 
         return view("admin.production.stitchingPendingMachineWiseBatch", compact("list", "machine"));
 
@@ -1761,7 +1761,7 @@ class ProductionController extends Controller
         $list=$list->where("production.machine",$request->id);
         $list=$list->where("production.production_status","N");
         $list=$list->orderBy("production.id", "desc");
-        $list=$list->paginate(20);
+        $list=$list->paginate(session('records_per_page', 30));
 
         return view("admin.production.machineWiseBatch", compact("list", "machine"));
 
@@ -1813,7 +1813,7 @@ class ProductionController extends Controller
             $production=$production->where("production.production_status","like",'%'.$request->status.'%');
         }
         $production=$production->orderBy("production.id", "desc");
-        $production=$production->paginate(20);
+        $production=$production->paginate(session('records_per_page', 30));
         return view("admin.production.allProduction", compact("production", "machine"));
     }
 

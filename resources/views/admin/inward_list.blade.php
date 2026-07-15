@@ -1,4 +1,4 @@
-@extends('admin.layout.table_master')
+@extends('admin.layout.table_master_material')
 
 @section('title', 'List of Inward')
 
@@ -41,12 +41,8 @@
 
 
                         <div class="row">
-                             <div class="col-sm-4">
-                            </div>
-                            <div class="col-sm-4">
-                            </div>
-                            <div class="col-sm-4" style="text-align: right;margin-bottom: 5px">
-                                <a class="btn btn-primary" href="{{url('client/inward/add')}}">Add New</a>
+                            <div class="col-sm-12" style="text-align: right;margin-bottom: 5px">
+                                <a class="btn btn-primary" href="{{route('admin.stock.inward.add')}}">Add New</a>
                             </div>
                         </div>
                         <div class="row">
@@ -59,9 +55,43 @@
                             @endif
 
                             <div class="col-sm-12">
+                                <div class="card-box">
+                                    <h4 class="m-t-0 header-title">Filter</h4>
+                                    <form method="get">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label>Inward From</label>
+                                                    <input type="text" value="{{ request('inward_from') }}" name="inward_from" class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label>Product Name</label>
+                                                    <input type="text" value="{{ request('product_name') }}" name="product_name" class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label>Customer Name</label>
+                                                    <input type="text" value="{{ request('customer_name') }}" name="customer_name" class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label>Type of Inward</label>
+                                                    <input type="text" value="{{ request('inward_type') }}" name="inward_type" class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="hidden-xs">&nbsp;</label>
+                                                <button class="btn btn-primary btn-block waves-effect waves-light"><i class="mdi mdi-file-find"></i> Search</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
 
                                 <div class="card-box table-responsive">
-                                    <form method="get">
                                     <table class="table table-striped table-bordered">
                                         <thead>
                                         <tr>
@@ -71,17 +101,6 @@
                                             <th>Customer Name</th>
                                             <th>Type of Inward</th>
                                             <th>Received Qty</th>
-{{--                                            <th></th>--}}
-                                        </tr>
-
-                                        <tr>
-                                            <td><button>Search</button></td>
-                                            <td><input type="text" class="listSearchContributor inputElement" name="inward_from" value="@if(isset($_GET['inward_from'])){{$_GET['inward_from']}}@endif"></td>
-                                            <td><input type="text" class="listSearchContributor inputElement" name="product_name" value="@if(isset($_GET['product_name'])){{$_GET['product_name']}}@endif"></td>
-                                              <td><input type="text" class="listSearchContributor inputElement" name="customer_name" value="@if(isset($_GET['vendor_name'])){{$_GET['vendor_name']}}@endif"></td>
-                                             <td><input type="text" class="listSearchContributor inputElement" name="inward_type" value="@if(isset($_GET['inward_type'])){{$_GET['inward_type']}}@endif"></td>
-                                            <td></td>
-{{--                                            <td></td>--}}
                                         </tr>
                                         </thead>
                                         <tbody>
@@ -114,7 +133,6 @@
                                             @endforeach
                                         </tbody>
                                     </table>
-                                </form>
                                     {{$data->appends(request()->input())->links()}}
                                 </div>
                             </div>

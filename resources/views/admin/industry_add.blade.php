@@ -1,7 +1,6 @@
-@extends('admin.layout.master')
+@extends('admin.layout.master_material')
 
 @section('title', 'Add Industry')
-  <script src="https://cdn.ckeditor.com/ckeditor5/20.0.0/classic/ckeditor.js"></script>
 @section('sidebar')
     @parent
 
@@ -102,12 +101,4 @@
 
                 </div> <!-- content -->
 
-
-              <script>
-            ClassicEditor
-            .create( document.querySelector( '#editor' ) )
-            .catch( error => {
-                console.error( error );
-            } );
-    </script>
    @endsection

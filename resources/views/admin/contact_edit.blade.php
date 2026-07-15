@@ -1,6 +1,6 @@
-@extends('admin.layout.master')
+@extends('admin.layout.master_material')
 
-@section('title', 'Add Category')
+@section('title', 'Edit Contact')
 
 @section('sidebar')
     @parent
@@ -8,8 +8,6 @@
 @endsection
 
 @section('content')
-    <script src="https://cdn.ckeditor.com/ckeditor5/20.0.0/classic/ckeditor.js"></script>
-
         <div class="content-page">
             <!-- Start content -->
             <div class="content">
@@ -19,10 +17,10 @@
                     <div class="row">
                      <div class="col-xs-12">
                         <div class="page-title-box">
-                            <h4 class="page-title">Add New Contact</h4>
+                            <h4 class="page-title">Edit Contact</h4>
                             <ol class="breadcrumb p-0 m-0">
                                 <li>
-                                    <a href="#">Zircos</a>
+                                    <a href="#">{{Session::get('software_title')}}</a>
                                 </li>
                                 <li>
                                     <a href="{{url('client/customer/contact')}}">Contact List </a>
@@ -55,7 +53,7 @@
                                 @endif -->
                                 <div class="col-xs-12">
 
-                                    <div class="row justify-content-md-center">
+                                    <div class="row">
                                         {{Form::model($data,['method'=>'post','route'=>'admin.contact.update','files'=>'true'])}}
                                         {{Form::hidden('id',null)}}
                                         <div class="col-md-12">
@@ -201,24 +199,6 @@
 
  <script src="{{asset('public/adminpanel/default/assets/js/jquery-1.12.4.js')}}"></script>
 <script>
-    ClassicEditor
-    .create( document.querySelector( '#editor' ) )
-    .catch( error => {
-        console.error( error );
-    } );
-
-    ClassicEditor
-    .create( document.querySelector( '#editor2' ) )
-    .catch( error => {
-        console.error( error );
-    } );
-
-    ClassicEditor
-    .create( document.querySelector( '#editor3' ) )
-    .catch( error => {
-        console.error( error );
-    } );
-
     $("#copy_billing").click(function(){
 
         var billing_city=$("#billing_city").val();

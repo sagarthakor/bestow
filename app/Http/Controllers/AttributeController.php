@@ -45,7 +45,7 @@ class AttributeController extends Controller
     }
     function list(Request $request)
     {
-        $list=attribute::orderBy('attribute_name', 'asc')->paginate(10);
+        $list=attribute::orderBy('attribute_name', 'asc')->paginate(session('records_per_page', 30));
         return view("admin/attribute/index",compact("list"));
     }
 }

@@ -511,7 +511,7 @@ class OrderController extends Controller
             $orderlist=$orderlist->where("customer_name","like",'%'.$request->client_name.'%');
         }
         $orderlist=$orderlist->orderBy("id","desc");
-        $orderlist=$orderlist->paginate(10);
+        $orderlist=$orderlist->paginate(session('records_per_page', 30));
         $company_name=company::select('company_name')->first();
         return view("admin.order.list")->with(['list'=>$orderlist,'company'=>$company_name->company_name]);
     }

@@ -1182,6 +1182,9 @@ class MasterController extends Controller
 
             Session::put('software_title',$wensite_detail->software_title);
 
+            $company_settings = \App\company::first();
+            Session::put('records_per_page', $company_settings->records_per_page ?? 30);
+
 
             $totcustomer=customers::query()->count();
 
