@@ -39,9 +39,14 @@ class SeedBeltProductionAndReportPermissions extends Migration
             Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
         }
 
-        $superAdmin = Role::where('name', 'Super Admin')->first();
-        if ($superAdmin) {
-            $superAdmin->givePermissionTo($permissions);
+        // Admin and OFFICE mirror Super Admin's production/report permission set
+        // (same formula_*, production_*, *_report_view grants) but were missing
+        // these new ones, so Belt Production/Reports stayed hidden for them too.
+        foreach (['Super Admin', 'Admin', 'OFFICE'] as $roleName) {
+            $role = Role::where('name', $roleName)->first();
+            if ($role) {
+                $role->givePermissionTo($permissions);
+            }
         }
     }
 
