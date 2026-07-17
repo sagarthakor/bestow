@@ -2055,33 +2055,9 @@ class PurchaseController extends Controller
 
     function po_add(Request $request)
     {
-        $vendor = ['' => 'select vendor'] + vendor::orderBy('vendor_name', 'asc')
-                ->get()
-                ->pluck('vendor_name', 'id')
-                ->toArray();
-
-
-        $product = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'product')
-            ->orwhere('product.status', 'raw material')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $service = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'service')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $bom=product::select('product.*','gst.gst_per','uom.uom_name')
-            ->leftJoin('gst','gst.id','product.gst')
-            ->leftJoin('uom','uom.id','product.uom')
-            ->where('product.status','bom')
-            ->orderBy('product.product_name','asc')
-            ->get();
+        // Product/service/BOM picking on this page uses the select2 AJAX
+        // search endpoint (product_search_options) now, so the full
+        // product-table dump that used to be passed to the view is gone.
 
         $solist = ['' => 'select salaesorder'] + salesorder::orderBy('salaesorder_no', 'desc')->get()->pluck('salaesorder_no', 'salaesorder_no')->toArray();
         $term = ['' => 'select terms'] + terms::query()
@@ -2096,6 +2072,6 @@ class PurchaseController extends Controller
         $duedate = Date('d-m-Y', strtotime('+ 15 days'));
 
         return view("admin.purchase/po_add")
-            ->with(['payment_terms'=>$pterms,'duedate'=>$duedate,'bom'=>$bom,'vendor' => $vendor, 'product' => $product, 'service' => $service, 'terms' => $term, 'solist' => $solist]);
+            ->with(['payment_terms'=>$pterms,'duedate'=>$duedate,'terms' => $term, 'solist' => $solist]);
     }
 }

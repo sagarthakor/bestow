@@ -235,8 +235,10 @@ class BomController extends Controller
     	->where('bom_id',$request->id)
     	->get();
 
-    	$product=product::orderBy('product_name','asc')->get();
-        
+        // Product picking on this page uses the select2 AJAX search endpoint
+        // (product_search_options) now, so the full product-table dump that
+        // used to be passed to the view is gone.
+
         $category=[''=>'select category']+category::query()
                 ->orderBy('category_name','asc')
                 ->get()
@@ -265,27 +267,20 @@ class BomController extends Controller
                 ->pluck('uom_name','id')
                 ->toArray();
 
-        $vendor=[''=>'select vendor']+vendor::query()
-                ->orderBy('vendor_name','asc')
-                ->get()
-                ->pluck('vendor_name','id')
-                ->toArray();
-
-        $product=product::select("product.id","product.product_name","stock_status.qty as stockqty")
-            ->orderBy('product.product_name','asc')
-            ->leftJoin("stock_status","stock_status.product","product.id")
-            ->get();
+        // Vendor is not used by this view (no vendor picker on this page);
+        // the full vendor-table dump that used to be passed to the view is
+        // gone.
 
         $manufacturer=[''=>'select Manufacturer']+manufacturer::orderBy('manufacturer_name','asc')
                 ->get()->pluck('manufacturer_name','id')->toArray();
 
         $brand=[''=>'select Brand']+brand::orderBy('brand_name','asc')
                 ->get()->pluck('brand_name','id')->toArray();
-        
+
          $attribute=attribute::orderBy('attribute_name', 'asc')->get();
-         
+
     	return view("admin/bom/bom_edit")
-            ->with(["attribute"=>$attribute,'subcategory'=>$subcategory,'brand'=>$brand,'manufacturer'=>$manufacturer,'bom'=>$bom,'item'=>$bom_item,'product'=>$product,'category'=>$category,'material'=>$material,'gst'=>$gst,'uom'=>$uom,'vendor'=>$vendor]);
+            ->with(["attribute"=>$attribute,'subcategory'=>$subcategory,'brand'=>$brand,'manufacturer'=>$manufacturer,'bom'=>$bom,'item'=>$bom_item,'category'=>$category,'material'=>$material,'gst'=>$gst,'uom'=>$uom]);
 
     }
 
@@ -485,26 +480,19 @@ class BomController extends Controller
                 ->pluck('uom_name','id')
                 ->toArray();
 
-        $vendor=[''=>'select vendor']+vendor::query()
-                ->orderBy('vendor_name','asc')
-                ->get()
-                ->pluck('vendor_name','id')
-                ->toArray();
-                
-    	$product=product::select("product.id","product.product_name","stock_status.qty as stockqty")
-            ->orderBy('product.product_name','asc')
-            ->where("product.status","product")
-            ->leftJoin("stock_status","stock_status.product","product.id")
-            ->get();
+        // Product picking on this page uses the select2 AJAX search endpoint
+        // (product_search_options) now, and vendor is not used by this view
+        // (no vendor picker on this page), so the full table dumps that used
+        // to be passed to the view are gone.
 
         $manufacturer=[''=>'select Manufacturer']+manufacturer::orderBy('manufacturer_name','asc')
                 ->get()->pluck('manufacturer_name','id')->toArray();
 
         $brand=[''=>'select Brand']+brand::orderBy('brand_name','asc')
                 ->get()->pluck('brand_name','id')->toArray();
-                
+
         $attribute=attribute::orderBy('attribute_name', 'asc')->get();
-        
-    	return view("admin/bom/bom_add",compact('manufacturer','brand','product','category','material','gst','uom','vendor',"attribute"));
+
+    	return view("admin/bom/bom_add",compact('manufacturer','brand','category','material','gst','uom',"attribute"));
     }
 }

@@ -589,20 +589,9 @@ class SalesController extends Controller
         //dd($pterms);
 
 
-        $product=product::select('product.*','gst.gst_per','uom.uom_name',"stock_status.qty as stockqty")
-            ->leftJoin('gst','gst.id','product.gst')
-            ->leftJoin('uom','uom.id','product.uom')
-            ->leftJoin('stock_status','stock_status.product','product.id')
-            ->where('product.status','product')
-            ->orderBy('product.product_name','asc')
-            ->get();
-
-        $service=product::select('product.*','gst.gst_per','uom.uom_name')
-            ->leftJoin('gst','gst.id','product.gst')
-            ->leftJoin('uom','uom.id','product.uom')
-            ->where('product.status','service')
-            ->orderBy('product.product_name','asc')
-            ->get();
+        // Product/service/BOM picking on this page uses the select2 AJAX
+        // search endpoint (product_search_options) now, so the full
+        // product-table dump that used to be passed to the view is gone.
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
@@ -610,13 +599,6 @@ class SalesController extends Controller
             ->get()
             ->pluck('module','id')
             ->toArray();
-
-        $bom=product::select('product.*','gst.gst_per','uom.uom_name')
-            ->leftJoin('gst','gst.id','product.gst')
-            ->leftJoin('uom','uom.id','product.uom')
-            ->where('product.status','bom')
-            ->orderBy('product.product_name','asc')
-            ->get();
 
         $reason=sales_update_reason::select("sales_update_reason.*","website_user.first_name","website_user.last_name")
         ->leftJoin("website_user","website_user.id","sales_update_reason.user_id")
@@ -626,7 +608,7 @@ class SalesController extends Controller
 
         $salesMan = salesman::get()->pluck('salesman_name','id')->toArray();
 
-        return view("admin.sales/sales_order_edit")->with(["reason"=>$reason,'contact_name'=>$contact_name,'duedate' => $duedate, 'payment_terms' => $pterms,'bom'=>$bom,'data'=>$so,'quotitem'=>$soitem,'customer'=>$customer,'product'=>$product,'service'=>$service,'module'=>$module, 'salesMan' => $salesMan]);
+        return view("admin.sales/sales_order_edit")->with(["reason"=>$reason,'contact_name'=>$contact_name,'duedate' => $duedate, 'payment_terms' => $pterms,'data'=>$so,'quotitem'=>$soitem,'customer'=>$customer,'module'=>$module, 'salesMan' => $salesMan]);
     }
 
     public function salesorder_list(Request $request)
@@ -1352,27 +1334,9 @@ class SalesController extends Controller
 
         //dd($quotitem);
 
-        $product=product::select('product.*','gst.gst_per','uom.uom_name',"stock_status.qty as stockqty")
-            ->leftJoin('gst','gst.id','product.gst')
-            ->leftJoin('uom','uom.id','product.uom')
-            ->leftJoin('stock_status','stock_status.product','product.id')
-            ->where('product.status','product')
-            ->orderBy('product.product_name','asc')
-            ->get();
-
-        $service=product::select('product.*','gst.gst_per','uom.uom_name')
-            ->leftJoin('gst','gst.id','product.gst')
-            ->leftJoin('uom','uom.id','product.uom')
-            ->where('product.status','service')
-            ->orderBy('product.product_name','asc')
-            ->get();
-
-        $bom=product::select('product.*','gst.gst_per','uom.uom_name')
-            ->leftJoin('gst','gst.id','product.gst')
-            ->leftJoin('uom','uom.id','product.uom')
-            ->where('product.status','bom')
-            ->orderBy('product.product_name','asc')
-            ->get();
+        // Product/service/BOM picking on this page uses the select2 AJAX
+        // search endpoint (product_search_options) now, so the full
+        // product-table dump that used to be passed to the view is gone.
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
@@ -1384,7 +1348,7 @@ class SalesController extends Controller
             ->pluck('module','id')
             ->toArray();
 
-        return view("admin.sales/sales_order_add")->with(["module"=>$module,'contact_name'=>$contact_name,'duedate' => $duedate, 'payment_terms' => $pterms,'bom'=>$bom,'data'=>$quot,'quotitem'=>$quotitem,'customer'=>$customer,'product'=>$product,'service'=>$service,'term'=>$term, 'salesMan' => $salesMan]);
+        return view("admin.sales/sales_order_add")->with(["module"=>$module,'contact_name'=>$contact_name,'duedate' => $duedate, 'payment_terms' => $pterms,'data'=>$quot,'quotitem'=>$quotitem,'customer'=>$customer,'term'=>$term, 'salesMan' => $salesMan]);
     }
 
 }

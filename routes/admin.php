@@ -482,6 +482,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get("get_terms","AjaxController@get_terms");
     Route::get("get_vendor","AdminController@get_vendor");
     Route::get("get_vendor_contact","AdminController@get_vendor_contact");
+    Route::get("product/search-options","AdminController@product_search_options")->name('admin.product.search_options');
+    Route::get("vendor/search-options","AdminController@vendor_search_options")->name('admin.vendor.search_options');
 
 
     Route::get('quotation/list/{status?}', 'AdminController@quotation_list')->name('admin.quotation.list');

@@ -566,34 +566,16 @@ class DeliveryChallanController extends Controller
         }
 
 
-        $product = product::select('product.*', 'gst.gst_per', 'uom.uom_name',"stock_status.qty as stockqty")
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->leftJoin("stock_status","stock_status.product","product.id")
-            ->where('product.status', 'product')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $service = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'service')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $bom = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'bom')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
+        // Product/service/BOM picking on this page uses the select2 AJAX
+        // search endpoint (product_search_options) now, so the full
+        // product-table dump that used to be passed to the view is gone.
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
 
         $stockstatus = stock_status::get();
 
-        return view("admin.invoice.deliverychallan_invoice")->with(["contact_name"=>$contact_name,'invoice_no'=>$invoice_no,'stockstatus' => $stockstatus, 'duedate' => $duedate, 'payment_terms' => $pterms, 'bom' => $bom, 'data' => $quot, 'quotitem' => $quotitem, 'customer' => $customer, 'product' => $product, 'service' => $service, 'module' => $module, 'salesMan' => $salesMan]);
+        return view("admin.invoice.deliverychallan_invoice")->with(["contact_name"=>$contact_name,'invoice_no'=>$invoice_no,'stockstatus' => $stockstatus, 'duedate' => $duedate, 'payment_terms' => $pterms, 'data' => $quot, 'quotitem' => $quotitem, 'customer' => $customer, 'module' => $module, 'salesMan' => $salesMan]);
 
     }
 
@@ -1219,27 +1201,9 @@ class DeliveryChallanController extends Controller
             ->toArray();
 
 
-        $product = product::select('product.*', 'gst.gst_per', 'uom.uom_name','stock_status.qty as stockqty')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->leftJoin("stock_status","stock_status.product","product.id")
-            ->where('product.status', 'product')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $service = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'service')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $bom = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'bom')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
+        // Product/service/BOM picking on this page uses the select2 AJAX
+        // search endpoint (product_search_options) now, so the full
+        // product-table dump that used to be passed to the view is gone.
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
@@ -1282,7 +1246,7 @@ class DeliveryChallanController extends Controller
             ->toArray();
 
         return view("admin.challan.deliverychallanedit")
-            ->with(['contact_name'=>$contact_name,'module'=>$module,'stockstatus' => $stockstatus, 'duedate' => $duedate, 'payment_terms' => $pterms, 'bom' => $bom, 'data' => $quot, 'quotitem' => $quotitem, 'customer' => $customer, 'product' => $product, 'service' => $service, 'term' => $term]);
+            ->with(['contact_name'=>$contact_name,'module'=>$module,'stockstatus' => $stockstatus, 'duedate' => $duedate, 'payment_terms' => $pterms, 'data' => $quot, 'quotitem' => $quotitem, 'customer' => $customer, 'term' => $term]);
 
     }
 
@@ -2159,27 +2123,9 @@ class DeliveryChallanController extends Controller
             ->toArray();
         }
 
-        $product = product::select('product.*', 'gst.gst_per', 'uom.uom_name','stock_status.qty as stockqty')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->leftJoin("stock_status", "stock_status.product", "product.id")
-            ->where('product.status', 'product')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $service = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'service')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $bom = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'bom')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
+        // Product/service/BOM picking on this page uses the select2 AJAX
+        // search endpoint (product_search_options) now, so the full
+        // product-table dump that used to be passed to the view is gone.
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
@@ -2192,7 +2138,7 @@ class DeliveryChallanController extends Controller
 
 
 
-        return view("admin.challan.deliverychallan_new")->with(['contact_name'=>$contact_name,'stockstatus' => $stockstatus, 'duedate' => $duedate, 'payment_terms' => $pterms, 'bom' => $bom, 'data' => $quot, 'quotitem' => $quotitem, 'customer' => $customer, 'product' => $product, 'service' => $service, 'module' => $module, 'term' => $term, 'salesMan' => $salesMan]);
+        return view("admin.challan.deliverychallan_new")->with(['contact_name'=>$contact_name,'stockstatus' => $stockstatus, 'duedate' => $duedate, 'payment_terms' => $pterms, 'data' => $quot, 'quotitem' => $quotitem, 'customer' => $customer, 'module' => $module, 'term' => $term, 'salesMan' => $salesMan]);
 
     }
 }

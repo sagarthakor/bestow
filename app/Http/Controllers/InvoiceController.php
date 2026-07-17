@@ -419,26 +419,9 @@ class InvoiceController extends Controller
             ->toArray();
 
 
-        $product = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'product')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $service = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'service')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $bom = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'bom')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
+        // Product/service/BOM picking on this page uses the select2 AJAX
+        // search endpoint (product_search_options) now, so the full
+        // product-table dump that used to be passed to the view is gone.
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
@@ -479,7 +462,7 @@ class InvoiceController extends Controller
                 ->toArray();
 
         return view("admin.invoice.edit")
-            ->with(['contact_name' => $contact_name, 'module' => $module, 'stockstatus' => $stockstatus, 'duedate' => $duedate, 'payment_terms' => $pterms, 'bom' => $bom, 'data' => $quot, 'quotitem' => $quotitem, 'customer' => $customer, 'product' => $product, 'service' => $service, 'term' => $term]);
+            ->with(['contact_name' => $contact_name, 'module' => $module, 'stockstatus' => $stockstatus, 'duedate' => $duedate, 'payment_terms' => $pterms, 'data' => $quot, 'quotitem' => $quotitem, 'customer' => $customer, 'term' => $term]);
 
     }
 
@@ -955,26 +938,9 @@ class InvoiceController extends Controller
         }
 
 
-        $product = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'product')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $service = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'service')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $bom = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'bom')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
+        // Product/service/BOM picking on this page uses the select2 AJAX
+        // search endpoint (product_search_options) now, so the full
+        // product-table dump that used to be passed to the view is gone.
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
@@ -982,7 +948,7 @@ class InvoiceController extends Controller
 
         $stockstatus = stock_status::get();
 
-        return view("admin.invoice.create")->with(['contact_name' => $contact_name, 'stockstatus' => $stockstatus, 'duedate' => $duedate, 'payment_terms' => $pterms, 'bom' => $bom, 'data' => $quot, 'quotitem' => $quotitem, 'customer' => $customer, 'product' => $product, 'service' => $service, 'term' => $term, 'salesMan' => $salesMan]);
+        return view("admin.invoice.create")->with(['contact_name' => $contact_name, 'stockstatus' => $stockstatus, 'duedate' => $duedate, 'payment_terms' => $pterms, 'data' => $quot, 'quotitem' => $quotitem, 'customer' => $customer, 'term' => $term, 'salesMan' => $salesMan]);
 
     }
 

@@ -69,7 +69,7 @@
 
                                     <div class="form-group">
                                         <label class="control-label">Vendor Name <span style="color: red">*</span></label>
-                                    {{Form::select('vendor',$vendor,null,['class'=>'form-control js-example-basic-single','id'=>'customer','onchange'=>'getvendor(this.value)','required'])}}
+                                    <select id="customer" name="vendor" class="form-control" onchange="getvendor(this.value)" required></select>
 
                                     <!--   <div class="input-group-btn" style="top: 10px">
 <span class="input-group-addon" id="start-date"><span class="glyphicon glyphicon-plus" style="cursor: pointer;" onclick="add_customer()"></span>
@@ -453,101 +453,6 @@
         </div>
 
 
-        <div class="modal" id="product_model" role="dialog" style="width: 100% !important">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" onclick="model_close()">&times;</button>
-                        <h4 class="modal-title">Products</h4>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-12">
-
-                                <div class="card-box table-responsive">
-                                    <input type="hidden" name="srid" id="srid">
-                                    <table style="width: 100% !important" id="datatable-buttons" class="table table-striped table-bordered">
-                                        <thead>
-                                        <tr>
-
-                                            <th>Product Name</th>
-
-                                            <th>UOM</th>
-                                            <th>Price</th>
-                                            <th>GST</th>
-
-                                        </tr>
-                                        </thead>
-
-
-                                        <tbody>
-                                        @foreach($product as $serarchprod)
-                                            <tr value="{{$serarchprod->id}}">
-                                                <td value="{{$serarchprod->id}}" style="width: 10%">{{$serarchprod->product_name}}</td>
-                                                <td value="{{$serarchprod->id}}">{{$serarchprod->uom_name}}</td>
-                                                <td value="{{$serarchprod->id}}">{{$serarchprod->price}}</td>
-                                                <td value="{{$serarchprod->id}}">{{$serarchprod->gst_per}}</td>
-                                            </tr>
-                                        @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-
-        <div class="modal" id="service_model" role="dialog" style="width: 100% !important">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" onclick="model_close()">&times;</button>
-                        <h4 class="modal-title">Services</h4>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-12">
-
-                                <div class="card-box table-responsive">
-                                    <input type="hidden" name="servicesrid" id="servicesrid">
-                                    <table style="width: 100% !important" id="service_datatable-buttons" class="table table-striped table-bordered">
-                                        <thead>
-                                        <tr>
-
-                                            <th>Service Name</th>
-
-                                            <th>UOM</th>
-                                            <th>Price</th>
-                                            <th>GST</th>
-
-                                        </tr>
-                                        </thead>
-
-
-                                        <tbody>
-                                        @foreach($service as $serarchservice)
-                                            <tr value="{{$serarchservice->id}}">
-                                                <td style="width: 10%">{{$serarchservice->product_name}}</td>
-                                                <td>{{$serarchservice->uom_name}}</td>
-                                                <td>{{$serarchservice->price}}</td>
-                                                <td>{{$serarchservice->gst_per}}</td>
-                                            </tr>
-                                        @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-
-
         <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
         <script type="text/javascript" src="{{public_path('/adminpanel/plugins/parsleyjs/parsley.min.js')}}"></script>
@@ -558,6 +463,8 @@
         var customer=$("#customer").val();
         //alert(customer);
         getvendor(customer);
+
+        initVendorAjaxSelect2($("#customer"));
 
         $(".adjustment").on("input", function(){
             var item_total = $("#item_total").val();
@@ -588,6 +495,51 @@
         $('form').parsley();
         // /getdate("Sd");
     });
+
+    // Search-as-you-type product/service/BOM picker: fetches only the
+    // matching rows from the server instead of dumping the whole table
+    // (7000+ products) into every row.
+    function initProductAjaxSelect2($select, status) {
+        $select.select2({
+            ajax: {
+                url: "{{ route('admin.product.search_options') }}",
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {term: params.term, status: status};
+                },
+                processResults: function (data) {
+                    return data;
+                },
+                cache: true
+            },
+            minimumInputLength: 2,
+            placeholder: 'Type to search...',
+            width: '100%'
+        });
+    }
+
+    // Search-as-you-type vendor picker: fetches only the matching rows from
+    // the server instead of dumping the whole vendor table into the page.
+    function initVendorAjaxSelect2($select) {
+        $select.select2({
+            ajax: {
+                url: "{{ route('admin.vendor.search_options') }}",
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {term: params.term};
+                },
+                processResults: function (data) {
+                    return data;
+                },
+                cache: true
+            },
+            minimumInputLength: 2,
+            placeholder: 'Type to search...',
+            width: '100%'
+        });
+    }
 
     $( "#quot_date" ).datepicker({
         changeMonth: true,
@@ -955,8 +907,6 @@
 
     function model_close()
     {
-        $("#product_model").hide();
-        $("#service_model").hide();
         $("#myModal").hide();
     }
 
@@ -990,65 +940,16 @@
         window.location="{{url('customer_add')}}";
     }
 
-    function product_search(srno)
-    {
-        $("#product_model").show();
-        $("#srid").val(srno);
-    }
-
-    function service_search(srno)
-    {
-        $("#service_model").show();
-        $("#servicesrid").val(srno);
-    }
 </script>
 
         <script>
-
-
-    $("#datatable-buttons").on('click','tr',function(e){
-        e.preventDefault();
-        var id = $(this).attr('value');
-        var srno=$("#srid").val();
-        get_product(id,srno)
-        $("#product_model").hide();
-        var appurl="{{url('/')}}";
-        $.ajax({
-            url:appurl+'/client/ajax_getproduct',
-            data:{product:id},
-            method:'get',
-            success:function(data)
-            {
-                $("#product"+srno).html(data);
-            }
-        });
-    });
-
-
-    $("#service_datatable-buttons").on('click','tr',function(e){
-        e.preventDefault();
-        var id = $(this).attr('value');
-        var srno=$("#servicesrid").val();
-        get_product(id,srno)
-        $("#service_model").hide();
-        var appurl="{{url('/')}}";
-        $.ajax({
-            url:appurl+'/client/ajax_getservice',
-            data:{product:id},
-            method:'get',
-            success:function(data)
-            {
-                $("#product"+srno).html(data);
-            }
-        });
-    });
 
     $("#add_product").click(function (e) {
             e.preventDefault();
             var i = $("#totrow").val();
             i++;
 
-            var data = "<tr id='row" + i + "'><td style='width:35%'><div class='form-group'><select class='form-control js-example-basic-single product' onchange='get_product(this)' name='product[]' id='product" + i + "'> <option>select</option>@foreach($product as $prod)<option value='{{$prod->id}}'>{{$prod->item_code}} - {{$prod->product_name}}</option>@endforeach</select></div><div class='form-group'><label></label><textarea style='width:100%' id='description" + i + "' name='description[]' class='description'></textarea></div></td>";
+            var data = "<tr id='row" + i + "'><td style='width:35%'><div class='form-group'><select class='form-control product' onchange='get_product(this)' name='product[]' id='product" + i + "'> <option>select</option></select></div><div class='form-group'><label></label><textarea style='width:100%' id='description" + i + "' name='description[]' class='description'></textarea></div></td>";
 {{--            data += '<td style="width:6%;vertical-align: top !important;text-align:center"><input type="text" name="inner_diamitter[]"  class="inner_diameter smallInputBox inputElement" id="inner_diamitter' + i + '"></td>';--}}
 {{--            data += '<td style="width:6%;vertical-align: top !important;text-align:center"><input type="text" name="outer_diamitter[]"  class="outer_diameter smallInputBox inputElement" id="outer_diamitter' + i + '"></td>';--}}
 {{--            data += '<td style="width:6%;vertical-align: top !important;text-align:center"><input type="text" name="thikness[]"  class="thikness smallInputBox inputElement" id="thikness' + i + '"></td>';--}}
@@ -1222,9 +1123,7 @@
             data += '<td class="actions" style="vertical-align: top !important;text-align:center"><a style="customer:pointer" onclick="remove_row(this)" class="rowremove"><i class="fa fa-trash" style="font-size: 22px"></i></a></td></tr>';
 
             $("#caltable").append(data);
-            $(document).ready(function () {
-                $('.js-example-basic-single').select2();
-            });
+            initProductAjaxSelect2($("#product" + i), 'po_product');
             $("#totrow").val(i);
         });
 
@@ -1234,7 +1133,7 @@
             var i = $("#totrow").val();
             i++;
 
-            var data = "<tr id='row" + i + "'><td style='width:35%'><div class='form-group'><select class='form-control js-example-basic-single product' onchange='get_product(this)' name='product[]' id='product" + i + "'> <option>select</option>@foreach($bom as $prod)<option value='{{$prod->id}}'>{{$prod->product_name}}</option>@endforeach</select></div><div class='form-group'><label></label><textarea style='width:100%' id='description" + i + "' name='description[]' class='description'></textarea></div></td>";
+            var data = "<tr id='row" + i + "'><td style='width:35%'><div class='form-group'><select class='form-control product' onchange='get_product(this)' name='product[]' id='product" + i + "'> <option>select</option></select></div><div class='form-group'><label></label><textarea style='width:100%' id='description" + i + "' name='description[]' class='description'></textarea></div></td>";
 {{--            data += '<td style="width:6%;vertical-align: top !important;text-align:center"><input type="text" name="inner_diamitter[]"  class="inner_diameter smallInputBox inputElement" id="inner_diamitter' + i + '"></td>';--}}
 {{--            data += '<td style="width:6%;vertical-align: top !important;text-align:center"><input type="text" name="outer_diamitter[]"  class="outer_diameter smallInputBox inputElement" id="outer_diamitter' + i + '"></td>';--}}
 {{--            data += '<td style="width:6%;vertical-align: top !important;text-align:center"><input type="text" name="thikness[]"  class="thikness smallInputBox inputElement" id="thikness' + i + '"></td>';--}}
@@ -1408,9 +1307,7 @@
             data += '<td class="actions" style="vertical-align: top !important;text-align:center"><a style="customer:pointer" onclick="remove_row(this)" class="rowremove"><i class="fa fa-trash" style="font-size: 22px"></i></a></td></tr>';
 
             $("#caltable").append(data);
-            $(document).ready(function () {
-                $('.js-example-basic-single').select2();
-            });
+            initProductAjaxSelect2($("#product" + i), 'bom');
             $("#totrow").val(i);
         });
 
@@ -1420,7 +1317,7 @@
             var i = $("#totrow").val();
             i++;
 
-            var data = "<tr id='row" + i + "'><td style='width:35%'><div class='form-group'><select class='form-control js-example-basic-single product' onchange='get_service(this)' name='product[]' id='product" + i + "'> <option>select</option>@foreach($service as $prod)<option value='{{$prod->id}}'>{{$prod->product_name}}</option>@endforeach</select></div><div class='form-group'><label></label><textarea style='width:100%' id='description" + i + "' name='description[]' class='description'></textarea></div></td>";
+            var data = "<tr id='row" + i + "'><td style='width:35%'><div class='form-group'><select class='form-control product' onchange='get_service(this)' name='product[]' id='product" + i + "'> <option>select</option></select></div><div class='form-group'><label></label><textarea style='width:100%' id='description" + i + "' name='description[]' class='description'></textarea></div></td>";
 {{--            data += '<td style="width:6%;vertical-align: top !important;text-align:center"><input type="text" name="inner_diamitter[]"  class="inner_diameter smallInputBox inputElement" id="inner_diamitter' + i + '"></td>';--}}
 {{--            data += '<td style="width:6%;vertical-align: top !important;text-align:center"><input type="text" name="outer_diamitter[]"  class="outer_diameter smallInputBox inputElement" id="outer_diamitter' + i + '"></td>';--}}
 {{--            data += '<td style="width:6%;vertical-align: top !important;text-align:center"><input type="text" name="thikness[]"  class="thikness smallInputBox inputElement" id="thikness' + i + '"></td>';--}}
@@ -1594,22 +1491,10 @@
             data += '<td class="actions" style="vertical-align: top !important;text-align:center"><a style="customer:pointer" onclick="remove_row(this)" class="rowremove"><i class="fa fa-trash" style="font-size: 22px"></i></a></td></tr>';
 
             $("#caltable").append(data);
-            $(document).ready(function () {
-                $('.js-example-basic-single').select2();
-            });
+            initProductAjaxSelect2($("#product" + i), 'service');
             $("#totrow").val(i);
         });
 
-    $(".service_btn").click(function(e){
-        e.preventDefault();
-    });
-
-    $(".product_btn").click(function(e){
-        e.preventDefault();
-    });
-    $("#product_btn1").click(function(e){
-        e.preventDefault();
-    });
     function add_customer()
     {
         $("#myModal").show();

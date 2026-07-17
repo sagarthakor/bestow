@@ -62,6 +62,66 @@ use App\Imports\ProductImport;
 
 class AdminController extends Controller
 {
+    // Shared select2 remote-search source for product/service/BOM pickers on
+    // Quotation, Sales Order, Delivery Challan, Invoice and Purchase Order add
+    // forms. Replaces dumping every row of the product table (7000+) into the
+    // page on every load - only the top 30 matches for the typed term are sent.
+    function product_search_options(Request $request)
+    {
+        $term = trim((string) $request->get('term', ''));
+        $status = $request->get('status', 'product');
+        if (!in_array($status, ['product', 'service', 'bom', 'po_product'], true)) {
+            $status = 'product';
+        }
+
+        // Purchase Order line items can also be raw materials, unlike every
+        // other module which only picks status='product'.
+        if ($status === 'po_product') {
+            $query = product::whereIn('status', ['product', 'raw material']);
+        } else {
+            $query = product::where('status', $status);
+        }
+        if ($term !== '') {
+            $query->where(function ($q) use ($term) {
+                $q->where('product_name', 'like', '%' . $term . '%')
+                    ->orWhere('item_code', 'like', '%' . $term . '%');
+            });
+        }
+
+        $results = $query->orderBy('product_name', 'asc')
+            ->limit(30)
+            ->get(['id', 'item_code', 'product_name'])
+            ->map(function ($p) use ($status) {
+                $label = (in_array($status, ['product', 'po_product'], true) && $p->item_code)
+                    ? ($p->item_code . ' - ' . $p->product_name)
+                    : $p->product_name;
+                return ['id' => $p->id, 'text' => $label];
+            });
+
+        return response()->json(['results' => $results]);
+    }
+
+    // Shared select2 remote-search source for the vendor picker on the
+    // Purchase Order add form (mirrors product_search_options above).
+    function vendor_search_options(Request $request)
+    {
+        $term = trim((string) $request->get('term', ''));
+
+        $query = vendor::query();
+        if ($term !== '') {
+            $query->where('vendor_name', 'like', '%' . $term . '%');
+        }
+
+        $results = $query->orderBy('vendor_name', 'asc')
+            ->limit(30)
+            ->get(['id', 'vendor_name'])
+            ->map(function ($v) {
+                return ['id' => $v->id, 'text' => $v->vendor_name];
+            });
+
+        return response()->json(['results' => $results]);
+    }
+
     function ajax_search_product(Request $request)
     {
         $product = product::where("bar_code", "=", $request->itemname)->get();
@@ -4136,27 +4196,9 @@ class AdminController extends Controller
 
         }
 
-        $product = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'product')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-        //dd($product);
-
-        $service = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'service')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $bom = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'bom')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
+        // Product/service/BOM picking on this page uses the select2 AJAX
+        // search endpoint (product_search_options) now, so the full
+        // product-table dump that used to be passed to the view is gone.
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
@@ -4169,7 +4211,7 @@ class AdminController extends Controller
         $salesMan = salesman::get()->pluck('salesman_name', 'id')->toArray();
         // dd($pterms);
 
-        return view("admin.quotation_edit")->with(["payment_terms" => $pterms, 'duedate' => $duedate, 'data' => $quot, 'quotitem' => $quotitem, 'customer' => $customer, 'product' => $product, 'service' => $service, 'module' => $module, 'contact_name' => $contact_name, 'bom' => $bom, 'salesMan' => $salesMan]);
+        return view("admin.quotation_edit")->with(["payment_terms" => $pterms, 'duedate' => $duedate, 'data' => $quot, 'quotitem' => $quotitem, 'customer' => $customer, 'module' => $module, 'contact_name' => $contact_name, 'salesMan' => $salesMan]);
         //
 
     }
@@ -4844,27 +4886,9 @@ class AdminController extends Controller
                 ->pluck('customer_name', 'id')
                 ->toArray();
 
-
-        $product = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'product')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $service = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'service')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $bom = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'bom')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
+        // Product/service/BOM picking on this page uses the select2 AJAX
+        // search endpoint (product_search_options) now, so the full
+        // product-table dump that used to be passed to the view is gone.
 
         $term = ['' => 'select terms'] + terms::query()
                 ->get()->pluck('module', 'id')->toArray();
@@ -4885,7 +4909,7 @@ class AdminController extends Controller
                 ->toArray();
 
         return view("admin.quotation_add")
-            ->with(['payment_terms' => $pterms, 'due_date' => $duedate, 'customer' => $customer, 'salesMan' => $salesMan, 'product' => $product, 'service' => $service, 'bom' => $bom, 'module' => $term]);
+            ->with(['payment_terms' => $pterms, 'due_date' => $duedate, 'customer' => $customer, 'salesMan' => $salesMan, 'module' => $term]);
     }
 
     function quotation_add1(Request $request)
@@ -4897,28 +4921,9 @@ class AdminController extends Controller
                 ->pluck('customer_name', 'id')
                 ->toArray();
 
-
-        $product = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'product')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $service = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'service')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-
-        $bom = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'bom')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
+        // Product/service/BOM picking on this page uses the select2 AJAX
+        // search endpoint (product_search_options) now, so the full
+        // product-table dump that used to be passed to the view is gone.
 
         $term = ['' => 'select terms'] + terms::query()
                 ->get()->pluck('module', 'id')->toArray();
@@ -4926,7 +4931,7 @@ class AdminController extends Controller
         $module = ['' => 'select terms'] + terms::query()
                 ->get()->pluck('module', 'id')->toArray();
 
-        return view("admin.quotation_add")->with(['bom' => $bom, 'customer' => $customer, 'product' => $product, 'service' => $service, 'terms' => $term,
+        return view("admin.quotation_add")->with(['customer' => $customer, 'terms' => $term,
             "module" => $module]);
     }
 
