@@ -182,9 +182,12 @@
     <tbody>
     @php $srno = 0; @endphp
     @foreach($quotitem as $item)
+        @php
+            $variantLabel = trim(($item->value1 ?? '') . ((($item->value1 ?? '') !== '' && ($item->value2 ?? '') !== '') ? ' / ' : '') . ($item->value2 ?? ''));
+        @endphp
         <tr>
             <td class="text-center">{{ ++$srno }}</td>
-            <td>{{ $item->product_name }}<br>HSN: {{ $item->product_name }}</td>
+            <td>{{ $item->item_code }} - {{ $item->product_name }}{{ $variantLabel !== '' ? ' ('.$variantLabel.')' : '' }}<br>HSN: {{ $item->hsn }}</td>
             <td class="text-center">{{ $item->qty }} {{ $item->uom_name }}</td>
             <td class="text-right">{{ number_format($item->price, 2, '.', ',') }}</td>
             @if($discsum != 0)

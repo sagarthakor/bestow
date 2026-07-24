@@ -114,7 +114,7 @@ class SalesController extends Controller
         $so=salesorder::where('id',$request->id)
             ->first();
 
-        $soitem=salesorder_item::select('salesorder_item.*','product.product_name','product.make','product.model')
+        $soitem=salesorder_item::select('salesorder_item.*','product.product_name','product.make','product.model','product.value1','product.value2')
             ->leftJoin('product','product.id','salesorder_item.product')
             ->where('salesorder_item.sono',$so->salaesorder_no)
             ->get();
@@ -200,7 +200,7 @@ class SalesController extends Controller
             ->first();
 
 
-        $soitem=salesorder_item::select('salesorder_item.*',"uom.uom_name","stock_status.qty as stockqty","product.product_image",'product.product_name','product.make','product.model')
+        $soitem=salesorder_item::select('salesorder_item.*',"uom.uom_name","stock_status.qty as stockqty","product.product_image",'product.product_name','product.make','product.model','product.value1','product.value2')
             ->leftJoin('product','product.id','salesorder_item.product')
             ->leftJoin('stock_status','stock_status.product','product.id')
             ->leftJoin('uom','uom.id','product.uom')
@@ -336,7 +336,7 @@ class SalesController extends Controller
             ->first();
            // dd($so);
 
-        $soitem=salesorder_item::select('salesorder_item.*','product.product_name',"product.item_code",'product.make','product.model','uom.uom_name','product.product_image','product.material_name','category.category_image','uom.uom_name')
+        $soitem=salesorder_item::select('salesorder_item.*','product.product_name',"product.item_code",'product.make','product.model','uom.uom_name','product.product_image','product.material_name','category.category_image','uom.uom_name','product.value1','product.value2')
             ->leftJoin('product','product.id','salesorder_item.product')
             ->leftJoin('category','category.id','product.category')
             ->leftJoin("uom","uom.id","product.uom")
@@ -499,7 +499,7 @@ class SalesController extends Controller
         $so=salesorder::where('id',$request->id)
             ->first();
 
-        $soitem=salesorder_item::select('salesorder_item.*',"uom.uom_name","stock_status.qty as stockqty",'product.product_name','product.make','product.model','product.product_image','product.bar_code')
+        $soitem=salesorder_item::select('salesorder_item.*',"uom.uom_name","stock_status.qty as stockqty",'product.product_name','product.make','product.model','product.product_image','product.bar_code','product.value1','product.value2')
             ->leftJoin('product','product.id','salesorder_item.product')
             ->leftJoin('uom','uom.id','product.uom')
             ->leftJoin('stock_status','stock_status.product','product.id')
@@ -1267,7 +1267,7 @@ class SalesController extends Controller
             $quot=quotation::where('id',$request->id)
                 ->first();
 
-            $quotitem=quotation_item::select('quot_item.*',"uom.uom_name","stock_status.qty as stockqty","product.item_code",'product.product_name','product.make','product.model',"product.product_image")
+            $quotitem=quotation_item::select('quot_item.*',"uom.uom_name","stock_status.qty as stockqty","product.item_code",'product.product_name','product.make','product.model',"product.product_image",'product.value1','product.value2')
                 ->leftJoin('product','product.id','quot_item.product')
                 ->leftJoin("stock_status","stock_status.product","product.id")
                 ->leftJoin('uom','uom.id','product.uom')

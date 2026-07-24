@@ -195,7 +195,10 @@
                 @foreach($quotitem as $item)
                     <tr>
                         <td class="text-center">{{$srno++}}</td>
-                        <td>{{$item->product_name}}<br>HSN: {{$item->hsn}}</td>
+                        @php
+                            $variantLabel = trim(($item->value1 ?? '') . ((($item->value1 ?? '') !== '' && ($item->value2 ?? '') !== '') ? ' / ' : '') . ($item->value2 ?? ''));
+                        @endphp
+                        <td>{{$item->product_name}}{{ $variantLabel !== '' ? ' ('.$variantLabel.')' : '' }}<br>HSN: {{$item->hsn}}</td>
                         {{-- <td class="text-center">
                              @if($item->product_image)
                                  <img src="{{public_path('/product_image/'.$item->product_image)}}" height="40">

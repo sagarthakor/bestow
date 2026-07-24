@@ -132,46 +132,6 @@
                                     
                                     
                                     <div class="row">
-                                                 <div class="col-md-3">
-                                        <div class="form-group row">
-                                        <label for="staticEmail" class="col-sm-6 col-form-label">Cotton</label>
-                                        <div class="col-sm-6">
-                                         {{$data->cotton}}
-                                        </div>
-                                    </div>
-                                    </div>
-                                    
-                                    <div class="col-md-3">
-                                        <div class="form-group row">
-                                        <label for="staticEmail" class="col-sm-6 col-form-label">Spendex</label>
-                                        <div class="col-sm-6">
-                                         {{$data->spendex}}
-                                        </div>
-                                    </div>
-                                    </div>
-                                    
-                                    <div class="col-md-3">
-                                        <div class="form-group row">
-                                        <label for="staticEmail" class="col-sm-6 col-form-label">Elastics</label>
-                                        <div class="col-sm-6">
-                                         {{$data->elastics}}
-                                        </div>
-                                    </div>
-                                    </div>
-                                    
-                                    <div class="col-md-3">
-                                        <div class="form-group row">
-                                        <label for="staticEmail" class="col-sm-6 col-form-label">Nylon</label>
-                                        <div class="col-sm-6">
-                                         {{$data->nylon}}
-                                        </div>
-                                    </div>
-                                    </div>
-                                    
-                                    </div>
-                                    
-                                    
-                                    <div class="row">
                                                  <div class="col-md-4">
                                         <div class="form-group row">
                                         <label for="staticEmail" class="col-sm-6 col-form-label">Manufacturer</label>

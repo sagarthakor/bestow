@@ -63,10 +63,15 @@ class BeltProductionController extends Controller
                 $sufficient = false;
             }
 
+            // Formula qty (and the stock converted via $factor) are both in
+            // grams for KG-tracked materials - the KG unit label only makes
+            // sense for the raw, un-converted stock figure, not these.
+            $displayUnit = $factor > 1 ? 'g' : $item->uom_name;
+
             return (object) [
                 'material' => $item->material,
                 'product_name' => $item->product_name,
-                'uom_name' => $item->uom_name,
+                'uom_name' => $displayUnit,
                 'required_qty' => $requiredQty,
                 'available_stock' => $availableStock,
                 'short_by' => max($shortBy, 0),
@@ -93,6 +98,30 @@ class BeltProductionController extends Controller
         $customer = customers::orderBy('customer_name', 'asc')->get();
 
         return view('admin.belt_production.create', compact('belts', 'customer'));
+    }
+
+    function belt_production_wastage_material(Request $request)
+    {
+        $belt = BeltProduction::find($request->id);
+
+        if (empty($belt) || $belt->status != 'Y' || empty($belt->total_wastage_nos) || $belt->total_wastage_nos <= 0) {
+            return response()->json(['html' => '<div class="alert alert-info">No wastage recorded for this batch.</div>']);
+        }
+
+        $result = $this->computeMaterialRequirement($belt->belt_product, $belt->total_wastage_nos);
+
+        if (empty($result['formula'])) {
+            return response()->json(['html' => '<div class="alert alert-danger">No formula defined for this belt in Buckle Formula Master.</div>']);
+        }
+
+        $html = '<p>Raw material used up by the ' . $belt->total_wastage_nos . ' wasted unit(s):</p>';
+        $html .= '<table class="table table-bordered"><tr><th>Raw Material</th><th>Qty Wasted</th></tr>';
+        foreach ($result['lines'] as $line) {
+            $html .= "<tr><td>{$line->product_name}</td><td>{$line->required_qty} {$line->uom_name}</td></tr>";
+        }
+        $html .= '</table>';
+
+        return response()->json(['html' => $html]);
     }
 
     function belt_production_check_material(Request $request)

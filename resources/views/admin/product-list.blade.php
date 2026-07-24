@@ -136,6 +136,8 @@
                                         <th>Sr.</th>
                                         <th>Item Code</th>
                                         <th>Product Name</th>
+                                        <th>Size</th>
+                                        <th>Color</th>
                                         <th>Categrory</th>
                                         <th>Material</th>
                                         <th>Usage Unit</th>
@@ -156,7 +158,9 @@
                                         <tr>
                                             <td style="text-align: center"> {{($data->currentPage() - 1) * $data->perPage() + $loop->iteration}}</td>
                                             <td style="text-align: center;">{{$list->item_code}}</td>
-                                            <td style="width: 40%"><a href="{{url('client/product/preview/'.$list->id)}}">{{$list->product_name}}</a></td>
+                                            <td style="width: 30%"><a href="{{url('client/product/preview/'.$list->id)}}">{{$list->product_name}}</a></td>
+                                            <td style="text-align: center;">{{$list->value2}}</td>
+                                            <td style="text-align: center;">{{$list->value1}}</td>
                                             <td style="text-align: center;">{{$list->catname}}</td>
                                             <td style="text-align: center;">{{$list->matname}}</td>
                                             <td style="text-align: center;width: 10%">{{$list->uom_name}}</td>

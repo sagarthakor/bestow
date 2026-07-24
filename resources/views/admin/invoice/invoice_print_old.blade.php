@@ -249,9 +249,12 @@ if($discsum==0)
                     <?php
                     $srno++;
                     ?>
+                    @php
+                        $variantLabel = trim(($item->value1 ?? '') . ((($item->value1 ?? '') !== '' && ($item->value2 ?? '') !== '') ? ' / ' : '') . ($item->value2 ?? ''));
+                    @endphp
                     <tr>
                         <td style="border-left:1px solid #ddd;text-align: center;vertical-align:top;width: 5%;border: 1px solid #ddd">{{$srno}}</td>
-                        <td style="vertical-align:top;width:30%;border: 1px solid #ddd">{{$item->product_name}}<br>HSN Code: {{$item->product_name}}</td>
+                        <td style="vertical-align:top;width:30%;border: 1px solid #ddd">{{$item->item_code}} - {{$item->product_name}}{{ $variantLabel !== '' ? ' ('.$variantLabel.')' : '' }}<br>HSN Code: {{$item->hsn}}</td>
                         <td style="text-align: center;vertical-align:top;width: 10%;border: 1px solid #ddd">{{$item->qty}} {{$item->uom_name}}</td>
                         
                         <td style="text-align: center;vertical-align:top;border: 1px solid #ddd">{{number_format($item->price,2,'.',',')}}</td>

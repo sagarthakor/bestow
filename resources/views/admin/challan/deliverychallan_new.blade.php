@@ -394,6 +394,10 @@
                                             $stockqty=$item->stockqty ?? "0";
 
                                             ?>
+                                            @php
+                                                $itemVariant = trim(($item->value1 ?? '') . ((($item->value1 ?? '') !== '' && ($item->value2 ?? '') !== '') ? ' / ' : '') . ($item->value2 ?? ''));
+                                                $itemVariantLabel = $itemVariant !== '' ? ' ('.$itemVariant.')' : '';
+                                            @endphp
                                             @if($item->pstatus=="service")
                                                 <tr style=""  id="row{{$srno}}">
                                                     <td width="10%"><input type="text" value="{{$item->bar_code}}"  onfocusout="search_product(this)" class="itemname form-control"></td>
@@ -401,7 +405,7 @@
                                                     <td style="vertical-align: top !important;width: 35%">
                                                         <div class="form-group">
                                                         <select class="form-control product" onchange="get_product(this)" name="product[]" id="product{{$srno}}">
-                                                            <option value="{{$item->product}}" selected>{{$item->product_name}}</option>
+                                                            <option value="{{$item->product}}" selected>{{$item->item_code}} - {{$item->product_name}}{{$itemVariantLabel}}</option>
                                                         </select>
 
 
@@ -627,7 +631,7 @@
                                                         <td style="vertical-align: top !important;width: 35%">
                                                             <div class="form-group">
                                                                 <select class="form-control product" onchange="get_product(this)" id="product{{$srno}}">
-                                                                    <option value="{{$item->product}}" selected>{{$item->product_name}}</option>
+                                                                    <option value="{{$item->product}}" selected>{{$item->item_code}} - {{$item->product_name}}{{$itemVariantLabel}}</option>
                                                                 </select>
 
                                                                 <label style="color:green">This item is deliver</label>
@@ -854,7 +858,7 @@
                                                             <div class="form-group">
 
                                                                 <select class="form-control product" onchange="get_product(this)" name="{{$stockqty > 0 ? "product[]" : "product1[]" }}" id="product{{$srno}}">
-                                                                    <option value="{{$item->product}}" selected>{{$item->product_name}}</option>
+                                                                    <option value="{{$item->product}}" selected>{{$item->item_code}} - {{$item->product_name}}{{$itemVariantLabel}}</option>
                                                                 </select>
                                                                 @if($item->qty > $stockqty)
                                                                 <label style="color:red">This item not in stock</label>

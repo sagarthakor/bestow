@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\BeltCosting;
 use App\BuckleFormulaMst;
 use App\BuckleFormulaMstItem;
+use App\category;
 use App\product;
 use Illuminate\Http\Request;
 
@@ -20,16 +22,19 @@ class BuckleFormulaController extends Controller
 
     function buckle_formula_add(Request $request)
     {
-        $product = product::orderBy('product_name', 'asc')->where('status', 'product')->get();
-        $rawmaterial = product::orderBy('product_name', 'asc')->where('status', 'raw material')->get();
+        $beltCategoryId = category::where('category_name', 'Belt')->value('id');
+        $product = product::orderBy('product_name', 'asc')->where('status', 'product')->where('category', $beltCategoryId)->get();
+        $rawmaterial = product::with('uomName')->orderBy('product_name', 'asc')->where('status', 'raw material')->get();
+        $beltCosting = BeltCosting::with(['bukkal', 'niwar'])->get();
 
-        return view('admin.buckle_formula.create', compact('product', 'rawmaterial'));
+        return view('admin.buckle_formula.create', compact('product', 'rawmaterial', 'beltCosting'));
     }
 
     function buckle_formula_store(Request $request)
     {
         $request->validate([
             'product' => 'required|unique:buckle_formula_mst,product',
+            'belt_costing_id' => 'required|exists:belt_costings,id',
             'size' => 'required',
             'material' => 'required|array|min:1',
             'qty' => 'required|array|min:1',
@@ -37,6 +42,7 @@ class BuckleFormulaController extends Controller
 
         $formula = new BuckleFormulaMst();
         $formula->product = $request->product;
+        $formula->belt_costing_id = $request->belt_costing_id;
         $formula->size = $request->size;
         $formula->nos = $request->nos ?: 1;
         $formula->save();
@@ -66,20 +72,23 @@ class BuckleFormulaController extends Controller
             ->orderBy('buckle_formula_mst_item.id', 'asc')
             ->get();
 
-        $rawmaterial = product::orderBy('product_name', 'asc')->where('status', 'raw material')->get();
+        $rawmaterial = product::with('uomName')->orderBy('product_name', 'asc')->where('status', 'raw material')->get();
+        $beltCosting = BeltCosting::with(['bukkal', 'niwar'])->get();
 
-        return view('admin.buckle_formula.edit', compact('data', 'data_item', 'rawmaterial'));
+        return view('admin.buckle_formula.edit', compact('data', 'data_item', 'rawmaterial', 'beltCosting'));
     }
 
     function buckle_formula_update(Request $request)
     {
         $request->validate([
+            'belt_costing_id' => 'required|exists:belt_costings,id',
             'size' => 'required',
             'material' => 'required|array|min:1',
             'qty' => 'required|array|min:1',
         ]);
 
         $formula = BuckleFormulaMst::find($request->id);
+        $formula->belt_costing_id = $request->belt_costing_id;
         $formula->size = $request->size;
         $formula->nos = $request->nos ?: 1;
         $formula->save();

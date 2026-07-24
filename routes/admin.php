@@ -91,6 +91,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/check-material', 'BeltProductionController@belt_production_check_material')->name('check_material');
         Route::post('/store', 'BeltProductionController@belt_production_store')->name('store');
         Route::post('/complete', 'BeltProductionController@belt_production_complete')->name('complete');
+        Route::get('/wastage-material', 'BeltProductionController@belt_production_wastage_material')->name('wastage_material');
     });
 
     // ✅ Admin Dashboard

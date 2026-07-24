@@ -134,7 +134,10 @@
                                 <tbody>
                                     @foreach($quotitem as $item)
                                     <tr>
-                                        <td style="vertical-align: top !important;width: 20%">{{$item->product_name}}</td>
+                                        @php
+                                            $itemVariantLabel = trim(($item->value1 ?? '') . ((($item->value1 ?? '') !== '' && ($item->value2 ?? '') !== '') ? ' / ' : '') . ($item->value2 ?? ''));
+                                        @endphp
+                                        <td style="vertical-align: top !important;width: 20%">{{$item->product_name}}{{ $itemVariantLabel !== '' ? ' ('.$itemVariantLabel.')' : '' }}</td>
                                         <td style="vertical-align: top !important;text-align: center;">{{$item->qty}}</td>
                                         <td style="vertical-align: top !important;text-align: center;">{{$item->price}}</td>
                                         <td style="vertical-align: top !important;text-align: center;">{{$item->total}}</td>

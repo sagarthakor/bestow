@@ -409,7 +409,10 @@
                                                 <select class="product listPrice smallInputBox inputElement"
                                                         onchange="get_product(this)" name="product[]"
                                                         id="product{{$srno}}" required>
-                                                    <option value="{{$item->product}}" selected>{{$item->product_name}}</option>
+                                                    @php
+                                                        $itemVariant = trim(($item->value1 ?? '') . ((($item->value1 ?? '') !== '' && ($item->value2 ?? '') !== '') ? ' / ' : '') . ($item->value2 ?? ''));
+                                                    @endphp
+                                                    <option value="{{$item->product}}" selected>{{$item->item_code}} - {{$item->product_name}}{{ $itemVariant !== '' ? ' ('.$itemVariant.')' : '' }}</option>
                                                     {{--                                                        @foreach($product as $prod)--}}
                                                     {{--                                                            <option value="{{$prod->id}}">{{$prod->product_name}}</option>--}}
                                                     {{--                                                        @endforeach--}}

@@ -47,10 +47,6 @@
                         @endcan
                     </ul>
                 </ul>
-                {{Form::model($data,['method'=>'post','route'=>'post.quot_update'])}}
-                {{Form::hidden('id',null)}}
-                {{Form::hidden('quot_no',$data->quot_no)}}
-
                 <div class="tab-content">
                     <div id="home" class="tab-pane fade in active">
                         <div class="panel">
@@ -418,7 +414,10 @@
                                             <tr id="row{{$srno}}">
                                                 <td>{{$srno}}</td>
                                                 <td style="vertical-align: top !important;width: 20%">
-                                                    {{$item->product_name}}
+                                                    @php
+                                                        $variantLabel = trim(($item->value1 ?? '') . ((($item->value1 ?? '') !== '' && ($item->value2 ?? '') !== '') ? ' / ' : '') . ($item->value2 ?? ''));
+                                                    @endphp
+                                                    {{$item->item_code}} - {{$item->product_name}}{{ $variantLabel !== '' ? ' ('.$variantLabel.')' : '' }}
 
                                                 </td>
 {{--                                                <td style="vertical-align: top !important;text-align: center;">--}}
@@ -548,7 +547,6 @@
 
                         </div> <!-- end Panel -->
 
-                        {{Form::close()}}
                     </div> <!-- container -->
 
                 </div> <!-- content -->
