@@ -37,10 +37,6 @@
                     <!-- end row -->
 
                   
-                   {{Form::model($data,['method'=>'post','route'=>'post.quot_update'])}}
-                   {{Form::hidden('id',null)}}
-                   {{Form::hidden('quot_no',$data->quot_no)}}
-
                    <div class="tab-content">
                       <div id="home" class="tab-pane fade in active">
                         <div class="panel">
@@ -54,8 +50,6 @@
                                     <div class="row">
 
 
-                                        {{Form::model($data,['method'=>'post','route'=>'formula_mst_update'])}}
-                                        {{Form::hidden('id',null)}}
                                         <div class="col-md-12">
                                             <div class="demo-box">
                                                 <div class="col-md-12">
@@ -135,9 +129,6 @@
                                                
 
 
-                                              
-
-                                                {{Form::close()}}
 
 
 
@@ -158,7 +149,6 @@
 
 </div> <!-- end Panel -->
 
-{{Form::close()}}
 </div> <!-- container -->
 
 </div> <!-- content -->

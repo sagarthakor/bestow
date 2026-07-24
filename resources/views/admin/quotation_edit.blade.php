@@ -320,9 +320,15 @@
                                                 <select class="product listPrice smallInputBox inputElement js-example-basic-single"
                                                         onchange="get_product(this)" name="product[]"
                                                         id="product{{$srno}}" required>
-                                                    <option value="{{$item->product}}">{{$item->item_code}} - {{$item->product_name}}</option>
+                                                    @php
+                                                        $itemVariant = trim(($item->value1 ?? '') . ((($item->value1 ?? '') !== '' && ($item->value2 ?? '') !== '') ? ' / ' : '') . ($item->value2 ?? ''));
+                                                    @endphp
+                                                    <option value="{{$item->product}}">{{$item->item_code}} - {{$item->product_name}}{{ $itemVariant !== '' ? ' ('.$itemVariant.')' : '' }}</option>
                                                     @foreach($product as $prod)
-                                                        <option value="{{$prod->id}}">{{$prod->item_code}} - {{$prod->product_name}}</option>
+                                                        @php
+                                                            $prodVariant = trim(($prod->value1 ?? '') . ((($prod->value1 ?? '') !== '' && ($prod->value2 ?? '') !== '') ? ' / ' : '') . ($prod->value2 ?? ''));
+                                                        @endphp
+                                                        <option value="{{$prod->id}}">{{$prod->item_code}} - {{$prod->product_name}}{{ $prodVariant !== '' ? ' ('.$prodVariant.')' : '' }}</option>
                                                     @endforeach
                                                 </select>
 
@@ -1555,7 +1561,7 @@ $("#quot_date").datepicker({
                 var i = $("#totrow").val();
                 i++;
 
-                var data = "<tr id='row" + i + "'><td style='vertical-align: top !important;text-align: center;width:10%'><input type='text'  onfocusout='search_product(this)' class='itemname form-control'></td><td style='width:15%'><div class='form-group'><select class='form-control js-example-basic-single product' onchange='get_product(this)' name='product[]' id='product" + i + "'> <option>select</option>@foreach($product as $prod)<option value='{{$prod->id}}'>{{$prod->item_code}} - {{$prod->product_name}}</option>@endforeach</select></div><div class='form-group'><label></label><textarea style='width:100%' id='description" + i + "' name='description[]' class='description'></textarea></div></td>";
+                var data = "<tr id='row" + i + "'><td style='vertical-align: top !important;text-align: center;width:10%'><input type='text'  onfocusout='search_product(this)' class='itemname form-control'></td><td style='width:15%'><div class='form-group'><select class='form-control js-example-basic-single product' onchange='get_product(this)' name='product[]' id='product" + i + "'> <option>select</option>@foreach($product as $prod)@php($prodVariant = trim(($prod->value1 ?? '') . ((($prod->value1 ?? '') !== '' && ($prod->value2 ?? '') !== '') ? ' / ' : '') . ($prod->value2 ?? '')))@php($prodLabel = $prod->item_code . ' - ' . $prod->product_name . ($prodVariant !== '' ? ' ('.$prodVariant.')' : ''))<option value='{{$prod->id}}'>{{ $prodLabel }}</option>@endforeach</select></div><div class='form-group'><label></label><textarea style='width:100%' id='description" + i + "' name='description[]' class='description'></textarea></div></td>";
                 {{--            data += '<td style="width:6%;vertical-align: top !important;text-align:center"><input type="text" name="inner_diamitter[]"  class="inner_diameter smallInputBox inputElement" id="inner_diamitter' + i + '"></td>';--}}
                         {{--            data += '<td style="width:6%;vertical-align: top !important;text-align:center"><input type="text" name="outer_diamitter[]"  class="outer_diameter smallInputBox inputElement" id="outer_diamitter' + i + '"></td>';--}}
                         {{--            data += '<td style="width:6%;vertical-align: top !important;text-align:center"><input type="text" name="thikness[]"  class="thikness smallInputBox inputElement" id="thikness' + i + '"></td>';--}}

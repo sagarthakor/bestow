@@ -104,7 +104,7 @@ class InvoiceController extends Controller
 
         $contact = contact::find($so->contact_name);
         //dd($contact);
-        $soitem = invoice_item::select('invoice_item.*', 'product.product_name', 'product.make', 'product.model', 'uom.uom_name', 'product.product_image', 'product.material_name', 'category.category_image', 'product.hsn')
+        $soitem = invoice_item::select('invoice_item.*', 'product.product_name', 'product.item_code', 'product.value1', 'product.value2', 'product.make', 'product.model', 'uom.uom_name', 'product.product_image', 'product.material_name', 'category.category_image', 'product.hsn')
             ->leftJoin('product', 'product.id', 'invoice_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->leftJoin("uom", "uom.id", "product.uom")
@@ -163,7 +163,7 @@ class InvoiceController extends Controller
 
         $contact = contact::find($so->contact_name);
         //dd($contact);
-        $soitem = invoice_item::select('invoice_item.*', 'product.product_name', 'product.make', 'product.model', 'uom.uom_name', 'product.product_image', 'product.material_name', 'category.category_image', 'product.hsn')
+        $soitem = invoice_item::select('invoice_item.*', 'product.product_name', 'product.item_code', 'product.value1', 'product.value2', 'product.make', 'product.model', 'uom.uom_name', 'product.product_image', 'product.material_name', 'category.category_image', 'product.hsn')
             ->leftJoin('product', 'product.id', 'invoice_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->leftJoin("uom", "uom.id", "product.uom")
@@ -248,7 +248,7 @@ class InvoiceController extends Controller
             ->where("invoice.id", $request->id)
             ->first();
 
-        $quotitem = invoice_item::select('invoice_item.*', 'product.product_name', 'uom.uom_name', 'stock_status.qty as stockqty')
+        $quotitem = invoice_item::select('invoice_item.*', 'product.product_name', 'product.item_code', 'product.value1', 'product.value2', 'uom.uom_name', 'stock_status.qty as stockqty')
             ->leftJoin('product', 'product.id', 'invoice_item.product')
             ->leftJoin("uom", "uom.id", "product.uom")
             ->leftJoin("stock_status", "stock_status.product", "invoice_item.product")
@@ -407,7 +407,7 @@ class InvoiceController extends Controller
                     ->toArray();
         }
 
-        $quotitem = invoice_item::select('invoice_item.*', 'product.product_name', "product.product_image", 'uom.uom_name', 'stock_status.qty as stockqty', "product.bar_code")
+        $quotitem = invoice_item::select('invoice_item.*', 'product.product_name', 'product.item_code', 'product.value1', 'product.value2', "product.product_image", 'uom.uom_name', 'stock_status.qty as stockqty', "product.bar_code")
             ->leftJoin('product', 'product.id', 'invoice_item.product')
             ->leftJoin("uom", "uom.id", "product.uom")
             ->leftJoin("stock_status", "stock_status.product", "invoice_item.product")
@@ -912,7 +912,7 @@ class InvoiceController extends Controller
                 //dd($contact_name);
             }
 
-            $quotitem = salesorder_item::select('salesorder_item.*', 'product.product_name', 'uom.uom_name', 'stock_status.qty as stockqty', "product.bar_code")
+            $quotitem = salesorder_item::select('salesorder_item.*', 'product.product_name', 'product.item_code', 'product.value1', 'product.value2', 'uom.uom_name', 'stock_status.qty as stockqty', "product.bar_code")
                 ->leftJoin('product', 'product.id', 'salesorder_item.product')
                 ->leftJoin("uom", "uom.id", "product.uom")
                 ->leftJoin("stock_status", "stock_status.product", "salesorder_item.product")

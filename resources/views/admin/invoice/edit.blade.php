@@ -409,7 +409,10 @@
                                                 <select class="product listPrice smallInputBox inputElement js-example-basic-single"
                                                         onchange="get_product(this)" name="product[]"
                                                         id="product{{$srno}}" required>
-                                                    <option value="{{$item->product}}">{{$item->product_name}}</option>
+                                                    @php
+                                                        $itemVariant = trim(($item->value1 ?? '') . ((($item->value1 ?? '') !== '' && ($item->value2 ?? '') !== '') ? ' / ' : '') . ($item->value2 ?? ''));
+                                                    @endphp
+                                                    <option value="{{$item->product}}">{{$item->item_code}} - {{$item->product_name}}{{ $itemVariant !== '' ? ' ('.$itemVariant.')' : '' }}</option>
                                                     {{--                                                        @foreach($product as $prod)--}}
                                                     {{--                                                            <option value="{{$prod->id}}">{{$prod->product_name}}</option>--}}
                                                     {{--                                                        @endforeach--}}
@@ -801,8 +804,12 @@
 
                                     <tbody>
                                     @foreach($product as $serarchprod)
+                                        @php
+                                            $serarchprodVariant = trim(($serarchprod->value1 ?? '') . ((($serarchprod->value1 ?? '') !== '' && ($serarchprod->value2 ?? '') !== '') ? ' / ' : '') . ($serarchprod->value2 ?? ''));
+                                            $serarchprodVariantLabel = $serarchprodVariant !== '' ? ' ('.$serarchprodVariant.')' : '';
+                                        @endphp
                                         <tr value="{{$serarchprod->id}}">
-                                            <td value="{{$serarchprod->id}}" style="width: 10%">{{$serarchprod->product_name}}</td>
+                                            <td value="{{$serarchprod->id}}" style="width: 10%">{{$serarchprod->item_code}} - {{$serarchprod->product_name}}{{$serarchprodVariantLabel}}</td>
                                             <td value="{{$serarchprod->id}}">{{$serarchprod->uom_name}}</td>
                                             <td value="{{$serarchprod->id}}">{{$serarchprod->price}}</td>
                                             <td value="{{$serarchprod->id}}">{{$serarchprod->gst_per}}</td>
@@ -1305,7 +1312,14 @@
             var i=$("#totrow").val();
             i++;
 
-            var data="<tr id='row"+i+"'><td style='vertical-align: top !important;text-align: center;width:10%'><input type='text'  onfocusout='search_product(this)' class='itemname form-control'></td><td style='width: 20%'><div class='input-group'><select class='product form-control js-example-basic-single' onchange='get_product(this)' name='product[]' id='product"+i+"'> <option>select</option>@foreach($product as $prod)<option value='{{$prod->id}}'>{{$prod->product_name}}</option>@endforeach</select><div class='input-group-btn'><a class='btn btn-default product_btn'  onclick='product_search("+i+")'><img src='<?=asset('public/product_icon.png');?>' style='height:20px'></a></div></div><div class='form-group'><label></label><textarea id='description"+i+"' name='description[]' class='form-control'></textarea></div></td>";
+            @php
+                $addProductOptionsHtml = '';
+                foreach ($product as $prod) {
+                    $prodVariantJs = trim(($prod->value1 ?? '') . ((($prod->value1 ?? '') !== '' && ($prod->value2 ?? '') !== '') ? ' / ' : '') . ($prod->value2 ?? ''));
+                    $addProductOptionsHtml .= "<option value='".$prod->id."'>".$prod->item_code." - ".$prod->product_name.($prodVariantJs !== '' ? ' ('.$prodVariantJs.')' : '')."</option>";
+                }
+            @endphp
+            var data="<tr id='row"+i+"'><td style='vertical-align: top !important;text-align: center;width:10%'><input type='text'  onfocusout='search_product(this)' class='itemname form-control'></td><td style='width: 20%'><div class='input-group'><select class='product form-control js-example-basic-single' onchange='get_product(this)' name='product[]' id='product"+i+"'> <option>select</option>{!! $addProductOptionsHtml !!}</select><div class='input-group-btn'><a class='btn btn-default product_btn'  onclick='product_search("+i+")'><img src='<?=asset('public/product_icon.png');?>' style='height:20px'></a></div></div><div class='form-group'><label></label><textarea id='description"+i+"' name='description[]' class='form-control'></textarea></div></td>";
             // data +='<td style="vertical-align: top !important;text-align:center"><input type="text" name="inner_diamitter[]"  class="form-control inner_diamitter" id="inner_diamitter'+i+'"></td>';
             // data +='<td style="vertical-align: top !important;text-align:center"><input type="text" name="outer_diamitter[]"  class="form-control outer_diamitter" id="outer_diamitter'+i+'"></td>';
             // data +='<td style="vertical-align: top !important;text-align:center"><input type="text" name="thikness[]"  class="form-control thikness" id="thikness'+i+'"></td>';

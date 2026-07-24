@@ -1133,7 +1133,7 @@ class PurchaseController extends Controller
 
         $vendor=vendor::where('id',$po->vendor)->first();
 
-        $poitem = purchase_item::select('purchase_item.*', 'product.product_name','product.product_image', 'product.material_name', 'category.category_image',"uom.uom_name")
+        $poitem = purchase_item::select('purchase_item.*', 'product.product_name','product.product_image', 'product.material_name', 'product.value1', 'product.value2', 'category.category_image',"uom.uom_name")
             ->leftJoin('product', 'product.id', 'purchase_item.product')
             ->leftJoin('uom','uom.id','product.uom')
             ->leftJoin('category', 'category.id', 'product.category')
@@ -1174,7 +1174,7 @@ class PurchaseController extends Controller
 
         $vendor=vendor::where('id',$po->vendor)->first();
 
-        $poitem = purchase_item::select('purchase_item.*', 'product.product_name','product.product_image', 'product.material_name', 'category.category_image')
+        $poitem = purchase_item::select('purchase_item.*', 'product.product_name','product.product_image', 'product.material_name', 'product.value1', 'product.value2', 'category.category_image')
             ->leftJoin('product', 'product.id', 'purchase_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->where('purchase_item.pono', $po->purchase_no)
@@ -1216,7 +1216,7 @@ class PurchaseController extends Controller
 
         $vendor=vendor::where('id',$po->vendor)->first();
 
-        $poitem = purchase_item::select('purchase_item.*', 'product.product_name','product.product_image', 'product.material_name', 'category.category_image',"uom.uom_name")
+        $poitem = purchase_item::select('purchase_item.*', 'product.product_name','product.product_image', 'product.material_name', 'product.value1', 'product.value2', 'category.category_image',"uom.uom_name")
             ->leftJoin('product', 'product.id', 'purchase_item.product')
             ->leftJoin('uom','uom.id','product.uom')
             ->leftJoin('category', 'category.id', 'product.category')
@@ -1258,7 +1258,7 @@ class PurchaseController extends Controller
 
         $vendor=vendor::where('id',$po->vendor)->first();
 
-        $poitem = purchase_item::select('purchase_item.*', 'product.product_name','product.product_image', 'product.material_name', 'category.category_image',"uom.uom_name")
+        $poitem = purchase_item::select('purchase_item.*', 'product.product_name','product.product_image', 'product.material_name', 'product.value1', 'product.value2', 'category.category_image',"uom.uom_name")
             ->leftJoin('product', 'product.id', 'purchase_item.product')
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->leftJoin('category', 'category.id', 'product.category')
@@ -1581,7 +1581,7 @@ class PurchaseController extends Controller
         $quot = purchase::where('id', $request->id)
             ->first();
         //dd($quot);
-        $quotitem = purchase_item::select('purchase_item.*',"uom.uom_name","product.product_image", 'product.product_name', 'product.make', 'product.model')
+        $quotitem = purchase_item::select('purchase_item.*',"uom.uom_name","product.product_image", 'product.product_name', 'product.make', 'product.model', 'product.item_code', 'product.value1', 'product.value2')
             ->leftJoin('product', 'product.id', 'purchase_item.product')
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->where('purchase_item.pono', $quot->purchase_no)

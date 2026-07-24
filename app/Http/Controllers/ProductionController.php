@@ -964,75 +964,40 @@ class ProductionController extends Controller
     {
         $product = product::findorFail($request->product);
         $product_image = $product->product_image ?? "";
-        $product_image = $product->product_image ?? "";
         $size=$product->value2 ?? "";
         $colour=$product->value1 ?? "";
+
+        // Raw material category is chosen here, at formula-creation time,
+        // instead of being fixed on the product record.
+        $categories=[
+            "Cotton"=>"Cotton",
+            "Spendex"=>"Spendex",
+            "Elastics"=>"Elastics",
+            "Nylon"=>"Nylon",
+            "Polyester"=>"Polyester",
+            "P_P_Yarn"=>"P.P Yarn",
+        ];
+
         $str="";
         $str .="<table class='table table-bordered'>";
         $str .="<tr>";
-        if($product->cotton){
-            $cotton_product=product::select("product.id","product.product_name","uom.uom_name")
-            ->leftJoin("uom","uom.id","product.uom")
-            ->where("product.product_name",$product->cotton)
-            ->first();
-            $str .="<td><table class='table'><tr><th>Cotton</th></tr>";
-            $str .="<tr><td>";
-            $str .="<table class='table table-bordered'><tr><th>Material</th><th>Qty</th><th>UOM</th></tr>";
-            $str .="<tr><td>$cotton_product->product_name<input type='hidden' class='form-control' name='material[]' value='".$cotton_product->id."'></td><td><input required='' style='width:40px' oninput='cal(this)' class='required_qty_per' type='text' name='percentage[]'></td><td>".$cotton_product->uom_name."</td></tr></table></td></tr></table></td>";
-        }
-        if($product->spendex){
-            $spendex_product=product::select("product.id","product.product_name","uom.uom_name")
-            ->leftJoin("uom","uom.id","product.uom")
-            ->where("product.product_name",$product->spendex)
-            ->first();
-            $str .="<td><table class='table'><tr><th>Spendex</th></tr>";
-            $str .="<tr><td>";
-            $str .="<table class='table table-bordered'><tr><th>Material</th><th>Qty</th><th>UOM</th></tr>";
-            $str .="<tr><td>$spendex_product->product_name<input type='hidden' class='form-control' name='material[]' value='".$spendex_product->id."'></td><td><input required='' style='width:40px' type='text' oninput='cal(this)' class='required_qty_per' name='percentage[]'></td><td>".$spendex_product->uom_name."</td></tr></table></td></tr></table></td>";
-        }
-        if($product->elastics){
-            $elastics_product=product::select("product.id","product.product_name","uom.uom_name")
-            ->leftJoin("uom","uom.id","product.uom")
-            ->where("product.product_name",$product->elastics)
-            ->first();
-            $str .="<td><table class='table'><tr><th>Elastics</th></tr>";
-            $str .="<tr><td>";
-            $str .="<table class='table table-bordered'><tr><th>Material</th><th>Qty</th><th>UOM</th></tr>";
-            $str .="<tr><td>$elastics_product->product_name<input type='hidden' class='form-control' name='material[]' value='".$elastics_product->id."'></td><td><input required='' style='width:40px' type='text' oninput='cal(this)' class='required_qty_per' name='percentage[]'></td><td>".$elastics_product->uom_name."</td></tr></table></td></tr></table></td>";
-        }
-        if($product->nylon){
-            $nylon_product=product::select("product.id","product.product_name","uom.uom_name")
-            ->leftJoin("uom","uom.id","product.uom")
-            ->where("product.product_name",$product->nylon)
-            ->first();
-            $str .="<td><table class='table'><tr><th>Nylon</th></tr>";
-            $str .="<tr><td>";
-            $str .="<table class='table table-bordered'><th>Material</th><th>Qty</th><th>UOM</th></tr>";
-            $str .="<tr><td>$nylon_product->product_name<input type='hidden' class='form-control' name='material[]' value='".$nylon_product->id."'></td><td><input required='' style='width:40px' type='text' oninput='cal(this)' class='required_qty_per' name='percentage[]'></td><td>".$nylon_product->uom_name."</td></tr></table></td></tr></table></td>";
-        }
-        if($product->polyester){
-            $polyester_product=product::select("product.id","product.product_name","uom.uom_name")
-                ->leftJoin("uom","uom.id","product.uom")
-                ->where("product.product_name",$product->polyester)
-                ->first();
-            $str .="<td><table class='table'><tr><th>Polyester</th></tr>";
-            $str .="<tr><td>";
-            $str .="<table class='table table-bordered'><th>Material</th><th>Qty</th><th>UOM</th></tr>";
-            $str .="<tr><td>$polyester_product->product_name<input type='hidden' class='form-control' name='material[]' value='".$polyester_product->id."'></td><td><input required='' style='width:40px' type='text' oninput='cal(this)' class='required_qty_per' name='percentage[]'></td><td>".$polyester_product->uom_name."</td></tr></table></td></tr></table></td>";
-        }
-        if($product->p_p_yarn){
-            $p_p_yarn=product::select("product.id","product.product_name","uom.uom_name")
-                ->leftJoin("uom","uom.id","product.uom")
-                ->where("product.product_name",$product->p_p_yarn)
-                ->first();
-            $str .="<td><table class='table'><tr><th>P.P Yarn</th></tr>";
-            $str .="<tr><td>";
-            $str .="<table class='table table-bordered'><th>Material</th><th>Qty</th><th>UOM</th></tr>";
-            $str .="<tr><td>$p_p_yarn->product_name<input type='hidden' class='form-control' name='material[]' value='".$p_p_yarn->id."'></td><td><input required='' style='width:40px' type='text' oninput='cal(this)' class='required_qty_per' name='percentage[]'></td><td>".$p_p_yarn->uom_name."</td></tr></table></td></tr></table></td>";
-        }
+        foreach ($categories as $group=>$label) {
+            $materials=product::select("id","product_name")
+                ->where("raw_material_group",$group)
+                ->orderBy("product_name","asc")
+                ->get();
 
+            $str .="<td><table class='table'><tr><th>".$label."</th></tr>";
+            $str .="<tr><td>";
+            $str .="<table class='table table-bordered'><tr><th>Material</th><th>Qty</th></tr>";
+            $str .="<tr><td><select class='form-control' name='material[]'><option value=''>select ".$label."</option>";
+            foreach ($materials as $material) {
+                $str .="<option value='".$material->id."'>".$material->product_name."</option>";
+            }
+            $str .="</select></td><td><input style='width:60px' oninput='cal(this)' class='required_qty_per' type='text' name='percentage[]'></td></tr></table>";
+            $str .="</td></tr></table></td>";
+        }
         $str .="</tr></table>";
-
 
         return response()->json(["colour"=>$colour,'product_image' => $product_image,"size"=>$size,"str"=>$str]);
     }

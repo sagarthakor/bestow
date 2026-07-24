@@ -63,7 +63,7 @@
                         <!-- end row -->
 
 
-                        {{Form::model($data,['method'=>'post','route'=>'post.quot_update'])}}
+                        {{Form::model($data,['method'=>'post','route'=>'admin.quotation.update'])}}
                         {{Form::hidden('id',null)}}
                         {{Form::hidden('quot_no',$data->quot_no)}}
                         <div class="panel">

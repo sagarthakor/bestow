@@ -394,6 +394,10 @@
                                             $stockqty=$item->stockqty ?? "0";
 
                                             ?>
+                                            @php
+                                                $itemVariant = trim(($item->value1 ?? '') . ((($item->value1 ?? '') !== '' && ($item->value2 ?? '') !== '') ? ' / ' : '') . ($item->value2 ?? ''));
+                                                $itemVariantLabel = $itemVariant !== '' ? ' ('.$itemVariant.')' : '';
+                                            @endphp
                                             @if($item->pstatus=="service")
                                                 <tr style=""  id="row{{$srno}}">
                                                     <td width="10%"><input type="text" value="{{$item->bar_code}}"  onfocusout="search_product(this)" class="itemname form-control"></td>
@@ -401,12 +405,16 @@
                                                     <td style="vertical-align: top !important;width: 35%">
                                                         <div class="form-group">
                                                             <select class="form-control product js-example-basic-single" onchange="get_product(this)" name="product[]" id="product{{$srno}}">
-                                                                <option value="{{$item->product}}">{{$item->product_name}}</option>
+                                                                <option value="{{$item->product}}">{{$item->item_code}} - {{$item->product_name}}{{$itemVariantLabel}}</option>
                                                                 @foreach($product as $prod)
+                                                                    @php
+                                                                        $prodVariant = trim(($prod->value1 ?? '') . ((($prod->value1 ?? '') !== '' && ($prod->value2 ?? '') !== '') ? ' / ' : '') . ($prod->value2 ?? ''));
+                                                                        $prodVariantLabel = $prodVariant !== '' ? ' ('.$prodVariant.')' : '';
+                                                                    @endphp
                                                                     @if($prod->stockqty > 0)
-                                                                        <option value="{{$prod->id}}">{{$prod->item_code}} - {{$prod->product_name}} - Stock - {{$prod->stockqty ?? 0}}</option>
+                                                                        <option value="{{$prod->id}}">{{$prod->item_code}} - {{$prod->product_name}}{{$prodVariantLabel}} - Stock - {{$prod->stockqty ?? 0}}</option>
                                                                     @else
-                                                                        <option style="background-color:red !important" value="{{$prod->id}}">{{$prod->product_name}} - Stock - {{$prod->stockqty}}</option>
+                                                                        <option style="background-color:red !important" value="{{$prod->id}}">{{$prod->item_code}} - {{$prod->product_name}}{{$prodVariantLabel}} - Stock - {{$prod->stockqty}}</option>
                                                                     @endif
 
                                                                 @endforeach
@@ -635,12 +643,16 @@
                                                         <td style="vertical-align: top !important;width: 35%">
                                                             <div class="form-group">
                                                                 <select class="form-control product js-example-basic-single" onchange="get_product(this)" id="product{{$srno}}">
-                                                                    <option value="{{$item->product}}">{{$item->product_name}}</option>
+                                                                    <option value="{{$item->product}}">{{$item->item_code}} - {{$item->product_name}}{{$itemVariantLabel}}</option>
                                                                     @foreach($product as $prod)
+                                                                        @php
+                                                                            $prodVariant = trim(($prod->value1 ?? '') . ((($prod->value1 ?? '') !== '' && ($prod->value2 ?? '') !== '') ? ' / ' : '') . ($prod->value2 ?? ''));
+                                                                            $prodVariantLabel = $prodVariant !== '' ? ' ('.$prodVariant.')' : '';
+                                                                        @endphp
                                                                         @if($prod->stockqty > 0)
-                                                                            <option value="{{$prod->id}}">{{$prod->item_code}} - {{$prod->product_name}} - Stock - {{$prod->stockqty ?? 0}}</option>
+                                                                            <option value="{{$prod->id}}">{{$prod->item_code}} - {{$prod->product_name}}{{$prodVariantLabel}} - Stock - {{$prod->stockqty ?? 0}}</option>
                                                                         @else
-                                                                            <option style="background-color:red !important" value="{{$prod->id}}">{{$prod->product_name}} - Stock - {{$prod->stockqty}}</option>
+                                                                            <option style="background-color:red !important" value="{{$prod->id}}">{{$prod->item_code}} - {{$prod->product_name}}{{$prodVariantLabel}} - Stock - {{$prod->stockqty}}</option>
                                                                         @endif
 
                                                                     @endforeach
@@ -870,12 +882,16 @@
                                                             <div class="form-group">
 
                                                                 <select class="form-control product js-example-basic-single" onchange="get_product(this)" name="{{$stockqty > 0 ? "product[]" : "product1[]" }}" id="product{{$srno}}">
-                                                                    <option value="{{$item->product}}">{{$item->product_name}}</option>
+                                                                    <option value="{{$item->product}}">{{$item->item_code}} - {{$item->product_name}}{{$itemVariantLabel}}</option>
                                                                     @foreach($product as $prod)
+                                                                        @php
+                                                                            $prodVariant = trim(($prod->value1 ?? '') . ((($prod->value1 ?? '') !== '' && ($prod->value2 ?? '') !== '') ? ' / ' : '') . ($prod->value2 ?? ''));
+                                                                            $prodVariantLabel = $prodVariant !== '' ? ' ('.$prodVariant.')' : '';
+                                                                        @endphp
                                                                         @if($prod->stockqty > 0)
-                                                                            <option value="{{$prod->id}}">{{$prod->item_code}} - {{$prod->product_name}} - Stock - {{$prod->stockqty ?? 0}}</option>
+                                                                            <option value="{{$prod->id}}">{{$prod->item_code}} - {{$prod->product_name}}{{$prodVariantLabel}} - Stock - {{$prod->stockqty ?? 0}}</option>
                                                                         @else
-                                                                            <option style="background-color:red !important" value="{{$prod->id}}">{{$prod->product_name}} - Stock - {{$prod->stockqty}}</option>
+                                                                            <option style="background-color:red !important" value="{{$prod->id}}">{{$prod->item_code}} - {{$prod->product_name}}{{$prodVariantLabel}} - Stock - {{$prod->stockqty}}</option>
                                                                         @endif
 
                                                                     @endforeach
@@ -1979,7 +1995,7 @@
             var i=$("#totrow").val();
             i++;
 
-            var data="<tr id='row"+i+"'><td style='vertical-align: top !important;text-align: center;width:10%'><input type='text'  onfocusout='search_product(this)' class='itemname form-control'></td><td style='width: 35%'><div class='form-group'><select class='product form-control js-example-basic-single' onchange='get_product(this)' name='product[]' id='product"+i+"'> <option>select</option>@foreach($product as $prod)<option value='{{$prod->id}}'>{{$prod->item_code}} - {{$prod->product_name}} - Stock : {{$prod->stockqty ?? 0}}</option>@endforeach</select></div><div class='form-group'><label></label><textarea id='description"+i+"' name='description[]' class='form-control'></textarea></div></td>";
+            var data="<tr id='row"+i+"'><td style='vertical-align: top !important;text-align: center;width:10%'><input type='text'  onfocusout='search_product(this)' class='itemname form-control'></td><td style='width: 35%'><div class='form-group'><select class='product form-control js-example-basic-single' onchange='get_product(this)' name='product[]' id='product"+i+"'> <option>select</option>@foreach($product as $prod)@php($prodVariant = trim(($prod->value1 ?? '') . ((($prod->value1 ?? '') !== '' && ($prod->value2 ?? '') !== '') ? ' / ' : '') . ($prod->value2 ?? '')))@php($prodVariantLabel = $prodVariant !== '' ? ' ('.$prodVariant.')' : '')<option value='{{$prod->id}}'>{{$prod->item_code}} - {{$prod->product_name}}{{$prodVariantLabel}} - Stock : {{$prod->stockqty ?? 0}}</option>@endforeach</select></div><div class='form-group'><label></label><textarea id='description"+i+"' name='description[]' class='form-control'></textarea></div></td>";
 {{--            data +='<td style="vertical-align: top !important;text-align:center"><input type="text" name="inner_diamitter[]"  class="smallInputBox inputElement inner_diamitter" id="inner_diamitter'+i+'"></td>';--}}
 {{--            data +='<td style="vertical-align: top !important;text-align:center"><input type="text" name="outer_diamitter[]"  class="smallInputBox inputElement outer_diamitter" id="outer_diamitter'+i+'"></td>';--}}
 {{--            data +='<td style="vertical-align: top !important;text-align:center"><input type="text" name="thikness[]"  class="smallInputBox inputElement thikness" id="thikness'+i+'"></td>';--}}

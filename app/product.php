@@ -9,6 +9,7 @@ class product extends Model
 {
     protected $table="product";
     public $timestamps=false;
+    protected $casts=['variant_images'=>'array'];
     /**
      * @var mixed
      */

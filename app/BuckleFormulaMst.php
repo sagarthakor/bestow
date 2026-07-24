@@ -19,4 +19,9 @@ class BuckleFormulaMst extends Model
     {
         return $this->hasMany(BuckleFormulaMstItem::class, 'formula_id', 'id');
     }
+
+    public function belt_costing(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(BeltCosting::class, 'belt_costing_id', 'id');
+    }
 }

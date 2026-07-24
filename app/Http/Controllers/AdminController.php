@@ -67,7 +67,9 @@ class AdminController extends Controller
         $product = product::where("bar_code", "=", $request->itemname)->get();
         //$option="<option value=''>select product</option>";
         foreach ($product as $product) {
-            $option[] = "<option value='$product->id'>$product->product_name</option>";
+            $variant = trim(($product->value1 ?? '').(($product->value1 && $product->value2) ? ' / ' : '').($product->value2 ?? ''));
+            $label = $product->item_code.' - '.$product->product_name.($variant !== '' ? ' ('.$variant.')' : '');
+            $option[] = "<option value='$product->id'>$label</option>";
         }
         return $option;
     }
@@ -310,7 +312,7 @@ class AdminController extends Controller
             ->leftJoin("contact", "contact.id", "quotation.contact_name")
             ->first();
 
-        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', "product.product_image", "uom.uom_name")
+        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', "product.product_image", "uom.uom_name", "product.value1", "product.value2")
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->where('quot_item.quot_no', $quot->quot_no)
@@ -3536,7 +3538,9 @@ class AdminController extends Controller
             'category.category_name as catname',
             'category.category_image',
             'product.product_image',
-            'uom.uom_name'
+            'uom.uom_name',
+            'product.value1',
+            'product.value2'
         )
             ->leftJoin('product', 'product.id', '=', 'quot_item.product')
             ->leftJoin('category', 'category.id', '=', 'product.category')
@@ -3636,7 +3640,7 @@ class AdminController extends Controller
         $state = state::where('state_name', $quot->billing_state)->first();
         $stateId = $state->id ?? 0;
 
-        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', 'product.material_name', 'category.category_image', 'product.product_image', "product.hsn", "product.item_code", 'category.category_name as catname', 'uom.uom_name')
+        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', 'product.material_name', 'category.category_image', 'product.product_image', "product.hsn", "product.item_code", 'category.category_name as catname', 'uom.uom_name', 'product.value1', 'product.value2')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->leftJoin('uom', 'uom.id', 'product.uom')
@@ -3844,7 +3848,7 @@ class AdminController extends Controller
         $quot = quotation::where('id', $request->id)
             ->first();
         //dd($quot);
-        $quotitem = quotation_item::select('quot_item.*', "uom.uom_name", "product.item_code", 'product.product_name', 'product.make', 'product.model', "product.product_image", "product.bar_code")
+        $quotitem = quotation_item::select('quot_item.*', "uom.uom_name", "product.item_code", 'product.product_name', 'product.make', 'product.model', "product.product_image", "product.bar_code", "product.value1", "product.value2")
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin("uom", "uom.id", "product.uom")
             ->where('quot_item.quotation_no', $quot->quotation_no)
@@ -5699,14 +5703,6 @@ class AdminController extends Controller
 
         $subcategory = ['' => 'select subcategory'] + subcategory::orderBy('subcategory_name', 'asc')->get()->pluck('subcategory_name', 'id')->toArray();
 
-        $manufacturer = ['' => 'select manufacturer'] + manufacturer::orderBy('manufacturer_name', 'asc')->get()->pluck('manufacturer_name', 'id')->toArray();
-
-        $importer = ['' => 'select Importer'] + importer::orderBy('manufacturer_name', 'asc')
-                ->get()->pluck('manufacturer_name', 'id')->toArray();
-
-        $packer = ['' => 'select Packer'] + packer::orderBy('manufacturer_name', 'asc')
-                ->get()->pluck('manufacturer_name', 'id')->toArray();
-
         $brand = ['' => 'select brand'] + brand::orderBy('brand_name', 'asc')->get()->pluck('brand_name', 'id')->toArray();
 
         $material = ['' => 'select material'] + material::query()
@@ -5730,25 +5726,7 @@ class AdminController extends Controller
         $vendor = ['' => 'select vendor'] + vendor::query()
                 ->orderBy('vendor_name', 'asc')->get()->pluck('vendor_name', 'id')->toArray();
 
-        $cotton = ['' => 'select cotton'] + product::orderBy('product_name', 'asc')->where("raw_material_group", "=", "Cotton")
-                ->get()->pluck('product_name', 'product_name')->toArray();
-        //dd($cotton);
-        $spendex = ['' => 'select spendex'] + product::orderBy('product_name', 'asc')->where("raw_material_group", "=", "Spendex")
-                ->get()->pluck('product_name', 'product_name')->toArray();
-
-        $elastics = ['' => 'select elstics'] + product::orderBy('product_name', 'asc')->where("raw_material_group", "=", "Elastics")
-                ->get()->pluck('product_name', 'product_name')->toArray();
-
-        $nylon = ['' => 'select nylon'] + product::orderBy('product_name', 'asc')->where("raw_material_group", "=", "Nylon")
-                ->get()->pluck('product_name', 'product_name')->toArray();
-
-        $polyester = ['' => 'select Polyester'] + product::orderBy('product_name', 'asc')->where("raw_material_group", "=", "Polyester")
-                ->get()->pluck('product_name', 'product_name')->toArray();
-
-        $P_P_Yarn = ['' => 'select P.P Yarn'] + product::orderBy('product_name', 'asc')->where("raw_material_group", "=", "P_P_Yarn")
-                ->get()->pluck('product_name', 'product_name')->toArray();
-
-        return view("admin/product_edit")->with(["product_multi_image" => $product_multi_image, "nylon" => $nylon, "cotton" => $cotton, "spendex" => $spendex, "elastics" => $elastics, "importer" => $importer, "packer" => $packer, "attribute" => $attribute, "brand" => $brand, "manufacturer" => $manufacturer, "subcategory" => $subcategory, 'category' => $category, 'uom' => $uom, 'gst' => $gst, 'data' => $save, 'vendor' => $vendor, 'material' => $material, 'polyester' => $polyester, 'P_P_Yarn' => $P_P_Yarn]);
+        return view("admin/product_edit")->with(["product_multi_image" => $product_multi_image, "attribute" => $attribute, "brand" => $brand, "subcategory" => $subcategory, 'category' => $category, 'uom' => $uom, 'gst' => $gst, 'data' => $save, 'vendor' => $vendor, 'material' => $material]);
 
     }
 

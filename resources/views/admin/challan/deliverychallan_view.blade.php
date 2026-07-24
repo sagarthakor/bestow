@@ -49,10 +49,6 @@
 
                                 </ul>
                             </ul>
-                            {{Form::model($data,['method'=>'post','route'=>'post.quot_update'])}}
-                            {{Form::hidden('id',null)}}
-                            {{Form::hidden('quot_no',$data->quot_no)}}
-
                             <div class="tab-content">
                                 <div id="home" class="tab-pane fade in active">
                                     <div class="panel">
@@ -368,10 +364,14 @@
                                                         $grand = $grand + $item->grand_total;
                                                         $discount_total = $discount_total + $item->discount_amount;
                                                         ?>
+                                                        @php
+                                                            $itemVariant = trim(($item->value1 ?? '') . ((($item->value1 ?? '') !== '' && ($item->value2 ?? '') !== '') ? ' / ' : '') . ($item->value2 ?? ''));
+                                                            $itemVariantLabel = $itemVariant !== '' ? ' ('.$itemVariant.')' : '';
+                                                        @endphp
                                                         <tr id="row{{$srno}}">
                                                             <td>{{$srno}}</td>
                                                             <td style="vertical-align: top !important;width: 20%">
-                                                                {{$item->product_name}}
+                                                                {{$item->product_name}}{{$itemVariantLabel}}
 
                                                             </td>
                                                             <td style="vertical-align: top !important;text-align: center;">
@@ -504,7 +504,6 @@
 
                                     </div> <!-- end Panel -->
 
-                                    {{Form::close()}}
                                 </div> <!-- container -->
 
                             </div> <!-- content -->

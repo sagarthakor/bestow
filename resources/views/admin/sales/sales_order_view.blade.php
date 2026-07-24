@@ -51,10 +51,6 @@
                         @endcan
                     </ul>
                 </ul>
-                {{Form::model($data,['method'=>'post','route'=>'post.quot_update'])}}
-                {{Form::hidden('id',null)}}
-                {{Form::hidden('quot_no',$data->quot_no)}}
-
                 <div class="tab-content">
                     <div id="home" class="tab-pane fade in active">
                         <div class="panel">
@@ -301,8 +297,11 @@
                                             ?>
                                             <tr id="row{{$srno}}">
                                                 <td style="vertical-align: top !important;">
+                                                    @php
+                                                        $itemVariantLabel = trim(($item->value1 ?? '') . ((($item->value1 ?? '') !== '' && ($item->value2 ?? '') !== '') ? ' / ' : '') . ($item->value2 ?? ''));
+                                                    @endphp
                                                     <div class="form-group">
-                                                        {{$item->product_name}}
+                                                        {{$item->product_name}}{{ $itemVariantLabel !== '' ? ' ('.$itemVariantLabel.')' : '' }}
                                                     </div>
 
                                                     <div class="form-group">
@@ -509,7 +508,6 @@
 
                         </div> <!-- end Panel -->
 
-                        {{Form::close()}}
                     </div> <!-- container -->
 
                 </div> <!-- content -->
@@ -592,8 +590,11 @@
 
                                             <tbody>
                                             @foreach($product as $serarchprod)
+                                                @php
+                                                    $serarchprodVariantLabel = trim(($serarchprod->value1 ?? '') . ((($serarchprod->value1 ?? '') !== '' && ($serarchprod->value2 ?? '') !== '') ? ' / ' : '') . ($serarchprod->value2 ?? ''));
+                                                @endphp
                                                 <tr value="{{$serarchprod->id}}">
-                                                    <td style="width: 10%">{{$serarchprod->product_name}}</td>
+                                                    <td style="width: 10%">{{$serarchprod->product_name}}{{ $serarchprodVariantLabel !== '' ? ' ('.$serarchprodVariantLabel.')' : '' }}</td>
                                                     <td>{{$serarchprod->uom_name}}</td>
                                                     <td>{{$serarchprod->price}}</td>
                                                     <td>{{$serarchprod->gst_per}}</td>

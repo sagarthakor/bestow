@@ -61,6 +61,9 @@ class FormulaController extends Controller
                 $tot=count($request->material);
                 for ($i=0;$i<$tot;$i++)
                 {
+                    if(empty($request->material[$i])){
+                        continue;
+                    }
                     $item=new formula_mst_item();
                     $item->formula_id=$formula_mst->id;
                     $item->nos=$request->nos;
@@ -136,6 +139,9 @@ class FormulaController extends Controller
                 $tot=count($request->material);
                 for ($i=0;$i<$tot;$i++)
                 {
+                    if(empty($request->material[$i])){
+                        continue;
+                    }
                     $item=new formula_mst_item();
                     $item->formula_id=$formula_mst->id;
                     $item->nos=$request->nos;

@@ -188,7 +188,10 @@
                                                         <tr id="row{{$srno}}">
                                                             <td>{{$srno}}</td>
                                                             <td style="vertical-align: top !important;width: 20%">
-                                                                {{$item->product_name}}
+                                                                @php
+                                                                    $variantLabel = trim(($item->value1 ?? '') . ((($item->value1 ?? '') !== '' && ($item->value2 ?? '') !== '') ? ' / ' : '') . ($item->value2 ?? ''));
+                                                                @endphp
+                                                                {{$item->product_name}}{{ $variantLabel !== '' ? ' ('.$variantLabel.')' : '' }}
 
                                                             </td>
 {{--                                                            <td style="vertical-align: top !important;text-align: center;">--}}

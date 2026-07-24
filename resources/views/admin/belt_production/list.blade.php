@@ -74,6 +74,9 @@
                                         <td style="text-align:right;">
                                             @if($row->status == 'Y')
                                                 <span class="{{ $row->total_wastage_nos > 0 ? 'text-danger' : 'text-success' }}">{{ $row->total_wastage_nos }}</span>
+                                                @if($row->total_wastage_nos > 0)
+                                                    <br><a href="javascript:void(0)" onclick="openWastage({{ $row->id }})" style="font-size:11px;">View Wastage</a>
+                                                @endif
                                             @else
                                                 -
                                             @endif
@@ -129,12 +132,34 @@
         </div>
     </div>
 
+    <!-- Wastage Material Modal -->
+    <div id="wastageModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999;">
+        <div style="background:#fff; max-width:500px; margin:10% auto; padding:20px; border-radius:4px;">
+            <h4>Raw Material Wasted</h4>
+            <div id="wastage_content">Loading...</div>
+            <button type="button" class="btn btn-default" style="margin-top:10px;" onclick="document.getElementById('wastageModal').style.display='none'">Close</button>
+        </div>
+    </div>
+
     <script>
         function openComplete(id, plannedQty) {
             document.getElementById('complete_id').value = id;
             document.getElementById('planned_qty_display').value = plannedQty;
             document.getElementById('total_production').value = plannedQty;
             document.getElementById('completeModal').style.display = 'block';
+        }
+
+        function openWastage(id) {
+            document.getElementById('wastage_content').innerHTML = 'Loading...';
+            document.getElementById('wastageModal').style.display = 'block';
+            $.ajax({
+                url: '{{ route("admin.belt_production.wastage_material") }}',
+                data: { id: id },
+                method: 'get',
+                success: function (res) {
+                    document.getElementById('wastage_content').innerHTML = res.html;
+                }
+            });
         }
     </script>
 

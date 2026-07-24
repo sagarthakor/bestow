@@ -1148,17 +1148,23 @@ function ajax_vendor_save(Request $request)
 function ajax_getproduct(Request $request)
 {
  $product=product::find($request->product);
- $str='<option value="'.$product->id.'">'.$product->product_name.'</option>';
+ $str='<option value="'.$product->id.'">'.$this->product_option_label($product).'</option>';
  $product_list=product::orderBy('product_name','asc')->where('status','product')->get();
 
  foreach($product_list as $list)
  {
   if($product->id==$list->id)
    {}else{
-     $str .='<option value="'.$list->id.'">'.$list->product_name.'</option>';
+     $str .='<option value="'.$list->id.'">'.$this->product_option_label($list).'</option>';
    }
  }
  return $str;
+}
+
+function product_option_label($product)
+{
+ $variant=trim(($product->value1 ?? '').(($product->value1 ?? '')!=='' && ($product->value2 ?? '')!=='' ? ' / ' : '').($product->value2 ?? ''));
+ return $product->item_code.' - '.$product->product_name.($variant!=='' ? ' ('.$variant.')' : '');
 }
 
 function ajax_getservice(Request $request)
