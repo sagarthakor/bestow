@@ -191,6 +191,12 @@ return [
         'Belt Production Report' => [
             'View' => 'belt_production_report_view',
         ],
+        'Socks Products Without Formula Report' => [
+            'View' => 'socks_missing_formula_report_view',
+        ],
+        'Belt Products Without Formula Report' => [
+            'View' => 'belt_missing_formula_report_view',
+        ],
     ],
 
     'Machine Master' =>[

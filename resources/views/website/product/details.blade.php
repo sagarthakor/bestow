@@ -381,12 +381,17 @@
         selectedVariant = {
             id:    btn.dataset.id,
             price: parseFloat(btn.dataset.price),
+            image: btn.dataset.image,
         };
 
         document.getElementById('priceBox').textContent = selectedVariant.price.toFixed(2);
         document.getElementById('selectedSizeLabel').textContent = btn.textContent;
 
-        // Image does NOT change on size select — only changes when color/design is switched
+        // Each size can have its own photo, so switch the main image too.
+        if (selectedVariant.image) {
+            document.getElementById('mainImage').src = '/product_image/' + selectedVariant.image;
+        }
+
         const url = new URL(window.location);
         url.searchParams.set('variant', selectedVariant.id);
         window.history.replaceState({}, '', url);

@@ -21,9 +21,10 @@
         .rpt-panel-body { padding: 18px 16px 6px; }
         .rpt-panel-body label { font-weight: 600; color: #555; font-size: 12.5px; margin-bottom: 4px; }
         .rpt-actions { padding: 0 16px 16px; text-align: right; border-top: 1px solid #eceff5; margin-top: 12px; padding-top: 14px; }
-        .rpt-stats { padding: 10px 16px; border-bottom: 1px solid #eceff5; background: #fafbfd; font-size: 13px; color: #666; }
-        .rpt-stats b { color: #222; }
         table.rpt-table thead th { background: #f4f6fa; font-weight: 600; color: #444; border-bottom: 2px solid #e3e6ee; vertical-align: middle; }
+        table.rpt-table { border: 1px solid #e3e6ee; border-collapse: collapse; box-shadow: 0 1px 3px rgba(20,30,60,.04); }
+        table.rpt-table th, table.rpt-table td { border: 1px solid #eceff5; padding: 10px 12px; vertical-align: middle; }
+        table.rpt-table tbody tr:hover { background-color: #f5f8fc; }
         .rpt-stock-ok { color: #1c8a56; font-weight: 600; }
         .rpt-stock-zero { color: #c0392b; font-weight: 600; }
     </style>
@@ -100,10 +101,10 @@
                     <div class="col-sm-12">
                         <div class="card-box" style="padding:0;">
 
-                            <div class="rpt-stats">
-                                Products: <b>{{ number_format($totalProducts) }}</b>
-                                &nbsp;&nbsp;|&nbsp;&nbsp; Total Stock Qty: <b>{{ number_format($totalStockQty, 2) }}</b>
-                            </div>
+                            @include('admin.reports.partials.stat_cards', ['stats' => [
+                                ['label' => 'Products', 'value' => number_format($totalProducts), 'icon' => 'mdi-shopping', 'color' => 'blue'],
+                                ['label' => 'Total Stock Qty', 'value' => number_format($totalStockQty, 2), 'icon' => 'mdi-package-variant', 'color' => 'cyan'],
+                            ]])
 
                             <div class="table-responsive">
                                 <table class="table table-striped rpt-table">

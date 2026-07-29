@@ -72,6 +72,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/edit/{id}', [NiwarCodeController::class, 'edit'])->name('edit');
         Route::post('/update/{id}', [NiwarCodeController::class, 'update'])->name('update');
         Route::get('/delete/{id}', [NiwarCodeController::class, 'destroy'])->name('delete');
+        Route::get('/details/{id}', [NiwarCodeController::class, 'details'])->name('details');
+        Route::post('/details/{id}', [NiwarCodeController::class, 'saveDetails'])->name('save_details');
     });
 
 // Belt Costing CRUD
@@ -912,7 +914,19 @@ Route::middleware(['auth'])->group(function () {
         Route::get('pressing-pending', 'ReportsController@pressingPending')->name('admin.reports.pressing_pending');
         Route::get('packaging-pending', 'ReportsController@packagingPending')->name('admin.reports.packaging_pending');
         Route::get('belt-production', 'ReportsController@beltProduction')->name('admin.reports.belt_production');
+        Route::get('socks-missing-formula', 'ReportsController@socksMissingFormula')->name('admin.reports.socks_missing_formula');
+        Route::get('belt-missing-formula', 'ReportsController@beltMissingFormula')->name('admin.reports.belt_missing_formula');
     });
+
+    // Manual permission-cache buster for servers without terminal/artisan access -
+    // Spatie caches permissions for 24h and only auto-clears on Eloquent writes,
+    // so permissions inserted via raw SQL (no terminal to run migrate) stay stale
+    // until this is hit once. Safe to leave in place; visiting it just re-primes
+    // the cache from the DB, no data is changed.
+    Route::get('clear-permission-cache', function () {
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+        return 'Permission cache cleared.';
+    })->name('admin.clear_permission_cache');
 
 
 

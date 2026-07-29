@@ -40,14 +40,16 @@ class RawMaterialPendingExport implements FromCollection, WithHeadings, ShouldAu
 
     public function map($row): array
     {
+        $isPurchaseRequest = ($row->source ?? null) === 'purchase_request';
+
         return [
             $row->raw_material,
             $row->uom ?? '-',
             $row->batch_no,
             $row->finish_product ?? '-',
             $row->customer ?? '-',
-            number_format($row->required_qty, 2),
-            number_format($row->avalible_stock, 2),
+            $isPurchaseRequest ? '-' : number_format($row->required_qty, 2),
+            $isPurchaseRequest ? '-' : number_format($row->avalible_stock, 2),
             number_format($row->need_to_order_stock, 2),
         ];
     }

@@ -21,9 +21,10 @@
         .rpt-panel-body { padding: 18px 16px 6px; }
         .rpt-panel-body label { font-weight: 600; color: #555; font-size: 12.5px; margin-bottom: 4px; }
         .rpt-actions { padding: 0 16px 16px; text-align: right; border-top: 1px solid #eceff5; margin-top: 12px; padding-top: 14px; }
-        .rpt-stats { padding: 10px 16px; border-bottom: 1px solid #eceff5; background: #fafbfd; font-size: 13px; color: #666; }
-        .rpt-stats b { color: #222; }
         table.rpt-table thead th { background: #f4f6fa; font-weight: 600; color: #444; border-bottom: 2px solid #e3e6ee; vertical-align: middle; }
+        table.rpt-table { border: 1px solid #e3e6ee; border-collapse: collapse; box-shadow: 0 1px 3px rgba(20,30,60,.04); }
+        table.rpt-table th, table.rpt-table td { border: 1px solid #eceff5; padding: 10px 12px; vertical-align: middle; }
+        table.rpt-table tbody tr:hover { background-color: #f5f8fc; }
         .rpt-status-completed { color: #1c8a56; font-weight: 600; }
         .rpt-status-pending { color: #c0392b; font-weight: 600; }
     </style>
@@ -89,15 +90,15 @@
                     <div class="col-sm-12">
                         <div class="card-box" style="padding:0;">
 
-                            <div class="rpt-stats">
-                                Batches: <b>{{ number_format($pendingBatches + $completedBatches) }}</b>
-                                &nbsp;&nbsp;|&nbsp;&nbsp; Pending Batches: <b>{{ number_format($pendingBatches) }}</b>
-                                &nbsp;&nbsp;|&nbsp;&nbsp; Completed Batches: <b>{{ number_format($completedBatches) }}</b>
-                                &nbsp;&nbsp;|&nbsp;&nbsp; Total Planned: <b>{{ number_format($totalPlanned, 2) }}</b>
-                                &nbsp;&nbsp;|&nbsp;&nbsp; Total Produced: <b>{{ number_format($totalProduced, 2) }}</b>
-                                &nbsp;&nbsp;|&nbsp;&nbsp; Total Wastage: <b>{{ number_format($totalWastage, 2) }}</b>
-                                &nbsp;&nbsp;|&nbsp;&nbsp; Total Pending Qty: <b>{{ number_format($totalPending, 2) }}</b>
-                            </div>
+                            @include('admin.reports.partials.stat_cards', ['stats' => [
+                                ['label' => 'Batches', 'value' => number_format($pendingBatches + $completedBatches), 'icon' => 'mdi-format-list-bulleted', 'color' => 'blue'],
+                                ['label' => 'Pending Batches', 'value' => number_format($pendingBatches), 'icon' => 'mdi-clock-alert', 'color' => 'orange'],
+                                ['label' => 'Completed Batches', 'value' => number_format($completedBatches), 'icon' => 'mdi-check-circle', 'color' => 'green'],
+                                ['label' => 'Total Planned', 'value' => number_format($totalPlanned, 2), 'icon' => 'mdi-package-variant', 'color' => 'cyan'],
+                                ['label' => 'Total Produced', 'value' => number_format($totalProduced, 2), 'icon' => 'mdi-package-variant', 'color' => 'green'],
+                                ['label' => 'Total Wastage', 'value' => number_format($totalWastage, 2), 'icon' => 'mdi-alert', 'color' => 'red'],
+                                ['label' => 'Total Pending Qty', 'value' => number_format($totalPending, 2), 'icon' => 'mdi-package-variant', 'color' => 'purple'],
+                            ]])
 
                             <div class="table-responsive">
                                 <table class="table table-striped rpt-table">

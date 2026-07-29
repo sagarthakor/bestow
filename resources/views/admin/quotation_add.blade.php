@@ -1018,7 +1018,7 @@
                         dataType: 'json',
                         delay: 250,
                         data: function (params) {
-                            return {term: params.term, status: status};
+                            return {term: params.term, status: status, label_style: 'verbose'};
                         },
                         processResults: function (data) {
                             return data;

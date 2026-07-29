@@ -1,6 +1,6 @@
 @extends('admin.layout.master_material')
 
-@section('title', 'List | Buckle Formula')
+@section('title', 'List | Belt Formula')
 
 @section('sidebar')
     @parent
@@ -15,11 +15,11 @@
                 <div class="row">
                     <div class="col-xs-12">
                         <div class="page-title-box">
-                            <h4 class="page-title">Buckle Formula Master</h4>
+                            <h4 class="page-title">Belt Formula Master</h4>
                             <ol class="breadcrumb p-0 m-0">
                                 <li><a href="{{ url('admin') }}">{{Session::get('software_title')}}</a></li>
                                 <li>Production</li>
-                                <li class="active">Buckle Formula List</li>
+                                <li class="active">Belt Formula List</li>
                                 <li style="text-align: right;margin-bottom: 5px">
                                     <a class="btn btn-primary" href="{{ route('admin.production.buckle_formula_add') }}">Add New</a>
                                 </li>
@@ -77,7 +77,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="text-center" style="padding:30px;color:#999;">No buckle formulas found</td>
+                                        <td colspan="5" class="text-center" style="padding:30px;color:#999;">No belt formulas found</td>
                                     </tr>
                                 @endforelse
                                 </tbody>

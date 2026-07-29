@@ -978,26 +978,30 @@ class ProductionController extends Controller
             "P_P_Yarn"=>"P.P Yarn",
         ];
 
-        $str="";
-        $str .="<table class='table table-bordered'>";
-        $str .="<tr>";
+        $str = "<table class='table table-bordered'>";
+        $str .= "<tr><th>Category</th><th>Raw Material</th><th>Qty (grams)</th></tr>";
         foreach ($categories as $group=>$label) {
-            $materials=product::select("id","product_name")
-                ->where("raw_material_group",$group)
-                ->orderBy("product_name","asc")
+            $materials = DB::table('product')
+                ->leftJoin('uom', 'uom.id', 'product.uom')
+                ->select('product.id', 'product.product_name', 'uom.uom_name')
+                ->where('product.raw_material_group', $group)
+                ->orderBy('product.product_name', 'asc')
                 ->get();
 
-            $str .="<td><table class='table'><tr><th>".$label."</th></tr>";
-            $str .="<tr><td>";
-            $str .="<table class='table table-bordered'><tr><th>Material</th><th>Qty</th></tr>";
-            $str .="<tr><td><select class='form-control' name='material[]'><option value=''>select ".$label."</option>";
+            $str .= "<tr>";
+            $str .= "<td>" . $label . "</td>";
+            $str .= "<td><select class='form-control' name='material[]' onchange='updateUomHint(this)'>";
+            $str .= "<option value=''>Select " . $label . "</option>";
             foreach ($materials as $material) {
-                $str .="<option value='".$material->id."'>".$material->product_name."</option>";
+                $uom = strtoupper($material->uom_name ?? '');
+                $str .= "<option value='" . $material->id . "' data-uom='" . $uom . "'>" . $material->product_name . "</option>";
             }
-            $str .="</select></td><td><input style='width:60px' oninput='cal(this)' class='required_qty_per' type='text' name='percentage[]'></td></tr></table>";
-            $str .="</td></tr></table></td>";
+            $str .= "</select></td>";
+            $str .= "<td><input style='width:100px' oninput='cal(this)' class='form-control required_qty_per' type='text' name='qty[]'>";
+            $str .= "<small class='uom-hint text-muted'></small></td>";
+            $str .= "</tr>";
         }
-        $str .="</tr></table>";
+        $str .= "</table>";
 
         return response()->json(["colour"=>$colour,'product_image' => $product_image,"size"=>$size,"str"=>$str]);
     }
@@ -1862,6 +1866,8 @@ class ProductionController extends Controller
             $purchase_requirement->timestamp = date('d-m-Y h:i:s a');
             $purchase_requirement->order_no = $order;
             $purchase_requirement->user_id = Session::get("user_id");
+            $purchase_requirement->finish_product = $request->finish_product;
+            $purchase_requirement->customer = $request->customer;
             if ($purchase_requirement->save()) {
                 $totproduct = count($request->purchase_required_mat);
                 for ($i = 0; $i < $totproduct; $i++) {

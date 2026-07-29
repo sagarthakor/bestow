@@ -321,7 +321,10 @@
                                                         onchange="get_product(this)" name="product[]"
                                                         id="product{{$srno}}" required>
                                                     @php
-                                                        $itemVariant = trim(($item->value1 ?? '') . ((($item->value1 ?? '') !== '' && ($item->value2 ?? '') !== '') ? ' / ' : '') . ($item->value2 ?? ''));
+                                                        $itemVariantParts = [];
+                                                        if ($item->value2 ?? '') { $itemVariantParts[] = 'Size: '.$item->value2; }
+                                                        if ($item->value1 ?? '') { $itemVariantParts[] = 'Color: '.$item->value1; }
+                                                        $itemVariant = implode(', ', $itemVariantParts);
                                                     @endphp
                                                     <option value="{{$item->product}}" selected>{{$item->item_code}} - {{$item->product_name}}{{ $itemVariant !== '' ? ' ('.$itemVariant.')' : '' }}</option>
                                                 </select>
@@ -845,7 +848,7 @@ $("#quot_date").datepicker({
                         dataType: 'json',
                         delay: 250,
                         data: function (params) {
-                            return {term: params.term, status: status};
+                            return {term: params.term, status: status, label_style: 'verbose'};
                         },
                         processResults: function (data) {
                             return data;

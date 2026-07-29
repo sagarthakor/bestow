@@ -1,6 +1,6 @@
 @extends('admin.layout.master_material')
 
-@section('title', 'Update | Buckle Formula')
+@section('title', 'Update | Belt Formula')
 
 @section('sidebar')
     @parent
@@ -15,10 +15,10 @@
                 <div class="row">
                     <div class="col-xs-12">
                         <div class="page-title-box">
-                            <h4 class="page-title">Update Buckle Formula</h4>
+                            <h4 class="page-title">Update Belt Formula</h4>
                             <ol class="breadcrumb p-0 m-0">
                                 <li><a href="{{ url('admin') }}">{{Session::get('software_title')}}</a></li>
-                                <li><a href="{{ route('admin.production.buckle_formula_list') }}">Buckle Formula List</a></li>
+                                <li><a href="{{ route('admin.production.buckle_formula_list') }}">Belt Formula List</a></li>
                                 <li>Update</li>
                             </ol>
                             <div class="clearfix"></div>
@@ -43,104 +43,57 @@
                             @endif
 
                             <div class="row">
-                                <div class="col-md-5">
+                                <div class="col-md-4">
                                     <div class="form-group">
                                         <label class="control-label">Belt Product</label>
                                         <input type="text" class="form-control" value="{{ $data->product_item->product_name ?? '-' }}" readonly>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label class="control-label">Size</label>
-                                        {{ Form::text('size', null, ['class' => 'form-control', 'required']) }}
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label class="control-label">Nos</label>
-                                        {{ Form::text('nos', null, ['class' => 'form-control']) }}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <h4>Belt Costing (Niwar Type / Bukkal Type)</h4>
-                            <div class="row">
-                                <div class="col-md-5">
+                                <div class="col-md-4">
                                     <div class="form-group">
                                         <label class="control-label">Belt Costing</label>
-                                        <select name="belt_costing_id" id="belt_costing_id" class="form-control js-example-basic-single" required onchange="fillBeltCosting(this.value)">
+                                        <select name="belt_costing_id" id="belt_costing_id" class="form-control js-example-basic-single" required>
                                             <option value="">Select bukkal / niwar combination</option>
                                             @foreach($beltCosting as $cost)
-                                                <option value="{{ $cost->id }}" {{ $cost->id == $data->belt_costing_id ? 'selected' : '' }}>{{ $cost->bukkal->type ?? '-' }} / {{ $cost->niwar->type ?? '-' }} &mdash; Total: {{ number_format($cost->total_cost, 2) }}</option>
+                                                <option value="{{ $cost->id }}" data-niwar-id="{{ $cost->niwar_id }}" {{ $cost->id == $data->belt_costing_id ? 'selected' : '' }}>{{ $cost->bukkal->type ?? '-' }} / {{ $cost->niwar->type ?? '-' }} &mdash; Total: {{ number_format($cost->total_cost, 2) }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="row" id="belt_costing_details" style="display:none;">
                                 <div class="col-md-2">
                                     <div class="form-group">
-                                        <label class="control-label">Bukkal Type</label>
-                                        <input type="text" id="bc_bukkal_type" class="form-control" readonly>
+                                        <label class="control-label">Size</label>
+                                        {{ Form::text('size', null, ['class' => 'form-control', 'id' => 'size_input', 'required']) }}
+                                        <small id="niwar-auto-hint" class="text-muted"></small>
                                     </div>
                                 </div>
                                 <div class="col-md-2">
                                     <div class="form-group">
-                                        <label class="control-label">Bukkal Rate</label>
-                                        <input type="text" id="bc_bukkal_rate" class="form-control" readonly>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label class="control-label">Niwar Type</label>
-                                        <input type="text" id="bc_niwar_type" class="form-control" readonly>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label class="control-label">Niwar Rate</label>
-                                        <input type="text" id="bc_niwar_rate" class="form-control" readonly>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label class="control-label">Miter</label>
-                                        <input type="text" id="bc_miter" class="form-control" readonly>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label class="control-label">Kadi/Slider Qty</label>
-                                        <input type="text" id="bc_kadi_qty" class="form-control" readonly>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label class="control-label">Kadi/Slider Rate</label>
-                                        <input type="text" id="bc_kadi_rate" class="form-control" readonly>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label class="control-label">Size Label</label>
-                                        <input type="text" id="bc_size_label" class="form-control" readonly>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label class="control-label">Panni Packing Rate</label>
-                                        <input type="text" id="bc_panni_packing" class="form-control" readonly>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label class="control-label">Total Costing</label>
-                                        <input type="text" id="bc_total_cost" class="form-control" readonly>
+                                        <label class="control-label">Nos</label>
+                                        {{ Form::text('nos', 1, ['class' => 'form-control', 'readonly' => 'readonly']) }}
+                                        <small class="text-muted">Formula is always per 1 belt</small>
                                     </div>
                                 </div>
                             </div>
 
                             <h4>Raw Material Required (per 1 Belt)</h4>
+
+                            <div id="niwar-fixed-section" style="display:none;">
+                                <table class="table table-bordered">
+                                    <thead>
+                                    <tr>
+                                        <th>Raw Material (from Niwar Code)</th>
+                                        <th>Qty (per 1 Belt)</th>
+                                        <th style="width:8%;"></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="niwar-fixed-rows"></tbody>
+                                </table>
+                            </div>
+
+                            <div id="niwar-groups-container"></div>
+
+                            <h4 style="margin-top:20px;">Other Raw Materials <small class="text-muted">(not from Niwar Code, e.g. buckle, kadi, packaging)</small></h4>
 
                             <table class="table table-bordered" id="caltable">
                                 <thead>
@@ -152,6 +105,7 @@
                                 </thead>
                                 <tbody id="material-rows">
                                 @foreach($data_item as $item)
+                                    @continue($item->niwar_type_material_id)
                                     <tr>
                                         <td>
                                             <select name="material[]" class="form-control js-example-basic-single material-select" onchange="updateUomHint(this)">
@@ -162,6 +116,8 @@
                                             </select>
                                         </td>
                                         <td>
+                                            <input type="hidden" name="is_auto[]" value="0">
+                                            <input type="hidden" name="niwar_group[]" value="">
                                             <input type="text" name="qty[]" value="{{ $item->qty }}" class="form-control">
                                             <small class="uom-hint text-muted"></small>
                                         </td>
@@ -192,51 +148,219 @@
     <script>
         $(document).ready(function () {
             $('.js-example-basic-single').select2();
-            fillBeltCosting($('#belt_costing_id').val());
             $('.material-select').each(function () {
                 updateUomHint(this);
             });
+            recalcNiwarMaterials();
         });
 
-        @php
-            $beltCostingJs = [];
-            foreach ($beltCosting as $cost) {
-                $beltCostingJs[$cost->id] = [
-                    'bukkal_type' => $cost->bukkal->type ?? '-',
-                    'bukkal_rate' => $cost->bukkal_rate,
-                    'niwar_type' => $cost->niwar->type ?? '-',
-                    'niwar_rate' => $cost->niwar_rate,
-                    'miter' => $cost->miter,
-                    'kadi_qty' => $cost->kadi_qty,
-                    'kadi_rate' => $cost->kadi_rate,
-                    'size_label' => $cost->size_label,
-                    'panni_packing' => $cost->panni_packing,
-                    'total_cost' => $cost->total_cost,
-                ];
-            }
-        @endphp
-        var beltCostingData = @json($beltCostingJs);
+        var materialOptions = `@foreach($rawmaterial as $mat)<option value="{{ $mat->id }}" data-uom="{{ strtoupper($mat->uomName->uom_name ?? '') }}">{{ $mat->product_name }}</option>@endforeach`;
 
-        function fillBeltCosting(id) {
-            var cost = beltCostingData[id];
-            if (!cost) {
-                $('#belt_costing_details').hide();
-                return;
-            }
-            $('#bc_bukkal_type').val(cost.bukkal_type);
-            $('#bc_bukkal_rate').val(cost.bukkal_rate);
-            $('#bc_niwar_type').val(cost.niwar_type);
-            $('#bc_niwar_rate').val(cost.niwar_rate);
-            $('#bc_miter').val(cost.miter);
-            $('#bc_kadi_qty').val(cost.kadi_qty);
-            $('#bc_kadi_rate').val(cost.kadi_rate);
-            $('#bc_size_label').val(cost.size_label);
-            $('#bc_panni_packing').val(cost.panni_packing);
-            $('#bc_total_cost').val(cost.total_cost);
-            $('#belt_costing_details').show();
+        var rawMaterialNames = {!! $rawmaterial->pluck('product_name', 'id')->toJson() !!};
+
+        var savedGroupItems = {!! json_encode($groupItems ?? []) !!};
+
+        var niwarTypeData = {!! $niwarTypes->mapWithKeys(function ($n) {
+            return [$n->id => [
+                'type' => $n->type,
+                'code' => $n->code,
+                'inchPerMeter' => (float) ($n->inch_per_meter ?: 39.37),
+                'materials' => $n->materials->map(function ($m) {
+                    return ['id' => $m->id, 'material' => $m->material, 'gm_per_meter' => (float) $m->gm_per_meter, 'is_group' => (bool) $m->is_group];
+                })->values(),
+                'sizeChart' => $n->sizeChart->pluck('required_inch', 'pp_size'),
+            ]];
+        })->toJson() !!};
+
+        function niwarLabel(data) {
+            return data.type + ' (' + data.code + ')';
         }
 
-        var materialOptions = `@foreach($rawmaterial as $mat)<option value="{{ $mat->id }}" data-uom="{{ strtoupper($mat->uomName->uom_name ?? '') }}">{{ $mat->product_name }}</option>@endforeach`;
+        function recalcNiwarMaterials() {
+            $('#niwar-fixed-rows').empty();
+            $('#niwar-fixed-section').hide();
+            $('#niwar-auto-hint').removeClass('text-danger').text('');
+
+            var niwarId = $('#belt_costing_id').find(':selected').data('niwar-id');
+            var size = ($('#size_input').val() || '').trim();
+
+            if (!niwarId || !niwarTypeData[niwarId]) {
+                $('#niwar-groups-container').empty();
+                return;
+            }
+
+            var data = niwarTypeData[niwarId];
+            renderGroupBoxes(niwarId);
+
+            if (size === '') {
+                updateGroupTargets();
+                return;
+            }
+
+            var requiredInch = data.sizeChart[size];
+
+            if (requiredInch === undefined) {
+                $('#niwar-auto-hint').addClass('text-danger')
+                    .text('No inch mapping found for size "' + size + '" in Niwar Code ' + niwarLabel(data) + '. Add it via Niwar Code > Manage Details.');
+                updateGroupTargets();
+                return;
+            }
+
+            var meter = requiredInch / data.inchPerMeter;
+
+            data.materials.forEach(function (m) {
+                if (m.is_group) {
+                    return;
+                }
+                var qty = Math.round(meter * m.gm_per_meter * 100) / 100;
+                addAutoRow(m.material, qty, meter, m.gm_per_meter, requiredInch, niwarLabel(data), data.inchPerMeter);
+            });
+
+            $('#niwar-auto-hint').text('Niwar Code ' + niwarLabel(data) + ': size "' + size + '" = ' + requiredInch + '" ÷ ' + data.inchPerMeter + ' = ' + meter.toFixed(3) + 'm');
+            updateGroupTargets();
+        }
+
+        function addAutoRow(materialId, qty, meter, gmPerMeter, requiredInch, label, inchPerMeter) {
+            $('#niwar-fixed-section').show();
+            var row = document.createElement('tr');
+            row.className = 'niwar-auto-row';
+            var breakdown = requiredInch + '" ÷ ' + inchPerMeter + ' = ' + meter.toFixed(3) + 'm × ' + gmPerMeter + 'gm/m = ' + qty + 'gm';
+            row.innerHTML =
+                '<td><select class="form-control" disabled><option>' + (rawMaterialNames[materialId] || 'Material #' + materialId) + '</option></select>' +
+                '<input type="hidden" name="material[]" value="' + materialId + '"></td>' +
+                '<td><input type="hidden" name="is_auto[]" value="1"><input type="hidden" name="niwar_group[]" value=""><input type="text" name="qty[]" class="form-control" value="' + qty + '" readonly><small class="text-muted">Auto (Niwar Code ' + label + '): ' + breakdown + '</small></td>' +
+                '<td class="text-center"><i class="fa fa-lock text-muted" title="Auto-calculated from Niwar Code — single fixed material, cannot be added to"></i></td>';
+            document.getElementById('niwar-fixed-rows').appendChild(row);
+        }
+
+        function renderGroupBoxes(niwarId) {
+            var data = niwarTypeData[niwarId];
+            var groupMaterials = (data.materials || []).filter(function (m) { return m.is_group; });
+
+            var existingRows = {};
+            $('.niwar-group-box').each(function () {
+                var gid = $(this).data('group-id');
+                var rows = [];
+                $(this).find('.group-row').each(function () {
+                    var mat = $(this).find('.group-material').val();
+                    var qty = $(this).find('.group-qty').val();
+                    if (mat || qty) {
+                        rows.push({material: mat, qty: qty});
+                    }
+                });
+                existingRows[gid] = rows;
+            });
+
+            $('#niwar-groups-container').empty();
+
+            groupMaterials.forEach(function (gm) {
+                var rows = existingRows[gm.id] || savedGroupItems[gm.id] || [];
+                buildGroupBox(gm, rows, niwarLabel(data));
+            });
+        }
+
+        function buildGroupBox(gm, rows, label) {
+            var box = document.createElement('div');
+            box.className = 'card-box niwar-group-box';
+            box.setAttribute('data-group-id', gm.id);
+            box.style.marginTop = '15px';
+            box.style.border = '1px solid #ddd';
+
+            var name = rawMaterialNames[gm.material] || ('Material #' + gm.material);
+            box.innerHTML =
+                '<h4>' + name + ' Group <small class="text-muted">(Niwar Code ' + label + ')</small> <small class="text-muted group-target-info"></small></h4>' +
+                '<p class="text-muted">Fulfilled by multiple raw materials below — their total qty must exactly match the target (not less, not more).</p>' +
+                '<table class="table table-bordered">' +
+                '<thead><tr><th>Raw Material</th><th>Qty (per 1 Belt)</th><th style="width:8%;"></th></tr></thead>' +
+                '<tbody class="group-rows"></tbody>' +
+                '</table>' +
+                '<button type="button" class="btn btn-default btn-sm add-group-row">+ Add Material</button>' +
+                '<div class="group-sum-info" style="margin-top:8px;"></div>';
+
+            document.getElementById('niwar-groups-container').appendChild(box);
+
+            if (rows.length === 0) {
+                rows = [{material: '', qty: ''}];
+            }
+            rows.forEach(function (r) {
+                addGroupRow(box, gm.id, r.material, r.qty);
+            });
+
+            $(box).find('.add-group-row').on('click', function () {
+                addGroupRow(box, gm.id, '', '');
+                updateGroupTargets();
+            });
+        }
+
+        function addGroupRow(box, groupId, materialId, qty) {
+            var row = document.createElement('tr');
+            row.className = 'group-row';
+            row.innerHTML =
+                '<td><select class="form-control js-example-basic-single group-material" name="material[]">' +
+                '<option value="">Select raw material</option>' + materialOptions + '</select>' +
+                '<input type="hidden" name="niwar_group[]" value="' + groupId + '">' +
+                '<input type="hidden" name="is_auto[]" value="0"></td>' +
+                '<td><input type="text" name="qty[]" class="form-control group-qty" value="' + (qty || '') + '"></td>' +
+                '<td class="text-center"><a href="javascript:void(0)" class="remove-group-row" title="Remove"><i class="fa fa-trash"></i></a></td>';
+            $(box).find('.group-rows').append(row);
+
+            var $select = $(row).find('.group-material');
+            $select.val(materialId || '');
+            $select.select2();
+
+            $(row).find('.remove-group-row').on('click', function () {
+                var tbody = $(box).find('.group-rows')[0];
+                if (tbody.rows.length > 1) {
+                    row.remove();
+                }
+                updateGroupTargets();
+            });
+        }
+
+        function updateGroupTargets() {
+            var niwarId = $('#belt_costing_id').find(':selected').data('niwar-id');
+            var size = ($('#size_input').val() || '').trim();
+            var data = niwarId ? niwarTypeData[niwarId] : null;
+            var requiredInch = (data && size !== '') ? data.sizeChart[size] : undefined;
+            var meter = (requiredInch !== undefined) ? (requiredInch / data.inchPerMeter) : null;
+
+            $('.niwar-group-box').each(function () {
+                var $box = $(this);
+                var gid = $box.data('group-id');
+                var gmData = data ? data.materials.find(function (m) { return m.id == gid; }) : null;
+
+                var sum = 0;
+                $box.find('.group-qty').each(function () {
+                    sum += parseFloat($(this).val()) || 0;
+                });
+                sum = Math.round(sum * 100) / 100;
+
+                if (!gmData || meter === null) {
+                    $box.find('.group-target-info').removeClass('text-success text-danger').addClass('text-muted')
+                        .text('(target unavailable — select a size with an inch mapping)');
+                    $box.find('.group-sum-info').removeClass('text-success text-danger')
+                        .text('Current total: ' + sum + 'gm');
+                    return;
+                }
+
+                var target = Math.round(meter * gmData.gm_per_meter * 100) / 100;
+                var diff = Math.round((target - sum) * 100) / 100;
+                $box.find('.group-target-info').removeClass('text-muted')
+                    .text('— Target: ' + target + 'gm (' + requiredInch + '" ÷ ' + data.inchPerMeter + ' = ' + meter.toFixed(3) + 'm × ' + gmData.gm_per_meter + 'gm/m)');
+
+                if (Math.abs(diff) <= 0.01) {
+                    $box.find('.group-sum-info').removeClass('text-danger').addClass('text-success')
+                        .text('✓ Current total: ' + sum + 'gm — matches target.');
+                } else {
+                    $box.find('.group-sum-info').removeClass('text-success').addClass('text-danger')
+                        .text('✗ Current total: ' + sum + 'gm — must be ' + target + 'gm (' + (diff > 0 ? 'short by ' + diff : 'over by ' + Math.abs(diff)) + 'gm).');
+                }
+            });
+        }
+
+        $('#belt_costing_id').on('change', recalcNiwarMaterials);
+        $('#size_input').on('input blur', recalcNiwarMaterials);
+        $(document).on('input', '.group-qty', updateGroupTargets);
 
         function updateUomHint(selectEl) {
             var $hint = $(selectEl).closest('tr').find('.uom-hint');
@@ -255,7 +379,7 @@
             row.innerHTML =
                 '<td><select name="material[]" class="form-control js-example-basic-single material-select" onchange="updateUomHint(this)">' +
                 '<option value="">Select raw material</option>' + materialOptions + '</select></td>' +
-                '<td><input type="text" name="qty[]" class="form-control"><small class="uom-hint text-muted"></small></td>' +
+                '<td><input type="hidden" name="is_auto[]" value="0"><input type="hidden" name="niwar_group[]" value=""><input type="text" name="qty[]" class="form-control"><small class="uom-hint text-muted"></small></td>' +
                 '<td class="text-center"><a href="javascript:void(0)" onclick="removeRow(this)" title="Remove"><i class="fa fa-trash"></i></a></td>';
             document.getElementById('material-rows').appendChild(row);
             $(row).find('.js-example-basic-single').select2();

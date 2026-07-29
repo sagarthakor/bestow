@@ -21,9 +21,10 @@
         .rpt-panel-body { padding: 18px 16px 6px; }
         .rpt-panel-body label { font-weight: 600; color: #555; font-size: 12.5px; margin-bottom: 4px; }
         .rpt-actions { padding: 0 16px 16px; text-align: right; border-top: 1px solid #eceff5; margin-top: 12px; padding-top: 14px; }
-        .rpt-stats { padding: 10px 16px; border-bottom: 1px solid #eceff5; background: #fafbfd; font-size: 13px; color: #666; }
-        .rpt-stats b { color: #222; }
         table.rpt-table thead th { background: #f4f6fa; font-weight: 600; color: #444; border-bottom: 2px solid #e3e6ee; vertical-align: middle; }
+        table.rpt-table { border: 1px solid #e3e6ee; border-collapse: collapse; box-shadow: 0 1px 3px rgba(20,30,60,.04); }
+        table.rpt-table th, table.rpt-table td { border: 1px solid #eceff5; padding: 10px 12px; vertical-align: middle; }
+        table.rpt-table tbody tr:hover { background-color: #f5f8fc; }
         table.rpt-table tr.rpt-salesman td { background: #dcecfb; font-weight: 700; color: #0f5a94; border-top: 2px solid #b9d9f5; }
         table.rpt-table tr.rpt-group td { background: #eaf4fd; font-weight: 600; color: #146bb3; }
         table.rpt-table tr.rpt-subtotal td { background: #eefcf5; font-weight: 600; color: #1c8a56; }
@@ -99,11 +100,13 @@
                     <div class="col-sm-12">
                         <div class="card-box" style="padding:0;">
 
-                            <div class="rpt-stats">
-                                Period: <b>{{ $from ?: 'All' }}</b> to <b>{{ $to ?: 'All' }}</b>
-                                &nbsp;&nbsp;|&nbsp;&nbsp; Salesmen: <b>{{ number_format($groups->count()) }}</b>
-                                &nbsp;&nbsp;|&nbsp;&nbsp; Total Amount: <b>{{ number_format($grandTotal, 2) }}</b>
-                            </div>
+                            @include('admin.reports.partials.stat_cards', [
+                                'period' => ['from' => $from, 'to' => $to],
+                                'stats' => [
+                                    ['label' => 'Salesmen', 'value' => number_format($groups->count()), 'icon' => 'mdi-account-multiple', 'color' => 'blue'],
+                                    ['label' => 'Total Amount', 'value' => number_format($grandTotal, 2), 'icon' => 'mdi-cash-multiple', 'color' => 'green'],
+                                ],
+                            ])
 
                             <div class="table-responsive">
                                 <table class="table table-striped rpt-table">

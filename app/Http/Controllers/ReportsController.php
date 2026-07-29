@@ -10,6 +10,8 @@ use App\Exports\StockAvailableExport;
 use App\Exports\RawMaterialPendingExport;
 use App\Exports\ProductionPendingExport;
 use App\Exports\BeltProductionExport;
+use App\Exports\SocksMissingFormulaExport;
+use App\Exports\BeltMissingFormulaExport;
 use App\quotation;
 use App\salesorder;
 use App\salesman;
@@ -679,21 +681,31 @@ class ReportsController extends Controller
 
     /**
      * RAW Material Required Pending Report.
-     * Production batches whose raw material need is not yet fully covered
-     * by available stock (need_to_order_stock > 0), grouped by raw material.
+     * Combines two sources of pending raw material need, grouped by raw material:
+     * 1. Production batches whose need is not yet fully covered by stock
+     *    (production_material.need_to_order_stock > 0).
+     * 2. Shortages raised during machine allocation that never became a batch at
+     *    all (ProductionController::machine_allocate diverts these straight to
+     *    purchase_required_material instead of creating a production_material
+     *    row), still outstanding because no PO has been raised yet (po_no is null).
+     * Source 2's finish_product/customer come from purchase_requirement (captured
+     * at machine-allocation time); older rows created before that column existed
+     * still show '-'.
      */
     function rawMaterialPending(Request $request)
     {
-        $query = DB::table('production_material as pm')
+        $prodQuery = DB::table('production_material as pm')
             ->join('product as rm', 'rm.id', '=', 'pm.required_material')
+            ->leftJoin('uom as u', 'u.id', '=', 'rm.uom')
             ->leftJoin('customers as c', 'c.id', '=', 'pm.customer')
             ->leftJoin('product as fp', 'fp.id', '=', 'pm.finish_product')
             ->where('pm.need_to_order_stock', '>', 0)
             ->select(
+                DB::raw("'production' as source"),
                 'pm.id',
                 'pm.batch_no',
                 'rm.product_name as raw_material',
-                'rm.uom',
+                'u.uom_name as uom',
                 'pm.required_qty',
                 'pm.avalible_stock',
                 'pm.need_to_order_stock',
@@ -703,16 +715,50 @@ class ReportsController extends Controller
             );
 
         if ($request->raw_material != '') {
-            $query->where('rm.product_name', 'like', '%' . $request->raw_material . '%');
+            $prodQuery->where('rm.product_name', 'like', '%' . $request->raw_material . '%');
         }
         if ($request->customer != '') {
-            $query->where('c.customer_name', 'like', '%' . $request->customer . '%');
+            $prodQuery->where('c.customer_name', 'like', '%' . $request->customer . '%');
         }
         if ($request->batch_no != '') {
-            $query->where('pm.batch_no', 'like', '%' . $request->batch_no . '%');
+            $prodQuery->where('pm.batch_no', 'like', '%' . $request->batch_no . '%');
         }
 
-        $query->orderBy('rm.product_name', 'asc')->orderBy('pm.id', 'desc');
+        $purchaseQuery = DB::table('purchase_required_material as prm')
+            ->join('purchase_requirement as pr', 'pr.id', '=', 'prm.order_id')
+            ->join('product as rm', 'rm.id', '=', 'prm.raw_material')
+            ->leftJoin('uom as u', 'u.id', '=', 'rm.uom')
+            ->leftJoin('customers as c', 'c.id', '=', 'pr.customer')
+            ->leftJoin('product as fp', 'fp.id', '=', 'pr.finish_product')
+            ->whereNull('pr.po_no')
+            ->where('prm.qty', '>', 0)
+            ->select(
+                DB::raw("'purchase_request' as source"),
+                'prm.id',
+                DB::raw("CONCAT('PR-', pr.order_no) as batch_no"),
+                'rm.product_name as raw_material',
+                'u.uom_name as uom',
+                DB::raw('0 as required_qty'),
+                DB::raw('0 as avalible_stock'),
+                'prm.qty as need_to_order_stock',
+                'fp.product_name as finish_product',
+                'c.customer_name as customer',
+                'prm.timestamp'
+            );
+
+        if ($request->raw_material != '') {
+            $purchaseQuery->where('rm.product_name', 'like', '%' . $request->raw_material . '%');
+        }
+        if ($request->customer != '') {
+            $purchaseQuery->where('c.customer_name', 'like', '%' . $request->customer . '%');
+        }
+        if ($request->batch_no != '') {
+            $purchaseQuery->having('batch_no', 'like', '%' . $request->batch_no . '%');
+        }
+
+        $query = $prodQuery->unionAll($purchaseQuery)
+            ->orderBy('raw_material', 'asc')
+            ->orderBy('id', 'desc');
 
         if ($request->export_excel) {
             return Excel::download(new RawMaterialPendingExport($query->get()), 'RawMaterialPendingReport.xlsx');
@@ -861,6 +907,88 @@ class ReportsController extends Controller
             'list', 'totalPlanned', 'totalProduced', 'totalWastage', 'totalPending',
             'pendingBatches', 'completedBatches'
         ));
+    }
+
+    /**
+     * Socks products (category = Socks) that have no matching row in formula_mst
+     * yet - i.e. their production formula was never created. Anti-join on
+     * formula_mst.product = product.id, same linkage FormulaController::formula_add
+     * uses to build the "select product" list when creating a formula.
+     */
+    function socksMissingFormula(Request $request)
+    {
+        $socksCategoryId = DB::table('category')->where('category_name', 'Socks')->value('id');
+
+        $query = DB::table('product as p')
+            ->leftJoin('subcategory as sc', 'sc.id', '=', 'p.subcategory')
+            ->leftJoin('formula_mst as fm', 'fm.product', '=', 'p.id')
+            ->where('p.category', $socksCategoryId)
+            ->where('p.status', 'product')
+            ->whereNull('fm.id')
+            ->select('p.id', 'p.product_name', 'p.item_code', 'p.uom', 'sc.subcategory_name');
+
+        if ($request->product != '') {
+            $query->where('p.product_name', 'like', '%' . $request->product . '%');
+        }
+        if ($request->subcategory != '') {
+            $query->where('p.subcategory', $request->subcategory);
+        }
+
+        $query->orderBy('p.product_name', 'asc');
+
+        if ($request->export_excel) {
+            return Excel::download(new SocksMissingFormulaExport($query->get()), 'SocksProductsWithoutFormula.xlsx');
+        }
+
+        $subcategories = DB::table('subcategory')->where('category', $socksCategoryId)->orderBy('subcategory_name')->get();
+
+        $summary = (clone $query)->get();
+        $totalMissing = $summary->count();
+
+        $list = $query->paginate(session('records_per_page', 30))->appends($request->all());
+
+        return view('admin.reports.socks_missing_formula', compact('list', 'subcategories', 'totalMissing'));
+    }
+
+    /**
+     * Belt products (category = Belt) that have no matching row in
+     * buckle_formula_mst yet. Same anti-join shape as socksMissingFormula(),
+     * against buckle_formula_mst.product = product.id (BuckleFormulaController
+     * enforces one formula per product via a unique constraint on that column).
+     */
+    function beltMissingFormula(Request $request)
+    {
+        $beltCategoryId = DB::table('category')->where('category_name', 'Belt')->value('id');
+
+        $query = DB::table('product as p')
+            ->leftJoin('subcategory as sc', 'sc.id', '=', 'p.subcategory')
+            ->leftJoin('buckle_formula_mst as bfm', 'bfm.product', '=', 'p.id')
+            ->where('p.category', $beltCategoryId)
+            ->where('p.status', 'product')
+            ->whereNull('bfm.id')
+            ->select('p.id', 'p.product_name', 'p.item_code', 'p.uom', 'sc.subcategory_name');
+
+        if ($request->product != '') {
+            $query->where('p.product_name', 'like', '%' . $request->product . '%');
+        }
+        if ($request->subcategory != '') {
+            $query->where('p.subcategory', $request->subcategory);
+        }
+
+        $query->orderBy('p.product_name', 'asc');
+
+        if ($request->export_excel) {
+            return Excel::download(new BeltMissingFormulaExport($query->get()), 'BeltProductsWithoutFormula.xlsx');
+        }
+
+        $subcategories = DB::table('subcategory')->where('category', $beltCategoryId)->orderBy('subcategory_name')->get();
+
+        $summary = (clone $query)->get();
+        $totalMissing = $summary->count();
+
+        $list = $query->paginate(session('records_per_page', 30))->appends($request->all());
+
+        return view('admin.reports.belt_missing_formula', compact('list', 'subcategories', 'totalMissing'));
     }
 
 }

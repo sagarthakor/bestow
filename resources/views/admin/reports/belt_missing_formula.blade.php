@@ -1,6 +1,6 @@
 @extends('admin.layout.master_material')
 
-@section('title', 'Report | Stitching Pending')
+@section('title', 'Report | Belt Products Without Formula')
 
 @section('sidebar')
     @parent
@@ -34,11 +34,11 @@
                 <div class="row">
                     <div class="col-xs-12">
                         <div class="page-title-box">
-                            <h4 class="page-title">Stitching Pending Report</h4>
+                            <h4 class="page-title">Belt Products Without Formula</h4>
                             <ol class="breadcrumb p-0 m-0">
                                 <li><a href="{{ url('admin') }}">{{Session::get('software_title')}}</a></li>
                                 <li>Reports</li>
-                                <li class="active">Stitching Pending</li>
+                                <li class="active">Belt Products Without Formula</li>
                             </ol>
                             <div class="clearfix"></div>
                         </div>
@@ -54,12 +54,17 @@
                             <div class="rpt-panel-body">
                                 <div class="row">
                                     <div class="col-sm-4">
-                                        <label>Batch No</label>
-                                        <input type="text" name="batch_no" value="{{ request('batch_no') }}" class="form-control" placeholder="Batch no">
+                                        <label>Product</label>
+                                        <input type="text" name="product" value="{{ request('product') }}" class="form-control" placeholder="Product name">
                                     </div>
                                     <div class="col-sm-4">
-                                        <label>Customer</label>
-                                        <input type="text" name="customer" value="{{ request('customer') }}" class="form-control" placeholder="Customer name">
+                                        <label>Subcategory</label>
+                                        <select name="subcategory" class="form-control">
+                                            <option value="">All Subcategories</option>
+                                            @foreach($subcategories as $sc)
+                                                <option value="{{ $sc->id }}" {{ request('subcategory') == $sc->id ? 'selected' : '' }}>{{ $sc->subcategory_name }}</option>
+                                            @endforeach
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -77,7 +82,7 @@
                         <div class="card-box" style="padding:0;">
 
                             @include('admin.reports.partials.stat_cards', ['stats' => [
-                                ['label' => 'Pending Batches', 'value' => number_format($list->total()), 'icon' => 'mdi-clock-alert', 'color' => 'orange'],
+                                ['label' => 'Products Without Formula', 'value' => number_format($totalMissing), 'icon' => 'mdi-alert-circle', 'color' => 'red'],
                             ]])
 
                             <div class="table-responsive">
@@ -85,12 +90,10 @@
                                     <thead>
                                     <tr>
                                         <th>#</th>
-                                        <th>Batch No</th>
                                         <th>Product</th>
-                                        <th>Customer</th>
-                                        <th>Machine</th>
-                                        <th>Nos</th>
-                                        <th>Size</th>
+                                        <th>Item Code</th>
+                                        <th>UOM</th>
+                                        <th>Subcategory</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -99,16 +102,14 @@
                                             <td style="width:2%;text-align:center;">
                                                 {{ ($list->currentPage() - 1) * $list->perPage() + $loop->iteration }}
                                             </td>
-                                            <td>{{ $data->batch_no }}</td>
-                                            <td>{{ $data->product_name ?? '-' }}</td>
-                                            <td>{{ $data->customer_name ?? '-' }}</td>
-                                            <td>{{ $data->machine_name ?? '-' }}</td>
-                                            <td style="text-align:right;">{{ $data->nos }}</td>
-                                            <td>{{ $data->size }}</td>
+                                            <td>{{ $data->product_name }}</td>
+                                            <td>{{ $data->item_code ?? '-' }}</td>
+                                            <td>{{ $data->uom ?? '-' }}</td>
+                                            <td>{{ $data->subcategory_name ?? '-' }}</td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="7" class="text-center" style="padding:30px;color:#999;">No pending stitching batches found</td>
+                                            <td colspan="5" class="text-center" style="padding:30px;color:#999;">Every Belt product has a formula</td>
                                         </tr>
                                     @endforelse
                                     </tbody>
@@ -128,7 +129,5 @@
             </div>
         </div>
     </div>
-
-    <script src="{{asset('/admin/assets/js/jquery.min.js')}}"></script>
 
 @endsection

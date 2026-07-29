@@ -21,9 +21,10 @@
         .rpt-panel-body { padding: 18px 16px 6px; }
         .rpt-panel-body label { font-weight: 600; color: #555; font-size: 12.5px; margin-bottom: 4px; }
         .rpt-actions { padding: 0 16px 16px; text-align: right; border-top: 1px solid #eceff5; margin-top: 12px; padding-top: 14px; }
-        .rpt-stats { padding: 10px 16px; border-bottom: 1px solid #eceff5; background: #fafbfd; font-size: 13px; color: #666; }
-        .rpt-stats b { color: #222; }
         table.rpt-table thead th { background: #f4f6fa; font-weight: 600; color: #444; border-bottom: 2px solid #e3e6ee; vertical-align: middle; }
+        table.rpt-table { border: 1px solid #e3e6ee; border-collapse: collapse; box-shadow: 0 1px 3px rgba(20,30,60,.04); }
+        table.rpt-table th, table.rpt-table td { border: 1px solid #eceff5; padding: 10px 12px; vertical-align: middle; }
+        table.rpt-table tbody tr:hover { background-color: #f5f8fc; }
     </style>
 
     <div class="content-page">
@@ -111,10 +112,10 @@
                     <div class="col-sm-12">
                         <div class="card-box" style="padding:0;">
 
-                            <div class="rpt-stats">
-                                Invoices: <b>{{ number_format($totalRecords) }}</b>
-                                &nbsp;&nbsp;|&nbsp;&nbsp; Total Amount: <b>{{ number_format($totalAmount, 2) }}</b>
-                            </div>
+                            @include('admin.reports.partials.stat_cards', ['stats' => [
+                                ['label' => 'Invoices', 'value' => number_format($totalRecords), 'icon' => 'mdi-receipt', 'color' => 'blue'],
+                                ['label' => 'Total Amount', 'value' => number_format($totalAmount, 2), 'icon' => 'mdi-cash-multiple', 'color' => 'green'],
+                            ]])
 
                             <div class="table-responsive">
                                 <table class="table table-striped rpt-table">

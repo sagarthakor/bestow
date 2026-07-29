@@ -88,11 +88,28 @@ class AdminController extends Controller
             });
         }
 
+        // Quotation asked for the Size/Color values to be explicitly labeled
+        // in the dropdown (e.g. "Size: 8, Color: Red") instead of a bare
+        // "8 / Red" that doesn't say which value is which - other modules
+        // still use the compact format until they ask for the same change.
+        $verbose = $request->get('label_style') === 'verbose';
+
         $results = $query->orderBy('product_name', 'asc')
             ->limit(30)
             ->get(['id', 'item_code', 'product_name', 'value1', 'value2'])
-            ->map(function ($p) use ($status) {
-                $variant = trim(($p->value1 ?? '') . (($p->value1 && $p->value2) ? ' / ' : '') . ($p->value2 ?? ''));
+            ->map(function ($p) use ($status, $verbose) {
+                if ($verbose) {
+                    $parts = [];
+                    if ($p->value2) {
+                        $parts[] = 'Size: ' . $p->value2;
+                    }
+                    if ($p->value1) {
+                        $parts[] = 'Color: ' . $p->value1;
+                    }
+                    $variant = implode(', ', $parts);
+                } else {
+                    $variant = trim(($p->value1 ?? '') . (($p->value1 && $p->value2) ? ' / ' : '') . ($p->value2 ?? ''));
+                }
                 $label = (in_array($status, ['product', 'po_product'], true) && $p->item_code)
                     ? ($p->item_code . ' - ' . $p->product_name)
                     : $p->product_name;

@@ -45,10 +45,19 @@ class BeltProductionController extends Controller
             return ['formula' => null, 'lines' => collect(), 'sufficient' => false];
         }
 
-        $items = BuckleFormulaMstItem::select('buckle_formula_mst_item.*', 'product.product_name', 'product.uom as material_uom', 'uom.uom_name', 'stock_status.qty as stock_qty')
+        $items = BuckleFormulaMstItem::select(
+                'buckle_formula_mst_item.*',
+                'product.product_name',
+                'product.uom as material_uom',
+                'uom.uom_name',
+                'stock_status.qty as stock_qty',
+                'niwar_group_product.product_name as niwar_group_name'
+            )
             ->leftJoin('product', 'product.id', 'buckle_formula_mst_item.material')
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->leftJoin('stock_status', 'stock_status.product', 'buckle_formula_mst_item.material')
+            ->leftJoin('niwar_type_materials', 'niwar_type_materials.id', 'buckle_formula_mst_item.niwar_type_material_id')
+            ->leftJoin('product as niwar_group_product', 'niwar_group_product.id', 'niwar_type_materials.material')
             ->where('buckle_formula_mst_item.formula_id', $formula->id)
             ->get();
 
@@ -76,6 +85,7 @@ class BeltProductionController extends Controller
                 'available_stock' => $availableStock,
                 'short_by' => max($shortBy, 0),
                 'is_short' => $isShort,
+                'group_label' => $item->niwar_group_name ? ($item->niwar_group_name . ' Group') : null,
             ];
         });
 
@@ -117,7 +127,8 @@ class BeltProductionController extends Controller
         $html = '<p>Raw material used up by the ' . $belt->total_wastage_nos . ' wasted unit(s):</p>';
         $html .= '<table class="table table-bordered"><tr><th>Raw Material</th><th>Qty Wasted</th></tr>';
         foreach ($result['lines'] as $line) {
-            $html .= "<tr><td>{$line->product_name}</td><td>{$line->required_qty} {$line->uom_name}</td></tr>";
+            $materialCell = $line->product_name . ($line->group_label ? "<br><small class='text-muted'>({$line->group_label})</small>" : '');
+            $html .= "<tr><td>{$materialCell}</td><td>{$line->required_qty} {$line->uom_name}</td></tr>";
         }
         $html .= '</table>';
 
@@ -141,8 +152,9 @@ class BeltProductionController extends Controller
         $html = '<table class="table table-bordered"><tr><th>Raw Material</th><th>Required Qty</th><th>Available Stock</th><th>Short By</th></tr>';
         foreach ($result['lines'] as $line) {
             $rowStyle = $line->is_short ? "style='background:#fdeaea'" : '';
+            $materialCell = $line->product_name . ($line->group_label ? "<br><small class='text-muted'>({$line->group_label})</small>" : '');
             $html .= "<tr $rowStyle>
-                <td>{$line->product_name}</td>
+                <td>{$materialCell}</td>
                 <td>{$line->required_qty} {$line->uom_name}</td>
                 <td>{$line->available_stock} {$line->uom_name}</td>
                 <td>" . ($line->is_short ? "<b style='color:#c0392b'>{$line->short_by} {$line->uom_name} short</b>" : 'OK') . "</td>

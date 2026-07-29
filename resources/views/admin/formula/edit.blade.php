@@ -24,7 +24,7 @@
                                     <a href="{{ url('admin') }}">{{Session::get('software_title')}}</a>
                                 </li>
                                 <li>
-                                    <a href="{{url('formula_mst/list')}}">Formula List </a>
+                                    <a href="{{route('admin.production.formula_list')}}">Formula List </a>
                                 </li>
                                 <li>
                                     Update Formula
@@ -84,7 +84,7 @@
                                                 <div class="col-md-4">
                                                     <div class="form-group">
                                                         <label class="control-label">Total Material</label>
-                                                        {{Form::text('required_qty',null,['oninput'=>'cal(this)','class'=>'form-control total_mat'])}}
+                                                        {{Form::text('required_qty',null,['oninput'=>'cal()','class'=>'form-control total_mat'])}}
 
                                                     </div>
                                                 </div>
@@ -96,43 +96,34 @@
                                                 <table id="caltable1" class="table table-bordered">
                                                     <thead>
                                                         <tr>
+                                                            <th>Category</th>
                                                             <th>Raw Material</th>
-
-                                                            <th colspan="2">Required Qty</th>
-
+                                                            <th>Qty (grams)</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                    <?php
-                                                    $srno=0;
-                                                    ?>
-                                                    @foreach($data_item as $fm)
-                                                        <?php
-                                                        $srno++;
-                                                        ?>
+                                                    @foreach($categoryRows as $row)
                                                         <tr>
+                                                            <td>{{ $row['label'] }}</td>
                                                             <td>
-                                                                <select name="material[]" class="form-control">
-                                                                    <option value="{{$fm->material}}">{{$fm->product_name}}</option>
+                                                                <select name="material[]" class="form-control" onchange="updateUomHint(this)">
+                                                                    <option value="">Select {{ $row['label'] }}</option>
+                                                                    @foreach($row['materials'] as $mat)
+                                                                        <option value="{{ $mat->id }}" data-uom="{{ strtoupper($mat->uom_name ?? '') }}" {{ $mat->id == $row['selected_material'] ? 'selected' : '' }}>{{ $mat->product_name }}</option>
+                                                                    @endforeach
                                                                 </select>
                                                             </td>
-
                                                             <td>
-                                                                <input value="{{$fm->qty}}" style="text-align: right" type="text" class="form-control qty" name="qty[]">
-                                                            </td>
-                                                            <td>
-                                                                {{$fm->uom_name}}
+                                                                <input value="{{ $row['selected_qty'] }}" style="text-align: right" oninput="cal()" type="text" class="form-control qty required_qty_per" name="qty[]">
+                                                                <small class="uom-hint text-muted"></small>
                                                             </td>
                                                         </tr>
-
-
                                                     @endforeach
-                                                    Total <span class="srno">{{$srno}}</span> Material Required
                                                     </tbody>
 
                                                 </table>
                                                 <div class="col-md-2">
-                                                    <button class="btn btn-primary">Save</button>
+                                                    <button id="btnsave" class="btn btn-primary">Save</button>
                                                 </div>
 
                                                 {{Form::close()}}
@@ -148,13 +139,9 @@
 
 
 
-
-
-
-
-                                            </div>
-
                                         </div>
+
+                                    </div>
 
 
                                     </div><!-- end row -->
@@ -183,53 +170,37 @@
         <script>
             $(document).ready(function () {
                 $('.js-example-basic-single').select2();
+
+                $('select[name="material[]"]').each(function () {
+                    updateUomHint(this);
+                });
+
+                cal();
             });
 
-            function cal(ele)
-            {
-                var total_mat =$(".total_mat").val();
-                // alert(total_mat);
-                var totalss = $(".srno").text();
-                var percentage = $(".percentage");
-                var qty=$(".qty");
-                //alert(totalss);
-                //var qty = $(".qty").text();
-                var item_total = 0;
-                for (var i = 0; i < totalss; i++) {
-                    var per =$(percentage[i]).text();
-
-                    var mat=Number(total_mat)*Number(per)/100;
-                    //alert(per);
-                    //alert(mat);
-                    $(qty[i]).val(mat);
+            function updateUomHint(selectEl) {
+                var $hint = $(selectEl).closest('tr').find('.uom-hint');
+                var uom = $(selectEl).find(':selected').data('uom');
+                if (!uom) {
+                    $hint.text('');
+                } else if (uom === 'KG') {
+                    $hint.text('Enter in grams');
+                } else {
+                    $hint.text('Unit: ' + uom);
                 }
             }
 
-            $("#add_rawmaterial").click(function (e) {
-                e.preventDefault();
-                var i = $("#totrow").val();
-                i++;
+            function cal() {
+                const totalMat = Math.round(Number($(".total_mat").val()) || 0);
 
-                var data = "<tr>";
-                data +='<td><select name="raw_material[]" class="form-control js-example-basic-single"><option value="">select raw material</option>@foreach($rawmaterial as $rmat)<option value="{{$rmat->id}}">{{$rmat->product_name}}</option>@endforeach</select></td>';
-                data +='<td><input type="text" name="required_qty_per[]" class="form-control"></td>';
-                data +='<td class="actions" style="vertical-align: top !important;text-align: center;">';
-                data +='<a onclick="remove_row(this)" style="cursor: pointer;" class="on-editing save-row" title="save"><i class="fa fa-trash" style="font-size: 22px"></i></a>';
-                data +='</td>';
-                $("#caltable").append(data);
-                $("#totrow").val(i);
+                const itemTotal = $(".required_qty_per")
+                    .map((_, el) => Number($(el).val()) || 0)
+                    .get()
+                    .reduce((a, b) => a + b, 0);
 
-                $(document).ready(function () {
-                    $('.js-example-basic-single').select2();
-                });
-            });
-            function remove_row(ele) {
-                if (confirm("Are you sure you want to delete this?")) {
-                    $(ele).closest('tr').remove();
-                }else {
-                    return false;
-                }
+                const roundedItemTotal = Math.round(itemTotal);
+
+                $("#btnsave").toggle(roundedItemTotal === totalMat);
             }
         </script>
 @endsection
-

@@ -55,7 +55,7 @@
                                             @endforeach
                                         </select>
                                         @if($belts->isEmpty())
-                                            <p class="help-block text-danger">No belt has a formula yet - add one in Buckle Formula Master first.</p>
+                                            <p class="help-block text-danger">No belt has a formula yet - add one in Belt Formula Master first.</p>
                                         @endif
                                     </div>
                                 </div>

@@ -1,3 +1,25 @@
+<style>
+    #sidebar-menu > ul > li > a {
+        border-left: 3px solid transparent;
+    }
+    #sidebar-menu > ul > li > a:hover,
+    #sidebar-menu > ul > li > a.subdrop,
+    #sidebar-menu > ul > li > a.active {
+        border-left-color: #26a69a;
+    }
+    #sidebar-menu ul ul a:hover,
+    #sidebar-menu ul ul li.active > a {
+        border-left-color: #26a69a;
+    }
+    @media (max-width: 768px) {
+        #sidebar-menu > ul > li > a,
+        #sidebar-menu ul ul a {
+            padding-top: 14px;
+            padding-bottom: 14px;
+        }
+    }
+</style>
+
 <!-- Loader -->
 <div id="preloader">
     <div id="status">
@@ -226,16 +248,16 @@
                                     <li><a href="{{route('admin.customers.list')}}"><i class="mdi mdi-account-box"></i>Customer</a></li>
                                 @endcan
                                 @can('vendor_view')
-                                    <li><a href="{{route('admin.vendor.list')}}"><i class="mdi mdi-account-box"></i>Vendor</a></li>
+                                    <li><a href="{{route('admin.vendor.list')}}"><i class="mdi mdi-domain"></i>Vendor</a></li>
                                 @endcan
                                 @can('customer_contact_view')
-                                    <li><a href="{{route('admin.customer.contact.list')}}"><i class="mdi mdi-content-save-all"></i>Customer Contact</a></li>
+                                    <li><a href="{{route('admin.customer.contact.list')}}"><i class="mdi mdi-phone"></i>Customer Contact</a></li>
                                 @endcan
                                 @can('vendor_contact_view')
-                                    <li><a href="{{route('admin.vendor.contact.list')}}"><i class="mdi mdi-content-save-all"></i>Vendor Contact</a></li>
+                                    <li><a href="{{route('admin.vendor.contact.list')}}"><i class="mdi mdi-account-switch"></i>Vendor Contact</a></li>
                                 @endcan
                                 @can('vendor_contact_view')
-                                    <li><a href="{{route('admin.salesman.list')}}"><i class="mdi mdi-content-save-all"></i>Salesman</a></li>
+                                    <li><a href="{{route('admin.salesman.list')}}"><i class="mdi mdi-account-multiple"></i>Salesman</a></li>
                                 @endcan
 
                                 {{-- <li><a href="http://127.0.0.1:8001/item/manufacturer/list">Manufacturer</a></li>
@@ -255,75 +277,81 @@
                             </a>
                             <ul class="list-unstyled">
                                 @can('website_order_view')
-                                    <li><a href="{{ route('order_list') }}">Website Orders</a></li>
+                                    <li><a href="{{ route('order_list') }}"><i class="mdi mdi-web"></i>Website Orders</a></li>
                                 @endcan
                                 @can('quotation_view')
-                                    <li><a href="{{ route('admin.quotation.list') }}">Quotation</a></li>
+                                    <li><a href="{{ route('admin.quotation.list') }}"><i class="mdi mdi-file-document-box"></i>Quotation</a></li>
                                 @endcan
                                 @can('sales_view')
-                                    <li><a href="{{ route('admin.sales.list') }}">Sales</a></li>
+                                    <li><a href="{{ route('admin.sales.list') }}"><i class="mdi mdi-cash-multiple"></i>Sales</a></li>
                                 @endcan
                                 @can('delivery_challan_view')
-                                    <li><a href="{{route('admin.challan.list')}}">Delivery</a></li>
+                                    <li><a href="{{route('admin.challan.list')}}"><i class="mdi mdi-truck-delivery"></i>Delivery</a></li>
                                 @endcan
                                 @can('invoice_view')
-                                    <li><a href="{{route('admin.invoice.list')}}">Invoice</a></li>
+                                    <li><a href="{{route('admin.invoice.list')}}"><i class="mdi mdi-receipt"></i>Invoice</a></li>
                                 @endcan
                                 @can('purchase_view')
-                                    <li><a href="{{route('admin.purchase.list')}}">Purchase</a></li>
-                                    <li><a href="{{route('admin.purchase.requirement.list')}}">Purchase Request</a></li>
+                                    <li><a href="{{route('admin.purchase.list')}}"><i class="mdi mdi-basket"></i>Purchase</a></li>
+                                    <li><a href="{{route('admin.purchase.requirement.list')}}"><i class="mdi mdi-cart-plus"></i>Purchase Request</a></li>
                                 @endcan
-                                    <li><a href="{{route('admin.orders.index')}}">Website Orders</a></li>
+                                    <li><a href="{{route('admin.orders.index')}}"><i class="mdi mdi-web"></i>Website Orders</a></li>
                             </ul>
                         </li>
                     @endif
-                    @if($user->hasAnyPermission(['quot_report_view', 'sales_report_view', 'invoice_report_view', 'sales_summary_report_view', 'product_wise_sales_report_view', 'salesman_wise_sales_report_view', 'stock_available_report_view', 'raw_material_pending_report_view', 'production_pending_report_view', 'stitching_pending_report_view', 'pressing_pending_report_view', 'packaging_pending_report_view', 'belt_production_report_view']))
+                    @if($user->hasAnyPermission(['quot_report_view', 'sales_report_view', 'invoice_report_view', 'sales_summary_report_view', 'product_wise_sales_report_view', 'salesman_wise_sales_report_view', 'stock_available_report_view', 'raw_material_pending_report_view', 'production_pending_report_view', 'stitching_pending_report_view', 'pressing_pending_report_view', 'packaging_pending_report_view', 'belt_production_report_view', 'socks_missing_formula_report_view', 'belt_missing_formula_report_view']))
                         <li class="has_sub">
                             <a href="javascript:void(0);" class="waves-effect">
-                                <i class="mdi mdi-cart"></i>
+                                <i class="mdi mdi-chart-bar"></i>
                                 <span> Reports </span>
                                 <span class="menu-arrow"></span>
                             </a>
                             <ul class="list-unstyled">
                                 @can('quot_report_view')
-                                    <li><a href="{{ route('admin.reports.quotation') }}">Quotation</a></li>
+                                    <li><a href="{{ route('admin.reports.quotation') }}"><i class="mdi mdi-file-document-box"></i>Quotation</a></li>
                                 @endcan
                                 @can('sales_report_view')
-                                    <li><a href="{{ route('admin.reports.sales') }}">Sales</a></li>
-                                    <li><a href="{{ route('admin.reports.sales.out_of_stock_items') }}">Sales Out of stock Items</a></li>
+                                    <li><a href="{{ route('admin.reports.sales') }}"><i class="mdi mdi-chart-line"></i>Sales</a></li>
+                                    <li><a href="{{ route('admin.reports.sales.out_of_stock_items') }}"><i class="mdi mdi-alert-circle"></i>Sales Out of stock Items</a></li>
                                 @endcan
                                 @can('invoice_report_view')
-                                    <li><a href="{{ route('admin.reports.invoice') }}">Invoice</a></li>
+                                    <li><a href="{{ route('admin.reports.invoice') }}"><i class="mdi mdi-receipt"></i>Invoice</a></li>
                                 @endcan
                                 @can('sales_summary_report_view')
-                                    <li><a href="{{ route('admin.reports.sales_summary') }}">Sales Report - Daily/Monthly</a></li>
+                                    <li><a href="{{ route('admin.reports.sales_summary') }}"><i class="mdi mdi-calendar-clock"></i>Sales Report - Daily/Monthly</a></li>
                                 @endcan
                                 @can('product_wise_sales_report_view')
-                                    <li><a href="{{ route('admin.reports.product_wise_sales') }}">Product Wise Sales Report</a></li>
+                                    <li><a href="{{ route('admin.reports.product_wise_sales') }}"><i class="mdi mdi-chart-bar"></i>Product Wise Sales Report</a></li>
                                 @endcan
                                 @can('salesman_wise_sales_report_view')
-                                    <li><a href="{{ route('admin.reports.salesman_wise_sales') }}">Sales-MAN Wise Sales Report</a></li>
+                                    <li><a href="{{ route('admin.reports.salesman_wise_sales') }}"><i class="mdi mdi-account-multiple"></i>Sales-MAN Wise Sales Report</a></li>
                                 @endcan
                                 @can('stock_available_report_view')
-                                    <li><a href="{{ route('admin.reports.stock_available') }}">Product Wise Available Stock Report</a></li>
+                                    <li><a href="{{ route('admin.reports.stock_available') }}"><i class="mdi mdi-package-variant"></i>Product Wise Available Stock Report</a></li>
                                 @endcan
                                 @can('raw_material_pending_report_view')
-                                    <li><a href="{{ route('admin.reports.raw_material_pending') }}">RAW Material Required Pending Report</a></li>
+                                    <li><a href="{{ route('admin.reports.raw_material_pending') }}"><i class="mdi mdi-alert"></i>RAW Material Required Pending Report</a></li>
                                 @endcan
                                 @can('production_pending_report_view')
-                                    <li><a href="{{ route('admin.reports.production_pending') }}">Production Pending</a></li>
+                                    <li><a href="{{ route('admin.reports.production_pending') }}"><i class="mdi mdi-clock-alert"></i>Production Pending</a></li>
                                 @endcan
                                 @can('stitching_pending_report_view')
-                                    <li><a href="{{ route('admin.reports.stitching_pending') }}">Stitching Pending</a></li>
+                                    <li><a href="{{ route('admin.reports.stitching_pending') }}"><i class="mdi mdi-needle"></i>Stitching Pending</a></li>
                                 @endcan
                                 @can('pressing_pending_report_view')
-                                    <li><a href="{{ route('admin.reports.pressing_pending') }}">Press Pending</a></li>
+                                    <li><a href="{{ route('admin.reports.pressing_pending') }}"><i class="mdi mdi-hanger"></i>Press Pending</a></li>
                                 @endcan
                                 @can('packaging_pending_report_view')
-                                    <li><a href="{{ route('admin.reports.packaging_pending') }}">Packing Pending</a></li>
+                                    <li><a href="{{ route('admin.reports.packaging_pending') }}"><i class="mdi mdi-package"></i>Packing Pending</a></li>
                                 @endcan
                                 @can('belt_production_report_view')
-                                    <li><a href="{{ route('admin.reports.belt_production') }}">Belt Production</a></li>
+                                    <li><a href="{{ route('admin.reports.belt_production') }}"><i class="mdi mdi-buffer"></i>Belt Production</a></li>
+                                @endcan
+                                @can('socks_missing_formula_report_view')
+                                    <li><a href="{{ route('admin.reports.socks_missing_formula') }}"><i class="mdi mdi-alert-circle"></i>Socks Products Without Formula</a></li>
+                                @endcan
+                                @can('belt_missing_formula_report_view')
+                                    <li><a href="{{ route('admin.reports.belt_missing_formula') }}"><i class="mdi mdi-alert-circle"></i>Belt Products Without Formula</a></li>
                                 @endcan
                             </ul>
                         </li>
@@ -337,19 +365,19 @@
                             </a>
                             <ul class="list-unstyled" style="display: none;">
 
-                                <li><a href="{{route('admin.stock.status')}}">Stock Status</a></li>
-                                <li><a href="{{route('admin.stock.book')}}">Stock Book</a></li>
+                                <li><a href="{{route('admin.stock.status')}}"><i class="mdi mdi-clipboard-check"></i>Stock Status</a></li>
+                                <li><a href="{{route('admin.stock.book')}}"><i class="mdi mdi-book-open-variant"></i>Stock Book</a></li>
                                 @can('product_view')
-                                    <li><a href="{{ route('admin.product.list') }}">Product</a></li>
+                                    <li><a href="{{ route('admin.product.list') }}"><i class="mdi mdi-shopping"></i>Product</a></li>
                                     {{--<li><a href="{{route('admin.bom.list')}}">Custom Product (BOM)</a></li>--}}
-                                    <li><a href="{{ route('admin.category.list') }}">Category</a></li>
-                                    <li><a href="{{ route('admin.subcategory.list') }}">Subcategory</a></li>
-                                    <li><a href="{{ route('admin.uom.list') }}">Usage Unit</a></li>
-                                    <li><a href="{{ route('admin.brand.list') }}">Brand</a></li>
-                                    <li><a href="{{ route('admin.material.list') }}">Material</a></li>
-                                    <li><a href="{{ route('admin.attribute.list') }}">Attribute</a></li>
-                                    <li><a href="{{ route('admin.variation.list') }}">Variation</a></li>
-                                    <li><a href="{{ route('admin.raw.material.list') }}">Raw Material</a></li>
+                                    <li><a href="{{ route('admin.category.list') }}"><i class="mdi mdi-folder"></i>Category</a></li>
+                                    <li><a href="{{ route('admin.subcategory.list') }}"><i class="mdi mdi-folder-multiple"></i>Subcategory</a></li>
+                                    <li><a href="{{ route('admin.uom.list') }}"><i class="mdi mdi-ruler"></i>Usage Unit</a></li>
+                                    <li><a href="{{ route('admin.brand.list') }}"><i class="mdi mdi-tag"></i>Brand</a></li>
+                                    <li><a href="{{ route('admin.material.list') }}"><i class="mdi mdi-texture"></i>Material</a></li>
+                                    <li><a href="{{ route('admin.attribute.list') }}"><i class="mdi mdi-format-list-bulleted"></i>Attribute</a></li>
+                                    <li><a href="{{ route('admin.variation.list') }}"><i class="mdi mdi-palette"></i>Variation</a></li>
+                                    <li><a href="{{ route('admin.raw.material.list') }}"><i class="mdi mdi-cube-outline"></i>Raw Material</a></li>
                                 @endcan
 
                             </ul>
@@ -364,25 +392,25 @@
                             </a>
                             <ul class="list-unstyled" style="display: none;">
                                 @can('production_master_view')
-                                    <li><a href="{{ route('admin.production.dashboard') }}">All Production Dashboard</a></li>
+                                    <li><a href="{{ route('admin.production.dashboard') }}"><i class="mdi mdi-apps"></i>All Production Dashboard</a></li>
                                 @endcan
                                 @can('production_view')
-                                    <li><a href="{{ route('admin.production.process') }}">Production Dashboard</a></li>
+                                    <li><a href="{{ route('admin.production.process') }}"><i class="mdi mdi-speedometer"></i>Production Dashboard</a></li>
                                 @endcan
                                 @can('stitching_view')
-                                    <li><a href="{{ route('admin.production.stitching.dashboard') }}">Stitching Dashboard</a></li>
+                                    <li><a href="{{ route('admin.production.stitching.dashboard') }}"><i class="mdi mdi-needle"></i>Stitching Dashboard</a></li>
                                 @endcan
                                 @can('pressing_view')
-                                    <li><a href="{{ route('admin.production.pressing.dashboard') }}">Pressing Dashboard</a></li>
+                                    <li><a href="{{ route('admin.production.pressing.dashboard') }}"><i class="mdi mdi-hanger"></i>Pressing Dashboard</a></li>
                                 @endcan
                                 @can('washing_view')
-                                    <li><a href="{{ route('admin.production.washing.dashboard') }}">Washing Dashboard</a></li>
+                                    <li><a href="{{ route('admin.production.washing.dashboard') }}"><i class="mdi mdi-water"></i>Washing Dashboard</a></li>
                                 @endcan
                                 @can('packaging_view')
-                                    <li><a href="{{ route('admin.production.packaging.dashboard') }}">Packaging Dashboard</a></li>
+                                    <li><a href="{{ route('admin.production.packaging.dashboard') }}"><i class="mdi mdi-package-variant-closed"></i>Packaging Dashboard</a></li>
                                 @endcan
                                 @can('formula_view')
-                                    <li><a href="{{ route('admin.production.formula_list') }}">Formula Master</a></li>
+                                    <li><a href="{{ route('admin.production.formula_list') }}"><i class="mdi mdi-flask"></i>Formula Master</a></li>
                                 @endcan
                             </ul>
                         </li>
@@ -396,15 +424,15 @@
                             </a>
                             <ul class="list-unstyled" style="display: none;">
                                 @can('belt_production_view')
-                                    <li><a href="{{ route('admin.belt_production.list') }}">Belt Production List</a></li>
-                                    <li><a href="{{ route('admin.belt_production.add') }}">Add Belt Production</a></li>
+                                    <li><a href="{{ route('admin.belt_production.list') }}"><i class="mdi mdi-format-list-bulleted"></i>Belt Production List</a></li>
+                                    <li><a href="{{ route('admin.belt_production.add') }}"><i class="mdi mdi-plus-circle"></i>Add Belt Production</a></li>
                                 @endcan
                                 @can('buckle_formula_view')
-                                    <li><a href="{{ route('admin.production.buckle_formula_list') }}">Buckle Formula Master</a></li>
+                                    <li><a href="{{ route('admin.production.buckle_formula_list') }}"><i class="mdi mdi-flask-outline"></i>Belt Formula Master</a></li>
                                 @endcan
-                                <li><a href="{{ route('admin.bukkal.list') }}">Bukkal Code</a></li>
-                                <li><a href="{{ route('admin.niwar.list') }}">Niwar Code</a></li>
-                                <li><a href="{{ route('admin.belt.list') }}">Bukkal Costing</a></li>
+                                <li><a href="{{ route('admin.bukkal.list') }}"><i class="mdi mdi-barcode"></i>Bukkal Code</a></li>
+                                <li><a href="{{ route('admin.niwar.list') }}"><i class="mdi mdi-tag-outline"></i>Niwar Code</a></li>
+                                <li><a href="{{ route('admin.belt.list') }}"><i class="mdi mdi-calculator"></i>Bukkal Costing</a></li>
                             </ul>
                         </li>
                     @endif
@@ -440,8 +468,8 @@
                                 @can('city_view')
                                     <li><a href="{{ route('admin.city.list') }}"><i class="mdi mdi-city"></i>City</a></li>
                                 @endcan
-                                    <li><a href="{{ route('admin.banners.index')}}"><i class="mdi mdi-city"></i>Banner</a></li>
-                                    <li><a href="{{ route('admin.shipping.index')}}"><i class="mdi mdi-city"></i>Shipping charge</a></li>
+                                    <li><a href="{{ route('admin.banners.index')}}"><i class="mdi mdi-image"></i>Banner</a></li>
+                                    <li><a href="{{ route('admin.shipping.index')}}"><i class="mdi mdi-truck"></i>Shipping charge</a></li>
                             </ul>
                         </li>
                     @endcan
@@ -453,15 +481,15 @@
                                 <span class="menu-arrow"></span>
                             </a>
                             <ul class="list-unstyled" style="">
-                                <li><a href="{{ url('machine/list') }}">Machine Master</a></li>
+                                <li><a href="{{ url('machine/list') }}"><i class="mdi mdi-settings"></i>Machine Master</a></li>
 
-                                <li><a href="{{ url('stitching-machine/list') }}">Stitching Machine</a></li>
+                                <li><a href="{{ url('stitching-machine/list') }}"><i class="mdi mdi-needle"></i>Stitching Machine</a></li>
 
-                                <li><a href="{{ url('pressing-machine/list') }}">Pressing Machine</a></li>
+                                <li><a href="{{ url('pressing-machine/list') }}"><i class="mdi mdi-hanger"></i>Pressing Machine</a></li>
 
-                                <li><a href="{{ url('washing-machine/list') }}">Washing Machine</a></li>
+                                <li><a href="{{ url('washing-machine/list') }}"><i class="mdi mdi-water"></i>Washing Machine</a></li>
 
-                                <li><a href="{{ url('packaging-machine/list') }}">Packaging Machine</a></li>
+                                <li><a href="{{ url('packaging-machine/list') }}"><i class="mdi mdi-package-variant"></i>Packaging Machine</a></li>
                             </ul>
                         </li>
                     @endcan

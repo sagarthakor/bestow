@@ -21,9 +21,10 @@
         .rpt-panel-body { padding: 18px 16px 6px; }
         .rpt-panel-body label { font-weight: 600; color: #555; font-size: 12.5px; margin-bottom: 4px; }
         .rpt-actions { padding: 0 16px 16px; text-align: right; border-top: 1px solid #eceff5; margin-top: 12px; padding-top: 14px; }
-        .rpt-stats { padding: 10px 16px; border-bottom: 1px solid #eceff5; background: #fafbfd; font-size: 13px; color: #666; }
-        .rpt-stats b { color: #222; }
         table.rpt-table thead th { background: #f4f6fa; font-weight: 600; color: #444; border-bottom: 2px solid #e3e6ee; vertical-align: middle; }
+        table.rpt-table { border: 1px solid #e3e6ee; border-collapse: collapse; box-shadow: 0 1px 3px rgba(20,30,60,.04); }
+        table.rpt-table th, table.rpt-table td { border: 1px solid #eceff5; padding: 10px 12px; vertical-align: middle; }
+        table.rpt-table tbody tr:hover { background-color: #f5f8fc; }
         .rpt-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
         .rpt-badge-green  { background: #e6f9f1; color: #17a673; }
         .rpt-badge-red    { background: #fdeaea; color: #d63b40; }
@@ -111,12 +112,12 @@
                     <div class="col-sm-12">
                         <div class="card-box" style="padding:0;">
 
-                            <div class="rpt-stats">
-                                Records: <b>{{ number_format($list->total()) }}</b>
-                                &nbsp;&nbsp;|&nbsp;&nbsp; Products Affected: <b>{{ number_format($summary->affected_products ?? 0) }}</b>
-                                &nbsp;&nbsp;|&nbsp;&nbsp; Sales Orders Affected: <b>{{ number_format($summary->affected_orders ?? 0) }}</b>
-                                &nbsp;&nbsp;|&nbsp;&nbsp; Total Sold Qty: <b>{{ number_format($summary->total_sold_qty ?? 0, 2) }}</b>
-                            </div>
+                            @include('admin.reports.partials.stat_cards', ['stats' => [
+                                ['label' => 'Records', 'value' => number_format($list->total()), 'icon' => 'mdi-format-list-bulleted', 'color' => 'blue'],
+                                ['label' => 'Products Affected', 'value' => number_format($summary->affected_products ?? 0), 'icon' => 'mdi-alert-circle', 'color' => 'orange'],
+                                ['label' => 'Sales Orders Affected', 'value' => number_format($summary->affected_orders ?? 0), 'icon' => 'mdi-alert-circle', 'color' => 'orange'],
+                                ['label' => 'Total Sold Qty', 'value' => number_format($summary->total_sold_qty ?? 0, 2), 'icon' => 'mdi-package-variant', 'color' => 'purple'],
+                            ]])
 
                             <div class="table-responsive">
                                 <table class="table table-striped rpt-table">

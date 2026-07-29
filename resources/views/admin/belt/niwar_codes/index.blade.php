@@ -62,6 +62,7 @@
                                         </button>
                                         <ul class="dropdown-menu">
                                             <li><a href="{{ route('admin.niwar.edit', $n->id) }}">Edit</a></li>
+                                            <li><a href="{{ route('admin.niwar.details', $n->id) }}">Manage Details</a></li>
                                             <li><a href="{{ route('admin.niwar.delete', $n->id) }}" onclick="return confirm('Delete?')">Delete</a></li>
                                         </ul>
                                     </div>

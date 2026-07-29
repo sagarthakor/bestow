@@ -89,7 +89,7 @@
                                                         <select onchange="getimage(this.value,1)" id="finish_product_1" name="product" class="js-example-basic-single form-control">
                                                             <option value="">Select product</option>
                                                             @foreach($product as $prod)
-                                                                <option value="{{$prod->id}}">{{$prod->product_name}}</option>
+                                                                <option value="{{$prod->id}}">{{$prod->product_name}}{{ $prod->value2 ? ' - Size ' . $prod->value2 : '' }}{{ $prod->value1 ? ' - ' . $prod->value1 : '' }}</option>
                                                             @endforeach
                                                         </select>
                                                     </div>
@@ -206,29 +206,15 @@
 
 
 
-            $("#add_rawmaterial").click(function (e) {
-                e.preventDefault();
-                var i = $("#totrow").val();
-                i++;
-
-                var data = "<tr>";
-                data +='<td><select name="raw_material[]" class="form-control js-example-basic-single"><option value="">select raw material</option>@foreach($raw_material_group as $rmat)<option value="{{$rmat->id}}">{{$rmat->group_name}}</option>@endforeach</select></td>';
-                data +='<td><input type="text" name="required_qty_per[]" class="form-control"></td>';
-                data +='<td class="actions" style="vertical-align: top !important;text-align: center;">';
-                data +='<a onclick="remove_row(this)" style="cursor: pointer;" class="on-editing save-row" title="save"><i class="fa fa-trash" style="font-size: 22px"></i></a>';
-                data +='</td>';
-                $("#caltable").append(data);
-                $("#totrow").val(i);
-
-                $(document).ready(function () {
-                    $('.js-example-basic-single').select2();
-                });
-            });
-            function remove_row(ele) {
-                if (confirm("Are you sure you want to delete this?")) {
-                    $(ele).closest('tr').remove();
-                }else {
-                    return false;
+            function updateUomHint(selectEl) {
+                var $hint = $(selectEl).closest('tr').find('.uom-hint');
+                var uom = $(selectEl).find(':selected').data('uom');
+                if (!uom) {
+                    $hint.text('');
+                } else if (uom === 'KG') {
+                    $hint.text('Enter in grams');
+                } else {
+                    $hint.text('Unit: ' + uom);
                 }
             }
 

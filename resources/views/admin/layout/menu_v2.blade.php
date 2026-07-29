@@ -96,7 +96,7 @@
                 </div>
             @endif
 
-            @if($user->hasAnyPermission(['quot_report_view', 'sales_report_view', 'invoice_report_view', 'sales_summary_report_view', 'product_wise_sales_report_view', 'salesman_wise_sales_report_view', 'stock_available_report_view', 'raw_material_pending_report_view', 'production_pending_report_view', 'stitching_pending_report_view', 'pressing_pending_report_view', 'packaging_pending_report_view', 'belt_production_report_view']))
+            @if($user->hasAnyPermission(['quot_report_view', 'sales_report_view', 'invoice_report_view', 'sales_summary_report_view', 'product_wise_sales_report_view', 'salesman_wise_sales_report_view', 'stock_available_report_view', 'raw_material_pending_report_view', 'production_pending_report_view', 'stitching_pending_report_view', 'pressing_pending_report_view', 'packaging_pending_report_view', 'belt_production_report_view', 'socks_missing_formula_report_view', 'belt_missing_formula_report_view']))
                 @php $grpActive = request()->routeIs('admin.reports.*'); @endphp
                 <div class="sidebar-group {{ $grpActive ? 'open' : '' }}">
                     <button type="button" class="sidebar-link sidebar-group-toggle {{ $grpActive ? 'active' : '' }}">
@@ -144,6 +144,12 @@
                         @endcan
                         @can('belt_production_report_view')
                             <a href="{{ route('admin.reports.belt_production') }}" class="sidebar-sublink {{ request()->routeIs('admin.reports.belt_production') ? 'active' : '' }}">Belt Production</a>
+                        @endcan
+                        @can('socks_missing_formula_report_view')
+                            <a href="{{ route('admin.reports.socks_missing_formula') }}" class="sidebar-sublink {{ request()->routeIs('admin.reports.socks_missing_formula') ? 'active' : '' }}">Socks Products Without Formula</a>
+                        @endcan
+                        @can('belt_missing_formula_report_view')
+                            <a href="{{ route('admin.reports.belt_missing_formula') }}" class="sidebar-sublink {{ request()->routeIs('admin.reports.belt_missing_formula') ? 'active' : '' }}">Belt Products Without Formula</a>
                         @endcan
                     </div>
                 </div>
@@ -223,7 +229,7 @@
                             <a href="{{ route('admin.belt_production.add') }}" class="sidebar-sublink {{ request()->routeIs('admin.belt_production.add') ? 'active' : '' }}">Add Belt Production</a>
                         @endcan
                         @can('buckle_formula_view')
-                            <a href="{{ route('admin.production.buckle_formula_list') }}" class="sidebar-sublink {{ request()->routeIs('admin.production.buckle_formula_list') ? 'active' : '' }}">Buckle Formula Master</a>
+                            <a href="{{ route('admin.production.buckle_formula_list') }}" class="sidebar-sublink {{ request()->routeIs('admin.production.buckle_formula_list') ? 'active' : '' }}">Belt Formula Master</a>
                         @endcan
                         <a href="{{ route('admin.bukkal.list') }}" class="sidebar-sublink {{ request()->routeIs('admin.bukkal.*') ? 'active' : '' }}">Bukkal Code</a>
                         <a href="{{ route('admin.niwar.list') }}" class="sidebar-sublink {{ request()->routeIs('admin.niwar.*') ? 'active' : '' }}">Niwar Code</a>
