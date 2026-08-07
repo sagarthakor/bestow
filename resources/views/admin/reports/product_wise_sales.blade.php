@@ -119,7 +119,7 @@
                                     @forelse($groups as $productName => $rows)
                                         <tr class="rpt-group">
                                             <td colspan="7">
-                                                {{ $productName }}
+                                                <x-product-name :name="$productName" :color="$rows->first()->value1 ?? null" :size="$rows->first()->value2 ?? null" />
                                                 @if($rows->first()->category_name)
                                                     <span class="rpt-tag">{{ $rows->first()->category_name }}</span>
                                                 @endif

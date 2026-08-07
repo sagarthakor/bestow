@@ -89,7 +89,7 @@
                                                         <select onchange="getimage(this.value,1)" id="finish_product_1" name="product" class="js-example-basic-single form-control">
                                                             <option value="">Select product</option>
                                                             @foreach($product as $prod)
-                                                                <option value="{{$prod->id}}">{{$prod->product_name}}{{ $prod->value2 ? ' - Size ' . $prod->value2 : '' }}{{ $prod->value1 ? ' - ' . $prod->value1 : '' }}</option>
+                                                                <option value="{{$prod->id}}">{{ \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) }}{{ $prod->value2 ? ' - Size ' . $prod->value2 : '' }}{{ $prod->value1 ? ' - ' . $prod->value1 : '' }}</option>
                                                             @endforeach
                                                         </select>
                                                     </div>

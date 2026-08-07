@@ -16,7 +16,7 @@ class BuckleFormulaController extends Controller
 {
     function buckle_formula_list(Request $request)
     {
-        $data = BuckleFormulaMst::with('product_item:id,product_name')
+        $data = BuckleFormulaMst::with('product_item:id,product_name,value1,value2')
             ->search($request->search, ['product_item.product_name', 'size'])
             ->paginate(session('records_per_page', 30));
 
@@ -73,7 +73,7 @@ class BuckleFormulaController extends Controller
     {
         $data = BuckleFormulaMst::find($request->id);
 
-        $data_item = BuckleFormulaMstItem::select('buckle_formula_mst_item.*', 'product.product_name', 'uom.uom_name')
+        $data_item = BuckleFormulaMstItem::select('buckle_formula_mst_item.*', 'product.product_name', 'product.value1', 'product.value2', 'uom.uom_name')
             ->leftJoin('product', 'product.id', 'buckle_formula_mst_item.material')
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->where('buckle_formula_mst_item.formula_id', $data->id)

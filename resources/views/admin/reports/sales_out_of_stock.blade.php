@@ -146,7 +146,7 @@
                                             <td>{{ $data->customer }}</td>
                                             <td>{{ $data->category_name ?? '-' }}</td>
                                             <td>{{ $data->subcategory_name ?? '-' }}</td>
-                                            <td>{{ $data->product }}</td>
+                                            <td><x-product-name :name="$data->product" :color="$data->value1 ?? null" :size="$data->value2 ?? null" /></td>
                                             <td style="text-align:right;">{{ number_format($data->sold_qty, 2) }}</td>
                                             <td style="text-align:right;">{{ number_format($data->stock_qty, 2) }}</td>
                                             <td style="text-align:right;">

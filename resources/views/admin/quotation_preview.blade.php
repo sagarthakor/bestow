@@ -260,10 +260,7 @@
                                         <tr id="row{{$srno}}">
                                             <td style="vertical-align: top !important;">
                                                 <div class="form-group">
-                                                    @php
-                                                        $variantLabel = trim(($item->value1 ?? '') . ((($item->value1 ?? '') !== '' && ($item->value2 ?? '') !== '') ? ' / ' : '') . ($item->value2 ?? ''));
-                                                    @endphp
-                                                    {{$item->product_name}}{{ $variantLabel !== '' ? ' ('.$variantLabel.')' : '' }}
+                                                    <x-product-name :row="$item" />
                                                 </div>
 
                                                 <div class="form-group">

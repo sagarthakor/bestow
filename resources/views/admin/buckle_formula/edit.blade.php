@@ -111,7 +111,7 @@
                                             <select name="material[]" class="form-control js-example-basic-single material-select" onchange="updateUomHint(this)">
                                                 <option value="">Select raw material</option>
                                                 @foreach($rawmaterial as $mat)
-                                                    <option value="{{ $mat->id }}" data-uom="{{ strtoupper($mat->uomName->uom_name ?? '') }}" {{ $mat->id == $item->material ? 'selected' : '' }}>{{ $mat->product_name }}</option>
+                                                    <option value="{{ $mat->id }}" data-uom="{{ strtoupper($mat->uomName->uom_name ?? '') }}" {{ $mat->id == $item->material ? 'selected' : '' }}>{{ \App\product::nameWithVariantInline($mat->product_name, $mat->value1 ?? null, $mat->value2 ?? null) }}</option>
                                                 @endforeach
                                             </select>
                                         </td>
@@ -154,7 +154,7 @@
             recalcNiwarMaterials();
         });
 
-        var materialOptions = `@foreach($rawmaterial as $mat)<option value="{{ $mat->id }}" data-uom="{{ strtoupper($mat->uomName->uom_name ?? '') }}">{{ $mat->product_name }}</option>@endforeach`;
+        var materialOptions = `@foreach($rawmaterial as $mat)<option value="{{ $mat->id }}" data-uom="{{ strtoupper($mat->uomName->uom_name ?? '') }}">{{ \App\product::nameWithVariantInline($mat->product_name, $mat->value1 ?? null, $mat->value2 ?? null) }}</option>@endforeach`;
 
         var rawMaterialNames = {!! $rawmaterial->pluck('product_name', 'id')->toJson() !!};
 

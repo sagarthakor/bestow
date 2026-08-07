@@ -48,6 +48,8 @@ class BeltProductionController extends Controller
         $items = BuckleFormulaMstItem::select(
                 'buckle_formula_mst_item.*',
                 'product.product_name',
+                'product.value1',
+                'product.value2',
                 'product.uom as material_uom',
                 'uom.uom_name',
                 'stock_status.qty as stock_qty',
@@ -94,7 +96,7 @@ class BeltProductionController extends Controller
 
     function belt_production_list(Request $request)
     {
-        $data = BeltProduction::with(['belt_item:id,product_name', 'customer_item:id,customer_name'])
+        $data = BeltProduction::with(['belt_item:id,product_name,value1,value2', 'customer_item:id,customer_name'])
             ->orderBy('id', 'desc')
             ->paginate(session('records_per_page', 30));
 

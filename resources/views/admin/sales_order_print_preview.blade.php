@@ -175,7 +175,7 @@ $inr="<span style='font-family: DejaVu Sans; sans-serif;'>&#8377;</span>";
 			?>
 			<tr>
 				<td style="text-align: center;vertical-align:top;width:4%">{{$srno}}</td>
-				<td style="text-align: left;vertical-align:top;width:60%">{{$item->product_name}}
+				<td style="text-align: left;vertical-align:top;width:60%"><x-product-name :row="$item" print />
                     <br>
                     <span style="font-size: 8px">{{$item->description}}</span>
                 </td>

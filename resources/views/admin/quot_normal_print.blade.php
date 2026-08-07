@@ -162,7 +162,7 @@ $totdivide1=3;
 			?>
 			<tr>
 				<td style="text-align: center;vertical-align:top;">{{$srno}}</td>
-				<td style="text-align: left;vertical-align:top;width:30%">{{$item->product_name}}<br>
+				<td style="text-align: left;vertical-align:top;width:30%"><x-product-name :row="$item" print /><br>
 					<span style="font-size: 8px">{{$item->description}}</span>
 				</td>
 

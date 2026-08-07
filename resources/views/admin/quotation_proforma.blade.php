@@ -261,7 +261,7 @@ if($discsum==0)
                     <tr>
                         <td style="border-left:1px solid #ddd;text-align: center;vertical-align:top;width: 5%;border: 1px solid #ddd">{{$srno}}</td>
 
-                        <td style="vertical-align:top;width:20%;border: 1px solid #ddd">{{$item->product_name}}<br>HSN Code: {{$item->hsn}}</td>
+                        <td style="vertical-align:top;width:20%;border: 1px solid #ddd"><x-product-name :row="$item" print /><br>HSN Code: {{$item->hsn}}</td>
                         <td style="border-left:1px solid #ddd;text-align: center;vertical-align:top;border: 1px solid #ddd">
                             @if($item->product_image)
                                 <img height="60px" src="{{public_path('/product_image/'.$item->product_image)}}">

@@ -307,7 +307,7 @@
 
                                     <!--                <tr class="child-{{$srno}}">-->
                                     <!--                    <td style="text-align:center">{{$totitem}}</td>-->
-                                    <!--                    <td colspan="5" style="text-align:center">{{$receive->product_name}}</td>-->
+                                    <!--                    <td colspan="5" style="text-align:center"><x-product-name :row="$receive" /></td>-->
                                     <!--                    <td style="text-align:center">{{$receive->order_qty}}</td>-->
                                     <!--                    <td style="text-align:center">{{$receive->qty_received}}</td>-->
                                     <!--                    <td style="text-align:center">{{$receive->remain_qty}}</td>-->

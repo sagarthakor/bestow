@@ -123,7 +123,7 @@
                                         ?>
                                         <tr>
                                             <td style="width:1%;text-align:center">{{$srno}}</td>
-                                            <td>{{$list->product_name}}</td>
+                                            <td><x-product-name :row="$list" /></td>
                                             <td>{{$list->category_name}}</td>
                                             <td>{{$list->price}}</td>
                                             <td>{{$list->gst_per}}</td>

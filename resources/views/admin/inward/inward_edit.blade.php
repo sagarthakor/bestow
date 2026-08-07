@@ -136,7 +136,7 @@
                                         </tr>
 
                                         <tr>
-                                            <td><input type="hidden" value="{{$item->product}}" name="product"/> {{$item->product_name}}</td>
+                                            <td><input type="hidden" value="{{$item->product}}" name="product"/> <x-product-name :row="$item" /></td>
 
                                             <td style="vertical-align: top !important;text-align: center;">
                                                 <input type="text" name="received"  value="{{$item->received_qty}}" class="received form-control" id="qty' . $srno . '">

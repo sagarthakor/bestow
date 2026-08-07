@@ -213,7 +213,7 @@
                 <div class="card-body">
                     @forelse($topProducts ?? [] as $i => $p)
                         <div class="lb-row">
-                            <span class="lb-name"><span class="rank-badge {{ $i==0?'rank-1':($i==1?'rank-2':($i==2?'rank-3':'rank-other')) }}">{{ $i+1 }}</span>{{ $p->product_name ?? 'Unknown' }}</span>
+                            <span class="lb-name"><span class="rank-badge {{ $i==0?'rank-1':($i==1?'rank-2':($i==2?'rank-3':'rank-other')) }}">{{ $i+1 }}</span><x-product-name :row="$p" /></span>
                             <span class="lb-sub">{{ number_format($p->total_qty, 0) }} sold</span>
                         </div>
                     @empty

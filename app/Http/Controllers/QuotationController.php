@@ -146,7 +146,7 @@ class QuotationController extends Controller
             ->first();
 
         //dd($quot);
-        $quotitem=quotation_item::select('quot_item.*','product.product_name','product.make','product.model')
+        $quotitem=quotation_item::select('quot_item.*','product.product_name', 'product.value1', 'product.value2','product.make','product.model')
             ->leftJoin('product','product.id','quot_item.product')
             ->where('quot_item.quot_no',$quot->quot_no)
             ->get();
@@ -210,7 +210,7 @@ class QuotationController extends Controller
             ->where('quotation.id',$request->id)
             ->first();
 
-        $quotitem=quotation_item::select('quot_item.*','product.product_name','product.make','product.model','product.material_name','category.category_image','product.product_image',"product.hsn","product.item_code",'category.category_name as catname','uom.uom_name')
+        $quotitem=quotation_item::select('quot_item.*','product.product_name', 'product.value1', 'product.value2','product.make','product.model','product.material_name','category.category_image','product.product_image',"product.hsn","product.item_code",'category.category_name as catname','uom.uom_name')
             ->leftJoin('product','product.id','quot_item.product')
             ->leftJoin('category','category.id','product.category')
             ->leftJoin('uom','uom.id','product.uom')
@@ -218,7 +218,7 @@ class QuotationController extends Controller
             ->get();
         //dd($quotitem);
 
-        $discsum=quotation_item::select('quot_item.*','product.product_name','product.make','product.model','product.product_image','product.material_name','category.category_image')
+        $discsum=quotation_item::select('quot_item.*','product.product_name', 'product.value1', 'product.value2','product.make','product.model','product.product_image','product.material_name','category.category_image')
         ->leftJoin('product','product.id','quot_item.product')
         ->leftJoin('category','category.id','product.category')
         ->where('quot_item.quotation_no',$quot->quotation_no)

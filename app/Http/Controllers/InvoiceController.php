@@ -113,7 +113,7 @@ class InvoiceController extends Controller
 
         //dd($soitem);
 
-        $discsum = invoice_item::select('invoice_item.*', 'product.product_name', 'product.make', 'product.model')
+        $discsum = invoice_item::select('invoice_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model')
             ->leftJoin('product', 'product.id', 'invoice_item.product')
             ->where('invoice_item.invoice_no', $so->invoice_number)
             ->sum('invoice_item.discount_amount');
@@ -172,7 +172,7 @@ class InvoiceController extends Controller
 
         //dd($soitem);
 
-        $discsum = invoice_item::select('invoice_item.*', 'product.product_name', "product.product_image", 'product.make', 'product.model')
+        $discsum = invoice_item::select('invoice_item.*', 'product.product_name', 'product.value1', 'product.value2', "product.product_image", 'product.make', 'product.model')
             ->leftJoin('product', 'product.id', 'invoice_item.product')
             ->where('invoice_item.invoice_no', $so->invoice_number)
             ->sum('invoice_item.discount_amount');
@@ -539,7 +539,7 @@ class InvoiceController extends Controller
 
         $stockqty = $data->stockqty ?? 0;
 
-        $sub_product = bom_sub_product::select('product.product_name', "stock_status.qty")
+        $sub_product = bom_sub_product::select('product.product_name', 'product.value1', 'product.value2', "stock_status.qty")
             ->leftJoin('product', 'product.id', 'bom_sub_product.product')
             ->leftJoin("stock_status", "stock_status.product", "product.id")
             ->where('bom_sub_product.bom_id', $data->id)
@@ -614,7 +614,7 @@ class InvoiceController extends Controller
             ->where('product.id', $request->product)
             ->first();
         $stockqty = $data->stockqty ?? 0;
-        $sub_product = bom_sub_product::select('product.product_name', "stock_status.qty")
+        $sub_product = bom_sub_product::select('product.product_name', 'product.value1', 'product.value2', "stock_status.qty")
             ->leftJoin('product', 'product.id', 'bom_sub_product.product')
             ->leftJoin("stock_status", "stock_status.product", "product.id")
             ->where('bom_sub_product.bom_id', $data->id)

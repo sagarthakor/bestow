@@ -147,6 +147,7 @@
                                             <td>{{ $data->subject ?? '-' }}</td>
                                             <td style="text-align:right;">{{ number_format($data->grand_total, 2) }}</td>
                                         </tr>
+                                        @include('admin.reports.partials.doc_items', ['items' => $items[$data->salaesorder_no] ?? null, 'colspan' => 7])
                                     @empty
                                         <tr>
                                             <td colspan="7" class="text-center" style="padding:30px;color:#999;">No sales orders found</td>

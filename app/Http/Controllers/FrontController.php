@@ -730,7 +730,7 @@ class FrontController extends Controller
         }
         Session::forget('inquiry');
         $order=customer_order::where("order_number",$n2)->first();
-        $orderitem=customer_order_item::select("customer_order_item.*","product.product_name","product.product_image","category.category_name","subcategory.subcategory_name")
+        $orderitem=customer_order_item::select("customer_order_item.*","product.product_name", "product.value1", "product.value2","product.product_image","category.category_name","subcategory.subcategory_name")
             ->leftJoin("product","product.id","customer_order_item.product")
             ->leftJoin("category","category.id","product.category")
             ->leftJoin("subcategory","subcategory.id","product.subcategory")
@@ -1001,7 +1001,7 @@ class FrontController extends Controller
         }
         Session::forget('cart');
         $order=customer_order::where("order_number",$n2)->first();
-        $orderitem=customer_order_item::select("customer_order_item.*","product.product_name","product.product_image","category.category_name","subcategory.subcategory_name")
+        $orderitem=customer_order_item::select("customer_order_item.*","product.product_name", "product.value1", "product.value2","product.product_image","category.category_name","subcategory.subcategory_name")
             ->leftJoin("product","product.id","customer_order_item.product")
             ->leftJoin("category","category.id","product.category")
             ->leftJoin("subcategory","subcategory.id","product.subcategory")

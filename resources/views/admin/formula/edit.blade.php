@@ -109,7 +109,7 @@
                                                                 <select name="material[]" class="form-control" onchange="updateUomHint(this)">
                                                                     <option value="">Select {{ $row['label'] }}</option>
                                                                     @foreach($row['materials'] as $mat)
-                                                                        <option value="{{ $mat->id }}" data-uom="{{ strtoupper($mat->uom_name ?? '') }}" {{ $mat->id == $row['selected_material'] ? 'selected' : '' }}>{{ $mat->product_name }}</option>
+                                                                        <option value="{{ $mat->id }}" data-uom="{{ strtoupper($mat->uom_name ?? '') }}" {{ $mat->id == $row['selected_material'] ? 'selected' : '' }}>{{ \App\product::nameWithVariantInline($mat->product_name, $mat->value1 ?? null, $mat->value2 ?? null) }}</option>
                                                                     @endforeach
                                                                 </select>
                                                             </td>

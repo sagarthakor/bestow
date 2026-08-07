@@ -42,7 +42,7 @@ class BeltProductionExport implements FromCollection, WithHeadings, ShouldAutoSi
     {
         return [
             $row->batch_no,
-            $row->product,
+            \App\product::nameWithVariantInline($row->product, $row->value1 ?? null, $row->value2 ?? null),
             $row->customer ?? '-',
             number_format($row->planned_qty, 2),
             number_format($row->total_production ?? 0, 2),

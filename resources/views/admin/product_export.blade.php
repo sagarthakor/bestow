@@ -8,7 +8,7 @@
         $srno++;
         ?>
         <tr><td>{{$srno}}</td>
-            <td style="word-wrap:break-word">{{$data->product_name}}</td>
+            <td style="word-wrap:break-word"><x-product-name :row="$data" /></td>
             <td style="word-wrap:break-word">{{$data->category_name}}</td>
             <td style="word-wrap:break-word">{{$data->material_name}}</td></tr>
     @endforeach

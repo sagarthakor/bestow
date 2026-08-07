@@ -105,7 +105,7 @@
                                     <tbody>
                                     @forelse($groups as $materialName => $rows)
                                         <tr class="rpt-group">
-                                            <td colspan="7">{{ $materialName }} ({{ $rows->first()->uom ?? '-' }})</td>
+                                            <td colspan="7"><x-product-name :name="$materialName" :color="$rows->first()->value1 ?? null" :size="$rows->first()->value2 ?? null" /> ({{ $rows->first()->uom ?? '-' }})</td>
                                         </tr>
                                         @foreach($rows as $row)
                                             <tr>
@@ -116,7 +116,7 @@
                                                         <span class="label label-warning" title="Raised before a production batch was created; not yet converted to a PO">Pending PO</span>
                                                     @endif
                                                 </td>
-                                                <td>{{ $row->finish_product ?? '-' }}</td>
+                                                <td><x-product-name :name="$row->finish_product ?? '-'" :color="$row->fp_value1 ?? null" :size="$row->fp_value2 ?? null" /></td>
                                                 <td>{{ $row->customer ?? '-' }}</td>
                                                 <td style="text-align:right;">{{ $row->source === 'purchase_request' ? '-' : number_format($row->required_qty, 2) }}</td>
                                                 <td style="text-align:right;">{{ $row->source === 'purchase_request' ? '-' : number_format($row->avalible_stock, 2) }}</td>

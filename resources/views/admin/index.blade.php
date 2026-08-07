@@ -489,7 +489,7 @@
                                                         $rankClass = $i == 0 ? 'badge-danger' : ($i == 1 ? 'badge-default' : ($i == 2 ? 'badge-warning' : 'badge-info'));
                                                     @endphp
                                                     <span class="badge {{ $rankClass }}">{{ $i + 1 }}</span>
-                                                    {{ $p->product_name ?? 'Unknown' }}
+                                                    <x-product-name :row="$p" />
                                                 </td>
                                                 <td class="text-right text-muted">{{ number_format($p->total_qty, 0) }} sold</td>
                                             </tr>

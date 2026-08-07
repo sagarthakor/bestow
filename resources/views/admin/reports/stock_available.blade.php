@@ -125,7 +125,7 @@
                                             <td style="width:2%;text-align:center;">
                                                 {{ ($list->currentPage() - 1) * $list->perPage() + $loop->iteration }}
                                             </td>
-                                            <td>{{ $data->product }}</td>
+                                            <td><x-product-name :name="$data->product" :color="$data->value1 ?? null" :size="$data->value2 ?? null" /></td>
                                             <td>{{ $data->item_code ?? '-' }}</td>
                                             <td>{{ $data->uom ?? '-' }}</td>
                                             <td>{{ $data->category_name ?? '-' }}</td>

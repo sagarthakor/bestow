@@ -166,6 +166,7 @@
                                             </td>
                                             <td style="text-align:right;">{{ number_format($data->grand_total, 2) }}</td>
                                         </tr>
+                                        @include('admin.reports.partials.doc_items', ['items' => $items[$data->quot_no] ?? null, 'colspan' => 8])
                                     @empty
                                         <tr>
                                             <td colspan="8" class="text-center" style="padding:30px;color:#999;">No quotations found</td>

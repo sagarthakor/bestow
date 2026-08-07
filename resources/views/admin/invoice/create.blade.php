@@ -306,11 +306,7 @@
                                                 <td style="vertical-align: top !important;width: 30%">
                                                     <div class="input-group">
                                                         <select class="form-control product" onchange="get_product(this)" name="product[]" id="product{{$srno}}">
-                                                            @php
-                                                                $itemVariant = trim(($item->value1 ?? '') . ((($item->value1 ?? '') !== '' && ($item->value2 ?? '') !== '') ? ' / ' : '') . ($item->value2 ?? ''));
-                                                                $itemVariantLabel = $itemVariant !== '' ? ' ('.$itemVariant.')' : '';
-                                                            @endphp
-                                                            <option value="{{$item->product}}" selected>{{$item->item_code}} - {{$item->product_name}}{{$itemVariantLabel}}</option>
+                                                            <option value="{{$item->product}}" selected>{{ \App\product::nameWithVariantInline($item->item_code . ' - ' . $item->product_name, $item->value1 ?? null, $item->value2 ?? null) }}</option>
                                                         </select>
                                                     </div>
 

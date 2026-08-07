@@ -39,7 +39,7 @@ class StockAvailableExport implements FromCollection, WithHeadings, ShouldAutoSi
     public function map($row): array
     {
         return [
-            $row->product,
+            \App\product::nameWithVariantInline($row->product, $row->value1 ?? null, $row->value2 ?? null),
             $row->item_code ?? '-',
             $row->uom ?? '-',
             $row->category_name ?? '-',

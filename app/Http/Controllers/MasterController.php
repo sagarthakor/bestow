@@ -1210,7 +1210,7 @@ class MasterController extends Controller
 
             $totproduct=product::query()->count();
 
-            $service_renewal=service_renewal::select('service_renewal.*','customers.customer_name','uom.uom_name','category.category_name','product.product_name')
+            $service_renewal=service_renewal::select('service_renewal.*','customers.customer_name','uom.uom_name','category.category_name','product.product_name', 'product.value1', 'product.value2')
                 ->leftJoin('customers','customers.id','service_renewal.customer')
                 ->leftJoin('uom','uom.id','service_renewal.usage_unit')
                 ->leftJoin('category','category.id','service_renewal.category')

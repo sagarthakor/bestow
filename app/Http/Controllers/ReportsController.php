@@ -31,6 +31,40 @@ use App\invoice;
 
 class ReportsController extends Controller
 {
+    /**
+     * Line items for a page of documents, keyed by the parent document so a
+     * report can list each document's products (with Size/Color) beneath its
+     * row. One query per report page rather than one per document.
+     *
+     * @param  string  $itemTable  e.g. 'quot_item'
+     * @param  string  $fk         column on $itemTable pointing at the parent
+     * @param  array   $keys       parent key values from the current page
+     */
+    private function documentItems(string $itemTable, string $fk, array $keys)
+    {
+        $keys = array_values(array_filter($keys, fn ($k) => $k !== null && $k !== ''));
+        if (!$keys) {
+            return collect();
+        }
+
+        return DB::table($itemTable . ' as it')
+            ->leftJoin('product as p', 'p.id', '=', 'it.product')
+            ->whereIn('it.' . $fk, $keys)
+            ->select(
+                'it.' . $fk . ' as doc_key',
+                'it.qty',
+                'it.price',
+                'it.description',
+                'p.product_name',
+                'p.item_code',
+                'p.value1',
+                'p.value2'
+            )
+            ->orderBy('it.id')
+            ->get()
+            ->groupBy('doc_key');
+    }
+
     //
     function quotation(Request $request)
     {
@@ -140,8 +174,10 @@ class ReportsController extends Controller
 
         $result = $product->paginate(session('records_per_page', 30))->appends($request->all());
 
+        $items = $this->documentItems('quot_item', 'quot_no', $result->pluck('quot_no')->all());
+
         return view('admin.reports.quotation')
-                ->with(['list'=>$result,'stage'=>$stage,'totalRecords'=>$totalRecords,'totalAmount'=>$totalAmount]);
+                ->with(['list'=>$result,'stage'=>$stage,'totalRecords'=>$totalRecords,'totalAmount'=>$totalAmount,'items'=>$items]);
     }
 
     function sales(Request $request)
@@ -207,7 +243,9 @@ class ReportsController extends Controller
 
         $company_name=company::select('company_name')->first();
 
-        return view('admin.reports.sales')->with(['list'=>$result,'company'=>$company_name->company_name,'totalRecords'=>$totalRecords,'totalAmount'=>$totalAmount]);
+        $items = $this->documentItems('salesorder_item', 'sono', $result->pluck('salaesorder_no')->all());
+
+        return view('admin.reports.sales')->with(['list'=>$result,'company'=>$company_name->company_name,'totalRecords'=>$totalRecords,'totalAmount'=>$totalAmount,'items'=>$items]);
     }
 
     function challan(Request $request)
@@ -275,7 +313,9 @@ class ReportsController extends Controller
         $stage = array('Created' => 'Created', 'Sent' => 'Sent', 'Reviewing' => 'Reviewing', 'QuoteRivision' => 'QuoteRivision', 'Accepted' => 'Accepted', 'Invoiced' => 'Invoiced', 'Canceled' => 'Canceled');
 
 
-        return view("admin.reports.challan")->with(['list' => $result, 'company' => $company_name->company_name, 'stage' => $stage, 'totalRecords' => $totalRecords, 'totalAmount' => $totalAmount]);
+        $items = $this->documentItems('delivery_challan_item', 'invid', $result->pluck('id')->all());
+
+        return view("admin.reports.challan")->with(['list' => $result, 'company' => $company_name->company_name, 'stage' => $stage, 'totalRecords' => $totalRecords, 'totalAmount' => $totalAmount, 'items' => $items]);
     }
 
     function invoice(Request $request)
@@ -342,7 +382,9 @@ class ReportsController extends Controller
 
         $company_name = company::select('company_name')->first();
 
-        return view("admin.reports.invoice")->with(['list' => $result, 'company' => $company_name->company_name, 'stage' => $stage, 'totalRecords' => $totalRecords, 'totalAmount' => $totalAmount]);
+        $items = $this->documentItems('invoice_item', 'invoice_no', $result->pluck('invoice_number')->all());
+
+        return view("admin.reports.invoice")->with(['list' => $result, 'company' => $company_name->company_name, 'stage' => $stage, 'totalRecords' => $totalRecords, 'totalAmount' => $totalAmount, 'items' => $items]);
     }
 
     public function salesOutOfStockItems(Request $request)
@@ -362,6 +404,8 @@ class ReportsController extends Controller
             ->groupBy(
                 'soi.product',
                 'p.product_name',
+                'p.value1',
+                'p.value2',
                 'p.category',
                 'p.subcategory',
                 's.id',
@@ -374,6 +418,8 @@ class ReportsController extends Controller
             ->select(
                 'soi.product as product_id',
                 'p.product_name as product',
+                'p.value1',
+                'p.value2',
                 'p.category as category_id',
                 'p.subcategory as subcategory_id',
                 's.id as so_id',
@@ -412,6 +458,8 @@ class ReportsController extends Controller
             ->select(
                 'w.product_id',
                 'w.product',
+                'w.value1',
+                'w.value2',
                 'w.category_id',
                 'w.subcategory_id',
                 'w.so_id',
@@ -529,7 +577,9 @@ class ReportsController extends Controller
         $grandTotal = $rows->sum('grand_total');
         $grandCount = $rows->count();
 
-        return view('admin.reports.sales_summary', compact('groups', 'period', 'grandTotal', 'grandCount', 'from', 'to'));
+        $items = $this->documentItems('salesorder_item', 'sono', $rows->pluck('salaesorder_no')->all());
+
+        return view('admin.reports.sales_summary', compact('groups', 'period', 'grandTotal', 'grandCount', 'from', 'to', 'items'));
     }
 
     /**
@@ -550,6 +600,8 @@ class ReportsController extends Controller
             ->select(
                 'soi.product as product_id',
                 'p.product_name as product',
+                'p.value1',
+                'p.value2',
                 'cat.category_name as category_name',
                 's.id as so_id',
                 's.salaesorder_no as order_no',
@@ -624,7 +676,9 @@ class ReportsController extends Controller
         $grandTotal = $rows->sum('grand_total');
         $salesmen = salesman::orderBy('salesman_name', 'asc')->get();
 
-        return view('admin.reports.salesman_wise_sales', compact('groups', 'period', 'grandTotal', 'from', 'to', 'salesmen'));
+        $items = $this->documentItems('salesorder_item', 'sono', $rows->pluck('salaesorder_no')->all());
+
+        return view('admin.reports.salesman_wise_sales', compact('groups', 'period', 'grandTotal', 'from', 'to', 'salesmen', 'items'));
     }
 
     /**
@@ -637,10 +691,12 @@ class ReportsController extends Controller
             ->join('product as p', 'p.id', '=', 'ss.product')
             ->leftJoin('category as cat', 'cat.id', '=', 'p.category')
             ->leftJoin('subcategory as sc', 'sc.id', '=', 'p.subcategory')
-            ->groupBy('ss.product', 'p.product_name', 'p.item_code', 'p.uom', 'cat.category_name', 'sc.subcategory_name')
+            ->groupBy('ss.product', 'p.product_name', 'p.value1', 'p.value2', 'p.item_code', 'p.uom', 'cat.category_name', 'sc.subcategory_name')
             ->select(
                 'ss.product as product_id',
                 'p.product_name as product',
+                'p.value1',
+                'p.value2',
                 'p.item_code',
                 'p.uom',
                 'cat.category_name',
@@ -705,11 +761,15 @@ class ReportsController extends Controller
                 'pm.id',
                 'pm.batch_no',
                 'rm.product_name as raw_material',
+                'rm.value1',
+                'rm.value2',
                 'u.uom_name as uom',
                 'pm.required_qty',
                 'pm.avalible_stock',
                 'pm.need_to_order_stock',
                 'fp.product_name as finish_product',
+                'fp.value1 as fp_value1',
+                'fp.value2 as fp_value2',
                 'c.customer_name as customer',
                 'pm.timestamp'
             );
@@ -737,11 +797,15 @@ class ReportsController extends Controller
                 'prm.id',
                 DB::raw("CONCAT('PR-', pr.order_no) as batch_no"),
                 'rm.product_name as raw_material',
+                'rm.value1',
+                'rm.value2',
                 'u.uom_name as uom',
                 DB::raw('0 as required_qty'),
                 DB::raw('0 as avalible_stock'),
                 'prm.qty as need_to_order_stock',
                 'fp.product_name as finish_product',
+                'fp.value1 as fp_value1',
+                'fp.value2 as fp_value2',
                 'c.customer_name as customer',
                 'prm.timestamp'
             );
@@ -810,6 +874,8 @@ class ReportsController extends Controller
                 't.timestamp',
                 'm.machine_name',
                 'p.product_name',
+                'p.value1',
+                'p.value2',
                 'c.customer_name'
             );
 
@@ -865,6 +931,8 @@ class ReportsController extends Controller
                 'bp.id',
                 'bp.batch_no',
                 'p.product_name as product',
+                'p.value1',
+                'p.value2',
                 'c.customer_name as customer',
                 'bp.planned_qty',
                 'bp.total_production',
@@ -925,7 +993,7 @@ class ReportsController extends Controller
             ->where('p.category', $socksCategoryId)
             ->where('p.status', 'product')
             ->whereNull('fm.id')
-            ->select('p.id', 'p.product_name', 'p.item_code', 'p.uom', 'sc.subcategory_name');
+            ->select('p.id', 'p.product_name', 'p.value1', 'p.value2', 'p.item_code', 'p.uom', 'sc.subcategory_name');
 
         if ($request->product != '') {
             $query->where('p.product_name', 'like', '%' . $request->product . '%');
@@ -966,7 +1034,7 @@ class ReportsController extends Controller
             ->where('p.category', $beltCategoryId)
             ->where('p.status', 'product')
             ->whereNull('bfm.id')
-            ->select('p.id', 'p.product_name', 'p.item_code', 'p.uom', 'sc.subcategory_name');
+            ->select('p.id', 'p.product_name', 'p.value1', 'p.value2', 'p.item_code', 'p.uom', 'sc.subcategory_name');
 
         if ($request->product != '') {
             $query->where('p.product_name', 'like', '%' . $request->product . '%');

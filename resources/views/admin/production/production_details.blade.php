@@ -77,7 +77,7 @@
                                             <table class="table table-bordered">
                                                 <tr>
                                                     <td>Product Name</td>
-                                                    <td>{{$production->product_name}}</td>
+                                                    <td><x-product-name :row="$production" /></td>
                                                 </tr>
                                             </table>
                                         </div>
@@ -113,7 +113,7 @@
                                                         <table class="table table-bordered">
                                                             <tr>
                                                                 @foreach($production_material as $mat)
-                                                                    <td>{{$mat->product_name}} : {{$mat->required_qty}} Gram</td>
+                                                                    <td><x-product-name :row="$mat" /> : {{$mat->required_qty}} Gram</td>
                                                                 @endforeach
 
                                                             </tr>

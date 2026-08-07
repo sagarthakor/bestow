@@ -213,11 +213,10 @@
             $discount += $item->discount_amount;
             $gsttotal += $item->gst_amount;
             $grand += $item->grand_total;
-            $variantLabel = trim(($item->value1 ?? '') . ((($item->value1 ?? '') !== '' && ($item->value2 ?? '') !== '') ? ' / ' : '') . ($item->value2 ?? ''));
         @endphp
         <tr>
             <td class="text-center">{{ $srno }}</td>
-            <td>{{ $item->product_name }}{{ $variantLabel !== '' ? ' ('.$variantLabel.')' : '' }}<br>HSN: {{ $item->hsn }}</td>
+            <td><x-product-name :row="$item" print /><br>HSN: {{ $item->hsn }}</td>
             @if(isset($isInternalPrint) && $isInternalPrint == 'yes')
                 <td class="text-center">
                     @if($item->product_image)

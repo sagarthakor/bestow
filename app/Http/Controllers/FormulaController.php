@@ -28,7 +28,7 @@ class FormulaController extends Controller
     {
         $data=formula_mst::find($request->id);
 
-        $data_item=formula_mst_item::select("formula_mst_item.*","product.product_name","uom.uom_name")
+        $data_item=formula_mst_item::select("formula_mst_item.*","product.product_name","product.value1","product.value2","uom.uom_name")
             ->leftJoin("product","product.id","formula_mst_item.material")
             ->leftJoin("uom","uom.id","product.uom")
             ->orderBy("formula_mst_item.id","asc")
@@ -114,7 +114,7 @@ class FormulaController extends Controller
         foreach ($categories as $group => $label) {
             $materials = DB::table('product')
                 ->leftJoin('uom', 'uom.id', 'product.uom')
-                ->select('product.id', 'product.product_name', 'uom.uom_name')
+                ->select('product.id', 'product.product_name', 'product.value1', 'product.value2', 'uom.uom_name')
                 ->where('product.raw_material_group', $group)
                 ->orderBy('product.product_name', 'asc')
                 ->get();
@@ -142,7 +142,7 @@ class FormulaController extends Controller
     function formula_list(Request $request)
     {
 
-        $data=formula_mst::with('product_item:id,product_name')
+        $data=formula_mst::with('product_item:id,product_name,value1,value2')
             ->search($request->search,['product_item.product_name', 'nos', 'size'])->paginate(session('records_per_page', 30));
 
         return view("admin.formula.list",compact('data'));

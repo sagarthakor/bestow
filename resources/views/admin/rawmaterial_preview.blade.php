@@ -93,7 +93,7 @@
                                         <div class="form-group row">
                                         <label for="staticEmail" class="col-sm-6 col-form-label">Product Name</label>
                                         <div class="col-sm-6">
-                                         {{$data->product_name}}
+                                         <x-product-name :row="$data" />
                                         </div>
                                     </div>
                                     </div>

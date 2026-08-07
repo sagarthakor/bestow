@@ -58,7 +58,7 @@
                     <caption style="color: #222;font-weight: 600">Details</caption>
                     <tr>
                       <td style="width: 10%">BOM Name </td>
-                      <td style="color: #222;width:20%"> {{$bom->product_name}}</td>
+                      <td style="color: #222;width:20%"> <x-product-name :row="$bom" /></td>
                         <td style="width: 10%">Category </td>
                         <td style="color: #222;width:20%"> {{$bom->category_name}}</td>
                         <td style="width: 10%">Material </td>
@@ -133,7 +133,7 @@
                     ?>
                     <tr id="row{{$srno}}">
                       <td style="vertical-align: top !important;width: 20%">
-                        {{$item->product_name}}
+                        <x-product-name :row="$item" />
 
                       </td>
                       <td style="vertical-align: top !important;">

@@ -99,7 +99,7 @@
                                         ?>
                                         <tr>
                                             <td style="width: 5%">{{($data->currentPage() - 1) * $data->perPage() + $loop->iteration}}</td>
-                                              <td>{{$list->product_name}}</td>
+                                              <td><x-product-name :row="$list" /></td>
                                             <td>{{$list->qty}}</td>
 
 

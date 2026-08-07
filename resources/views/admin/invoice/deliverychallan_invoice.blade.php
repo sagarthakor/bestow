@@ -465,7 +465,7 @@
                                             <td style="vertical-align: top !important;width:35%">
                                                 <div class="form-group">
                                                     <select class="form-control product" onchange="get_product(this)" name="product[]" id="product{{$srno}}">
-                                                        <option value="{{$item->product}}" selected>{{$item->product_name}}</option>
+                                                        <option value="{{$item->product}}" selected>{{ \App\product::nameWithVariantInline($item->product_name, $item->value1 ?? null, $item->value2 ?? null) }}</option>
                                                     </select>
 
                                                 </div>

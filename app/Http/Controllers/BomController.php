@@ -56,7 +56,7 @@ class BomController extends Controller
             ->first();
        // dd($data);
 
-        $sub_product=bom_sub_product::select('product.product_name',"stock_status.qty")
+        $sub_product=bom_sub_product::select('product.product_name', 'product.value1', 'product.value2',"stock_status.qty")
             ->leftJoin('product','product.id','bom_sub_product.product')
             ->leftJoin("stock_status","stock_status.product","product.id")
             ->where('bom_sub_product.bom_id',$data->id)
@@ -229,7 +229,7 @@ class BomController extends Controller
     {
     	$bom=product::find($request->id);
 
-    	$bom_item=bom_sub_product::select('bom_sub_product.*','product.product_name','stock_status.qty as stockqty')
+    	$bom_item=bom_sub_product::select('bom_sub_product.*','product.product_name', 'product.value1', 'product.value2','stock_status.qty as stockqty')
     	->Join('product','product.id','bom_sub_product.product')
         ->join("stock_status","stock_status.product","bom_sub_product.product")
     	->where('bom_id',$request->id)
@@ -295,7 +295,7 @@ class BomController extends Controller
             ->where('product.id',$request->id)
             ->first();
 
-        $bom_item=bom_sub_product::select('bom_sub_product.*','product.product_name',"product.hsn","product.product_image")
+        $bom_item=bom_sub_product::select('bom_sub_product.*','product.product_name','product.value1','product.value2',"product.hsn","product.product_image")
             ->leftJoin('product','product.id','bom_sub_product.product')
             ->where('bom_id',$request->id)
             ->get();

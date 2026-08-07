@@ -43,7 +43,7 @@ class RawMaterialPendingExport implements FromCollection, WithHeadings, ShouldAu
         $isPurchaseRequest = ($row->source ?? null) === 'purchase_request';
 
         return [
-            $row->raw_material,
+            \App\product::nameWithVariantInline($row->raw_material, $row->value1 ?? null, $row->value2 ?? null),
             $row->uom ?? '-',
             $row->batch_no,
             $row->finish_product ?? '-',

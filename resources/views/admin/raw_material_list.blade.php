@@ -151,7 +151,7 @@
                                    <td style="text-align: center"> {{($data->currentPage() - 1) * $data->perPage() + $loop->iteration}}</td>
                                    <td style="text-align: center;">{{$list->raw_material_group}}</td>
                                    <td style="text-align: center;">{{$list->item_code}}</td>
-                                   <td style="width: 40%"><a href="{{url('client/rawmaterial/preview/'.$list->id)}}">{{$list->product_name}}</a></td>
+                                   <td style="width: 40%"><a href="{{url('client/rawmaterial/preview/'.$list->id)}}"><x-product-name :row="$list" /></a></td>
 
                                    <td style="text-align: center;width: 10%">{{$list->uom_name}}</td>
                                    <td style="text-align: center;width: 5%">{{number_format($list->purchase_price,2,'.',',')}}</td>

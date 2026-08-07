@@ -372,7 +372,7 @@
                                                                                 class="product form-control"
                                                                                 required>
                                                                             <option
-                                                                                value="{{$item->product}}" selected>{{$item->product_name}} - Stock - {{$item->stockqty}}</option>
+                                                                                value="{{$item->product}}" selected><x-product-name :row="$item" /> - Stock - {{$item->stockqty}}</option>
                                                                         </select>
                                                                     </div>
 

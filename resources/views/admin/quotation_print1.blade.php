@@ -279,7 +279,7 @@ $totdivide1=7;
 			?>
 			<tr>
 				<td style="text-align: center;vertical-align:top;">{{$srno}}</td>
-				<td style="text-align: left;vertical-align:top;width:30%">{{$item->product_name}}
+				<td style="text-align: left;vertical-align:top;width:30%"><x-product-name :row="$item" print />
                     <br><span style="font-size: 8px">{{$item->description}}</span>
                 </td>
 				<td style="text-align: center;vertical-align:top;">{{$item->inner_diameter}}</td>

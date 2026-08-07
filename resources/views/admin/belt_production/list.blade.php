@@ -67,7 +67,7 @@
                                     <tr>
                                         <td style="width:3%;text-align:center;">{{ $loop->iteration }}</td>
                                         <td>{{ $row->batch_no }}</td>
-                                        <td>{{ $row->belt_item->product_name ?? '-' }}</td>
+                                        <td><x-product-name :name="$row->belt_item->product_name ?? '-'" :color="$row->belt_item->value1 ?? null" :size="$row->belt_item->value2 ?? null" /></td>
                                         <td>{{ $row->customer_item->customer_name ?? '-' }}</td>
                                         <td style="text-align:right;">{{ $row->planned_qty }}</td>
                                         <td style="text-align:right;">{{ $row->total_production ?? '-' }}</td>

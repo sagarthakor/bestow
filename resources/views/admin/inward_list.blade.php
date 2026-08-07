@@ -114,12 +114,12 @@
                                         <tr>
                                             <td style="width: 5%">{{$srno}}</td>
                                             <td>{{$list->inward_from}}</td>
-                                            <td>{{$list->product_name}}</td>
+                                            <td><x-product-name :row="$list" /></td>
 {{--                                            <td>{{$list->inward_no}}</td>--}}
                                             <td>{{$list->customer_name}}</td>
 {{--                                            <td>{{$list->vendor_name}}</td>--}}
                                             <td>{{$list->inward_type}}</td>
-{{--                                            <td>{{$list->product_name}}</td>--}}
+{{--                                            <td><x-product-name :row="$list" /></td>--}}
 {{--                                            <td>{{$list->total_qty}}</td>--}}
                                             <td>{{$list->received_qty}}</td>
 {{--                                            <td>{{$list->remaining_qty}}</td>--}}

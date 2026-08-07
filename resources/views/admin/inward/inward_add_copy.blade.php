@@ -160,7 +160,7 @@
                                                 <select class="form-control js-example-basic-single" name="product[]">
                                                     <option value="">select product</option>
                                                     @foreach($product1 as $prod)
-                                                        <option value="{{$prod->id}}">{{$prod->product_name}}</option>
+                                                        <option value="{{$prod->id}}">{{ \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) }}</option>
                                                     @endforeach
                                                 </select>
 

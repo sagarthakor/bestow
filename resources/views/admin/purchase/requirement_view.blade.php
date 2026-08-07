@@ -114,7 +114,7 @@
                                             ?>
                                             <tr>
                                                 <td>{{$srno}}</td>
-                                                <td>{{$ilist->product_name}}</td>
+                                                <td><x-product-name :row="$ilist" /></td>
                                                 <td>{{$ilist->qty}}</td>
                                                 <td>{{$ilist->uom_name}}</td>
                                             </tr>

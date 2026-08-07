@@ -135,10 +135,7 @@
     @foreach($quotitem as $item)
         <tr>
             <td>{{$srno++}}</td>
-            @php
-                $itemVariantLabel = trim(($item->value1 ?? '') . ((($item->value1 ?? '') !== '' && ($item->value2 ?? '') !== '') ? ' / ' : '') . ($item->value2 ?? ''));
-            @endphp
-            <td>{{$item->item_code}}<br>{{$item->product_name}}{{ $itemVariantLabel !== '' ? ' ('.$itemVariantLabel.')' : '' }}<br>HSN: {{$item->hsn}}</td>
+            <td>{{$item->item_code}}<br><x-product-name :row="$item" print /><br>HSN: {{$item->hsn}}</td>
             @if(isset($isInternalPrint) && $isInternalPrint == 'yes')
             <td><img src="{{asset('public/product_image/'.$item->product_image)}}" style="height: 65px" width="65px"></td>
             @endif

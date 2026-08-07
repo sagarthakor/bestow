@@ -42,7 +42,7 @@ class ProductWiseSalesExport implements FromCollection, WithHeadings, ShouldAuto
     public function map($row): array
     {
         return [
-            $row->product,
+            \App\product::nameWithVariantInline($row->product, $row->value1 ?? null, $row->value2 ?? null),
             $row->category_name ?? '-',
             $row->order_no,
             Carbon::parse($row->order_date)->format('d-m-Y'),

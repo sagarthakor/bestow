@@ -152,7 +152,7 @@
                                         </td>
 
                                         <td  style="vertical-align: top;text-align: center">{{$data->customer_name}}</td>
-                                        <td  style="vertical-align: top;text-align: center">{{$data->product_name}}</td>
+                                        <td  style="vertical-align: top;text-align: center"><x-product-name :row="$data" /></td>
                                         <td  style="vertical-align: top;text-align: center">{{$data->nos}}</td>
                                         <td  style="vertical-align: top;text-align: center;width: 10%">{{$data->size}}</td>
                                         <td  style="vertical-align: top;text-align: center;width: 10%">@if($data->production_status=="Y") <i style="color:green" class="mdi mdi-checkbox-marked"></i>Complete @else <i class="mdi mdi-close-box" style="color: green"></i> Pending @endif</td>

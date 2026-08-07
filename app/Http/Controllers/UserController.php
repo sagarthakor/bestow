@@ -136,7 +136,7 @@ class UserController extends Controller
         $order=customer_order::where("customer",Session::get("customer_session"))->orderBy("id","desc")
             ->get();
 
-        $order_item=customer_order_item::select("customer_order_item.*","product.product_name","product.product_image")
+        $order_item=customer_order_item::select("customer_order_item.*","product.product_name", "product.value1", "product.value2","product.product_image")
             ->leftJoin("product","product.id","customer_order_item.product")
             ->get();
 

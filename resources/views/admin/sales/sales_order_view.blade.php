@@ -297,11 +297,8 @@
                                             ?>
                                             <tr id="row{{$srno}}">
                                                 <td style="vertical-align: top !important;">
-                                                    @php
-                                                        $itemVariantLabel = trim(($item->value1 ?? '') . ((($item->value1 ?? '') !== '' && ($item->value2 ?? '') !== '') ? ' / ' : '') . ($item->value2 ?? ''));
-                                                    @endphp
                                                     <div class="form-group">
-                                                        {{$item->product_name}}{{ $itemVariantLabel !== '' ? ' ('.$itemVariantLabel.')' : '' }}
+                                                        <x-product-name :row="$item" />
                                                     </div>
 
                                                     <div class="form-group">
@@ -590,11 +587,8 @@
 
                                             <tbody>
                                             @foreach($product as $serarchprod)
-                                                @php
-                                                    $serarchprodVariantLabel = trim(($serarchprod->value1 ?? '') . ((($serarchprod->value1 ?? '') !== '' && ($serarchprod->value2 ?? '') !== '') ? ' / ' : '') . ($serarchprod->value2 ?? ''));
-                                                @endphp
                                                 <tr value="{{$serarchprod->id}}">
-                                                    <td style="width: 10%">{{$serarchprod->product_name}}{{ $serarchprodVariantLabel !== '' ? ' ('.$serarchprodVariantLabel.')' : '' }}</td>
+                                                    <td style="width: 10%"><x-product-name :row="$serarchprod" /></td>
                                                     <td>{{$serarchprod->uom_name}}</td>
                                                     <td>{{$serarchprod->price}}</td>
                                                     <td>{{$serarchprod->gst_per}}</td>
@@ -642,7 +636,7 @@
                                             <tbody>
                                             @foreach($service as $serarchservice)
                                                 <tr value="{{$serarchservice->id}}">
-                                                    <td style="width: 10%">{{$serarchservice->product_name}}</td>
+                                                    <td style="width: 10%"><x-product-name :row="$serarchservice" /></td>
                                                     <td>{{$serarchservice->uom_name}}</td>
                                                     <td>{{$serarchservice->price}}</td>
                                                     <td>{{$serarchservice->gst_per}}</td>

@@ -139,6 +139,7 @@
                                                     <td>{{ $row->status }}</td>
                                                     <td style="text-align:right;">{{ number_format($row->grand_total, 2) }}</td>
                                                 </tr>
+                                                @include('admin.reports.partials.doc_items', ['items' => $items[$row->salaesorder_no] ?? null, 'colspan' => 6])
                                             @endforeach
                                             <tr class="rpt-subtotal">
                                                 <td colspan="5" class="text-right">Subtotal ({{ $rows->count() }} orders)</td>

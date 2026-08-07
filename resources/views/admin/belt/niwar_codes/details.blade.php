@@ -76,7 +76,7 @@
                                             <select name="material[]" class="form-control js-example-basic-single">
                                                 <option value="">Select raw material</option>
                                                 @foreach($rawmaterial as $mat)
-                                                    <option value="{{ $mat->id }}" {{ $mat->id == $m->material ? 'selected' : '' }}>{{ $mat->product_name }}</option>
+                                                    <option value="{{ $mat->id }}" {{ $mat->id == $m->material ? 'selected' : '' }}>{{ \App\product::nameWithVariantInline($mat->product_name, $mat->value1 ?? null, $mat->value2 ?? null) }}</option>
                                                 @endforeach
                                             </select>
                                         </td>
@@ -97,7 +97,7 @@
                                             <select name="material[]" class="form-control js-example-basic-single">
                                                 <option value="">Select raw material</option>
                                                 @foreach($rawmaterial as $mat)
-                                                    <option value="{{ $mat->id }}">{{ $mat->product_name }}</option>
+                                                    <option value="{{ $mat->id }}">{{ \App\product::nameWithVariantInline($mat->product_name, $mat->value1 ?? null, $mat->value2 ?? null) }}</option>
                                                 @endforeach
                                             </select>
                                         </td>
@@ -173,7 +173,7 @@
             $('.js-example-basic-single').select2();
         });
 
-        var materialOptions = `@foreach($rawmaterial as $mat)<option value="{{ $mat->id }}">{{ $mat->product_name }}</option>@endforeach`;
+        var materialOptions = `@foreach($rawmaterial as $mat)<option value="{{ $mat->id }}">{{ \App\product::nameWithVariantInline($mat->product_name, $mat->value1 ?? null, $mat->value2 ?? null) }}</option>@endforeach`;
 
         document.getElementById('add_material').addEventListener('click', function () {
             var row = document.createElement('tr');

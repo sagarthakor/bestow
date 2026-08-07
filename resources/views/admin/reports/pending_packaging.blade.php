@@ -100,7 +100,7 @@
                                                 {{ ($list->currentPage() - 1) * $list->perPage() + $loop->iteration }}
                                             </td>
                                             <td>{{ $data->batch_no }}</td>
-                                            <td>{{ $data->product_name ?? '-' }}</td>
+                                            <td><x-product-name :row="$data" /></td>
                                             <td>{{ $data->customer_name ?? '-' }}</td>
                                             <td>{{ $data->machine_name ?? '-' }}</td>
                                             <td style="text-align:right;">{{ $data->nos }}</td>

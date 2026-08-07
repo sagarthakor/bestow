@@ -88,34 +88,14 @@ class AdminController extends Controller
             });
         }
 
-        // Quotation asked for the Size/Color values to be explicitly labeled
-        // in the dropdown (e.g. "Size: 8, Color: Red") instead of a bare
-        // "8 / Red" that doesn't say which value is which - other modules
-        // still use the compact format until they ask for the same change.
-        $verbose = $request->get('label_style') === 'verbose';
-
         $results = $query->orderBy('product_name', 'asc')
             ->limit(30)
             ->get(['id', 'item_code', 'product_name', 'value1', 'value2'])
-            ->map(function ($p) use ($status, $verbose) {
-                if ($verbose) {
-                    $parts = [];
-                    if ($p->value2) {
-                        $parts[] = 'Size: ' . $p->value2;
-                    }
-                    if ($p->value1) {
-                        $parts[] = 'Color: ' . $p->value1;
-                    }
-                    $variant = implode(', ', $parts);
-                } else {
-                    $variant = trim(($p->value1 ?? '') . (($p->value1 && $p->value2) ? ' / ' : '') . ($p->value2 ?? ''));
-                }
-                $label = (in_array($status, ['product', 'po_product'], true) && $p->item_code)
+            ->map(function ($p) use ($status) {
+                $name = (in_array($status, ['product', 'po_product'], true) && $p->item_code)
                     ? ($p->item_code . ' - ' . $p->product_name)
                     : $p->product_name;
-                if ($variant !== '') {
-                    $label .= ' (' . $variant . ')';
-                }
+                $label = product::nameWithVariantInline($name, $p->value1, $p->value2);
                 return ['id' => $p->id, 'text' => $label];
             });
 
@@ -148,8 +128,7 @@ class AdminController extends Controller
         $product = product::where("bar_code", "=", $request->itemname)->get();
         //$option="<option value=''>select product</option>";
         foreach ($product as $product) {
-            $variant = trim(($product->value1 ?? '').(($product->value1 && $product->value2) ? ' / ' : '').($product->value2 ?? ''));
-            $label = $product->item_code.' - '.$product->product_name.($variant !== '' ? ' ('.$variant.')' : '');
+            $label = product::nameWithVariantInline($product->item_code.' - '.$product->product_name, $product->value1 ?? null, $product->value2 ?? null);
             $option[] = "<option value='$product->id'>$label</option>";
         }
         return $option;
@@ -372,7 +351,7 @@ class AdminController extends Controller
 
     function product_quot_list(Request $request)
     {
-        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'customers.customer_name')
+        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'customers.customer_name')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin('customers', 'customers.id', 'quot_item.customer')
             ->where('quot_item.product', $request->product)
@@ -387,7 +366,7 @@ class AdminController extends Controller
         $quot = quotation::where('id', $request->id)
             ->first();
 
-        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model')
+        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->where('quot_item.quot_no', $quot->quot_no)
             ->get();
@@ -1045,11 +1024,11 @@ class AdminController extends Controller
                                                 <td style="width: 30%">
                                                     <div class="input-group">';
                 $str .= '<select class="form-control" onchange="get_product(this.value,' . $srno . ')" name="product[]" id="product' . $srno . '">
-                                                        <option value="' . $p->id . '">' . $p->product_name . '</option>';
+                                                        <option value="' . $p->id . '">' . \App\product::nameWithVariantInline($p->product_name, $p->value1 ?? null, $p->value2 ?? null) . '</option>';
                 foreach ($product1 as $prod) {
                     if ($p->id == $prod->id) {
                     } else {
-                        $str .= '<option value="' . $prod->id . '">' . $prod->product_name . '</option>';
+                        $str .= '<option value="' . $prod->id . '">' . \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) . '</option>';
                     }
                 }
                 $str .= '</select>';
@@ -1205,7 +1184,7 @@ class AdminController extends Controller
     {
         // $pagesize = $request->pagesize;
         $data = new product();
-        $data = $data->select("product.id", "product.product_name", "product.hsn", "product.price", "gst.gst_per", "product.product_image", "product.item_code");
+        $data = $data->select("product.id", "product.product_name", "product.value1", "product.value2", "product.hsn", "product.price", "gst.gst_per", "product.product_image", "product.item_code");
         $data = $data->leftJoin("gst", "gst.id", "product.gst");
         if (isset($request->product_name)) {
 
@@ -1372,13 +1351,13 @@ class AdminController extends Controller
             ->where('quotation.id', $request->qid)
             ->first();
 
-        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
+        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->where('quot_item.quot_no', $quot->quot_no)
             ->get();
 
-        $discsum = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
+        $discsum = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->where('quot_item.quot_no', $quot->quot_no)
@@ -1439,13 +1418,13 @@ class AdminController extends Controller
             ->where('quotation.id', $request->qid)
             ->first();
 
-        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
+        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->where('quot_item.quot_no', $quot->quot_no)
             ->get();
 
-        $discsum = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
+        $discsum = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->where('quot_item.quot_no', $quot->quot_no)
@@ -1638,7 +1617,7 @@ class AdminController extends Controller
 
     function service_renew()
     {
-        $data = service_renewal::select('service_renewal.*', 'customers.customer_name', 'uom.uom_name', 'category.category_name', 'product.product_name')
+        $data = service_renewal::select('service_renewal.*', 'customers.customer_name', 'uom.uom_name', 'category.category_name', 'product.product_name', 'product.value1', 'product.value2')
             ->leftJoin('customers', 'customers.id', 'service_renewal.customer')
             ->leftJoin('uom', 'uom.id', 'service_renewal.usage_unit')
             ->leftJoin('category', 'category.id', 'service_renewal.category')
@@ -3401,15 +3380,27 @@ class AdminController extends Controller
 
     function quotation_delete(Request $request)
     {
-        $data = quotation::find($request->quot_no);
+        // Route is admin/quotation/delete/{id}, so the quotation is looked up by
+        // its primary key -- quot_no is only the (shared across revisions) number.
+        $data = quotation::find($request->id);
 
-
-        if ($data->delete()) {
-            quotation_item::where('quot_no', $data->quot_no)->delete();
-            return back()->with('message', 'quotation delete successfully');
-
+        if (empty($data)) {
+            return back()->with('error', 'quotation not found');
         }
 
+        // Once a sales order exists against the quotation it must stay on record.
+        if ($data->so_status == 'Y') {
+            return back()->with('error', 'sales order is already created for this quotation, it can not be deleted');
+        }
+
+        $quot_no = $data->quot_no;
+
+        if ($data->delete()) {
+            quotation_item::where('quot_no', $quot_no)->delete();
+            return back()->with('message', 'quotation delete successfully');
+        }
+
+        return back()->with('error', 'quotation could not be deleted');
     }
 
     function dashboard(Request $request)
@@ -3485,19 +3476,19 @@ class AdminController extends Controller
             ->limit(5)
             ->get();
 
-        $topProducts = salesorder_item::select('product.id as product_id', 'product.product_name')
+        $topProducts = salesorder_item::select('product.id as product_id', 'product.product_name', 'product.value1', 'product.value2')
             ->selectRaw('SUM(CAST(salesorder_item.qty AS DECIMAL(12,2))) as total_qty')
             ->join('salesorder', 'salesorder.salaesorder_no', '=', 'salesorder_item.sono')
             ->leftJoin('product', 'product.id', '=', 'salesorder_item.product')
             ->whereNull('salesorder.delete_status')
             ->whereBetween('salesorder.salaesorder_date', [$monthStart, $monthEnd])
             ->whereNotNull('product.id')
-            ->groupBy('product.id', 'product.product_name')
+            ->groupBy('product.id', 'product.product_name', 'product.value1', 'product.value2')
             ->orderByDesc('total_qty')
             ->limit(5)
             ->get();
 
-        $service_renewal = service_renewal::select('service_renewal.*', 'customers.customer_name', 'uom.uom_name', 'category.category_name', 'product.product_name')
+        $service_renewal = service_renewal::select('service_renewal.*', 'customers.customer_name', 'uom.uom_name', 'category.category_name', 'product.product_name', 'product.value1', 'product.value2')
             ->leftJoin('customers', 'customers.id', 'service_renewal.customer')
             ->leftJoin('uom', 'uom.id', 'service_renewal.usage_unit')
             ->leftJoin('category', 'category.id', 'service_renewal.category')
@@ -3617,14 +3608,14 @@ class AdminController extends Controller
             ->limit(5)
             ->get();
 
-        $topProducts = salesorder_item::select('product.id as product_id', 'product.product_name')
+        $topProducts = salesorder_item::select('product.id as product_id', 'product.product_name', 'product.value1', 'product.value2')
             ->selectRaw('SUM(CAST(salesorder_item.qty AS DECIMAL(12,2))) as total_qty')
             ->join('salesorder', 'salesorder.salaesorder_no', '=', 'salesorder_item.sono')
             ->leftJoin('product', 'product.id', '=', 'salesorder_item.product')
             ->whereNull('salesorder.delete_status')
             ->whereBetween('salesorder.salaesorder_date', [$monthStart, $monthEnd])
             ->whereNotNull('product.id')
-            ->groupBy('product.id', 'product.product_name')
+            ->groupBy('product.id', 'product.product_name', 'product.value1', 'product.value2')
             ->orderByDesc('total_qty')
             ->limit(5)
             ->get();
@@ -3875,14 +3866,14 @@ class AdminController extends Controller
             ->where('quotation.id', $request->quot_no)
             ->first();
 
-        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', 'product.material_name', 'category.category_image', 'product.product_image', 'category.category_name as catname', 'uom.uom_name')
+        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model', 'product.material_name', 'category.category_image', 'product.product_image', 'category.category_name as catname', 'uom.uom_name')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->where('quot_item.quot_no', $quot->quot_no)
             ->get();
 
-        $discsum = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
+        $discsum = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->where('quot_item.quot_no', $quot->quot_no)
@@ -3944,7 +3935,7 @@ class AdminController extends Controller
             ->get();
         //dd($quotitem);
 
-        $discsum = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
+        $discsum = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->where('quot_item.quotation_no', $quot->quotation_no)
@@ -3990,14 +3981,14 @@ class AdminController extends Controller
             ->where('quotation.id', $request->quot_no)
             ->first();
 
-        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', 'product.material_name', 'category.category_image', 'product.product_image', 'category.category_name as catname', 'uom.uom_name')
+        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model', 'product.material_name', 'category.category_image', 'product.product_image', 'category.category_name as catname', 'uom.uom_name')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->where('quot_item.quot_no', $quot->quot_no)
             ->get();
 
-        $discsum = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
+        $discsum = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->where('quot_item.quot_no', $quot->quot_no)
@@ -4028,7 +4019,7 @@ class AdminController extends Controller
         $quot = quotation::where('id', $request->id)
             ->first();
         //dd($quot);
-        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model')
+        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->where('quot_item.quotation_no', $quot->quotation_no)
             ->get();
@@ -4246,7 +4237,7 @@ class AdminController extends Controller
         $quot = quotation::where('id', $request->id)
             ->first();
 
-        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model')
+        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->where('quot_item.quot_no', $quot->quot_no)
             ->get();
@@ -4315,7 +4306,7 @@ class AdminController extends Controller
 
         $qitem->save();
 
-        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model')
+        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->where('quot_item.quot_no', $qitem->quot_no)
             ->get();
@@ -4346,10 +4337,10 @@ class AdminController extends Controller
             $str .= '<tr class="gradeX">
                                                 <td>
                                                     <select class="form-control" onchange="get_product(this.value,' . $srno . ')" name="product[]" id="product' . $srno . '">
-                                                        <option value="' . $qi->product . '">' . $qi->product_name . '</option>';
+                                                        <option value="' . $qi->product . '">' . \App\product::nameWithVariantInline($qi->product_name, $qi->value1 ?? null, $qi->value2 ?? null) . '</option>';
 
             foreach ($product as $prod) {
-                $str .= '<option value="' . $prod->id . '">' . $prod->product_name . '</option>';
+                $str .= '<option value="' . $prod->id . '">' . \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) . '</option>';
             }
 
             $str .= '</select>
@@ -4394,7 +4385,7 @@ class AdminController extends Controller
                                                         <option value="">select</option>';
 
         foreach ($product as $prod) {
-            $str .= '<option value="' . $prod->id . '">' . $prod->product_name . '</option>';
+            $str .= '<option value="' . $prod->id . '">' . \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) . '</option>';
         }
 
         $str .= '</select>
@@ -4487,7 +4478,7 @@ class AdminController extends Controller
         }
 
 
-        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model')
+        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->where('quot_item.quot_no', $qno)
             ->get();
@@ -4518,10 +4509,10 @@ class AdminController extends Controller
             $str .= '<tr class="gradeX">
                                                 <td>
                                                     <select class="form-control" onchange="get_product(this.value,' . $srno . ')" name="product[]" id="product' . $srno . '">
-                                                        <option value="' . $qi->product . '">' . $qi->product_name . '</option>';
+                                                        <option value="' . $qi->product . '">' . \App\product::nameWithVariantInline($qi->product_name, $qi->value1 ?? null, $qi->value2 ?? null) . '</option>';
 
             foreach ($product as $prod) {
-                $str .= '<option value="' . $prod->id . '">' . $prod->product_name . '</option>';
+                $str .= '<option value="' . $prod->id . '">' . \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) . '</option>';
             }
 
             $str .= '</select>
@@ -4566,7 +4557,7 @@ class AdminController extends Controller
                                                         <option value="">select</option>';
 
         foreach ($product as $prod) {
-            $str .= '<option value="' . $prod->id . '">' . $prod->product_name . '</option>';
+            $str .= '<option value="' . $prod->id . '">' . \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) . '</option>';
         }
 
         $str .= '</select>
@@ -4661,7 +4652,7 @@ class AdminController extends Controller
             ->where('product.id', $request->product)
             ->first();
 
-        $sub_product = bom_sub_product::select('product.product_name')
+        $sub_product = bom_sub_product::select('product.product_name', 'product.value1', 'product.value2')
             ->leftJoin('product', 'product.id', 'bom_sub_product.product')
             ->where('bom_sub_product.bom_id', $data->id)
             ->get();

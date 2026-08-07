@@ -48,6 +48,13 @@
                             </div>
                         </div>
                     @endif
+                    @if(session()->has('error'))
+                        <div class="col-sm-12">
+                            <div class="alert alert-danger">
+                                <strong>{{session()->get('error')}}</strong>
+                            </div>
+                        </div>
+                    @endif
 
                     <div class="col-sm-12">
 
@@ -212,7 +219,9 @@
                                                 <a title="Internal Print" href="{{route('admin.quotation.print',['quot_no' => $data->id,'is_internal' => 'yes'])}}" class="btn btn-xs btn-purple waves-effect"><i class="fa fa-print"></i> Internal Print</a>
                                             @endcan
                                             @can('quotation_delete')
-                                                <a title="Delete" onclick="return confirm('Are you sure you want to delete this item?');" href="{{route('admin.quotation.delete',['id' => $data->id])}}" class="btn btn-xs btn-danger waves-effect"><i class="fa fa-trash-o"></i> Delete</a>
+                                                @if($data->so_status!="Y")
+                                                    <a title="Delete" onclick="return confirm('Are you sure you want to delete this item?');" href="{{route('admin.quotation.delete',['id' => $data->id])}}" class="btn btn-xs btn-danger waves-effect"><i class="fa fa-trash-o"></i> Delete</a>
+                                                @endif
                                             @endcan
 
 

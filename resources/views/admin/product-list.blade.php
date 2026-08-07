@@ -158,7 +158,7 @@
                                         <tr>
                                             <td style="text-align: center"> {{($data->currentPage() - 1) * $data->perPage() + $loop->iteration}}</td>
                                             <td style="text-align: center;">{{$list->item_code}}</td>
-                                            <td style="width: 30%"><a href="{{url('client/product/preview/'.$list->id)}}">{{$list->product_name}}</a></td>
+                                            <td style="width: 30%"><a href="{{url('client/product/preview/'.$list->id)}}"><x-product-name :row="$list" /></a></td>
                                             <td style="text-align: center;">{{$list->value2}}</td>
                                             <td style="text-align: center;">{{$list->value1}}</td>
                                             <td style="text-align: center;">{{$list->catname}}</td>

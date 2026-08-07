@@ -213,7 +213,7 @@ class OrderController extends Controller
     {
         $orderlist=customer_order::find($request->id);
 
-        $quotitem=customer_order_item::select('customer_order_item.*','uom.uom_name','product.product_name','product.product_image',"product.item_code","stock_status.qty as stockqty","product.price as pprice")
+        $quotitem=customer_order_item::select('customer_order_item.*','uom.uom_name','product.product_name', 'product.value1', 'product.value2','product.product_image',"product.item_code","stock_status.qty as stockqty","product.price as pprice")
             ->leftJoin('product','product.id','customer_order_item.product')
             ->leftJoin('uom','uom.id','product.uom')
             ->leftJoin("stock_status","stock_status.product","product.id")
@@ -395,7 +395,7 @@ class OrderController extends Controller
     {
         $orderlist=customer_order::find($request->id);
 
-        $quotitem=customer_order_item::select('customer_order_item.*','product.product_name')
+        $quotitem=customer_order_item::select('customer_order_item.*','product.product_name', 'product.value1', 'product.value2')
             ->leftJoin('product','product.id','customer_order_item.product')
             ->where('customer_order_item.order_no',$orderlist->order_number)
             ->get();

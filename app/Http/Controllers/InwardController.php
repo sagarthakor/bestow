@@ -35,7 +35,7 @@ class InwardController extends Controller
           $negativemark=0;
           foreach($subproduct as $sub){
               $srno++;
-              $product=product::select("product.id","product.product_name","stock_status.qty as stockqty","uom.uom_name")
+              $product=product::select("product.id","product.product_name", "product.value1", "product.value2","stock_status.qty as stockqty","uom.uom_name")
               ->leftJoin("uom","uom.id","product.uom")
               ->leftJoin("stock_status","stock_status.product","product.id")
               ->where("product.id",$sub->product)
@@ -130,7 +130,7 @@ class InwardController extends Controller
                 ->get()->pluck('customer_name', 'id')->toArray();
 
 
-        $item = inward_item::select('inward_item.*', 'product.product_name')
+        $item = inward_item::select('inward_item.*', 'product.product_name', 'product.value1', 'product.value2')
             ->leftJoin('product', 'product.id', 'inward_item.product')
             ->where("inward_item.id", $request->id)
             ->first();
@@ -278,7 +278,7 @@ class InwardController extends Controller
     function stock_status(Request $request)
     {
         $status = new stock_status();
-        $status = $status->select('stock_status.*', 'product.product_name');
+        $status = $status->select('stock_status.*', 'product.product_name', 'product.value1', 'product.value2');
         $status = $status->rightJoin('product', 'product.id', 'stock_status.product');
         if (isset($request->product_name)) {
             $status = $status->where('product.product_name', 'like', '%' . $request->product_name . '%');
@@ -377,7 +377,7 @@ class InwardController extends Controller
     {
         $podata = purchase::find($request->po_id);
 
-        $poitem = purchase_item::select('purchase_item.*', 'product.product_name', 'product.make', 'product.model','uom.uom_name','product.status as product_status')
+        $poitem = purchase_item::select('purchase_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model','uom.uom_name','product.status as product_status')
             ->leftJoin('product', 'product.id', 'purchase_item.product')
             ->leftJoin("uom","uom.id","product.uom")
             ->where('purchase_item.pono', $podata->purchase_no)
@@ -395,7 +395,7 @@ class InwardController extends Controller
             $row .= "<th>" . date('d-m-Y', strtotime($precv->receive_date)) . "</th>";
             $row .= "<th>$precv->note</th>";
             $row .= "</tr>";
-            $received = purchase_receive_item::select("purchase_receive_item.*", "product.product_name")
+            $received = purchase_receive_item::select("purchase_receive_item.*", "product.product_name", "product.value1", "product.value2")
                 ->leftJoin('product', 'product.id', 'purchase_receive_item.item')
                 ->where("purchase_receive_item.purchase_receive_id", $precv->id)
                 ->get();

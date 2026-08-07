@@ -122,7 +122,7 @@
                                                 {{ ($list->currentPage() - 1) * $list->perPage() + $loop->iteration }}
                                             </td>
                                             <td>{{ $data->batch_no }}</td>
-                                            <td>{{ $data->product }}</td>
+                                            <td><x-product-name :name="$data->product" :color="$data->value1 ?? null" :size="$data->value2 ?? null" /></td>
                                             <td>{{ $data->customer ?? '-' }}</td>
                                             <td style="text-align:right;">{{ number_format($data->planned_qty, 2) }}</td>
                                             <td style="text-align:right;">{{ number_format($data->total_production ?? 0, 2) }}</td>

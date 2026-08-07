@@ -51,7 +51,7 @@
                                         <select name="belt_product" id="belt_product" class="form-control js-example-basic-single" required>
                                             <option value="">Select belt</option>
                                             @foreach($belts as $belt)
-                                                <option value="{{ $belt->id }}">{{ $belt->product_name }}</option>
+                                                <option value="{{ $belt->id }}">{{ \App\product::nameWithVariantInline($belt->product_name, $belt->value1 ?? null, $belt->value2 ?? null) }}</option>
                                             @endforeach
                                         </select>
                                         @if($belts->isEmpty())

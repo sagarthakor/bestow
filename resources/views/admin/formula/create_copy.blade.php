@@ -86,7 +86,7 @@
                                                             <option value="{{$fm->raw_mat}}">{{$fm->group_name}}</option>
                                                             @foreach($rawmaterial as $rmat)
 
-                                                                <option value="{{$rmat->id}}">{{$rmat->product_name}}</option>
+                                                                <option value="{{$rmat->id}}">{{ \App\product::nameWithVariantInline($rmat->product_name, $rmat->value1 ?? null, $rmat->value2 ?? null) }}</option>
 
                                                         @endforeach
                                                     </td>
@@ -139,7 +139,7 @@
                                                             <option value="">select raw material</option>
                                                             @foreach($rawmaterial as $rmat)
 
-                                                                <option value="{{$rmat->id}}">{{$rmat->product_name}}</option>
+                                                                <option value="{{$rmat->id}}">{{ \App\product::nameWithVariantInline($rmat->product_name, $rmat->value1 ?? null, $rmat->value2 ?? null) }}</option>
 
                                                         @endforeach
                                                     </td>

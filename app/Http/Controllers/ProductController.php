@@ -625,7 +625,7 @@ class ProductController extends Controller
 
         $product_attribute=product_attribute::where("group_id",$request->id)->get();
 
-        $product_options=product_options::select("product_options.*","product.id as pid","product.product_name","product.price","product.purchase_price","product.sku","product.product_image")
+        $product_options=product_options::select("product_options.*","product.id as pid","product.product_name", "product.value1", "product.value2","product.price","product.purchase_price","product.sku","product.product_image")
             ->leftJoin("product","product.id","product_options.product")
             ->where("product_options.group_id",$request->id)
             ->get();

@@ -409,12 +409,9 @@
                                                 <select class="product listPrice smallInputBox inputElement"
                                                         onchange="get_product(this)" name="product[]"
                                                         id="product{{$srno}}" required>
-                                                    @php
-                                                        $itemVariant = trim(($item->value1 ?? '') . ((($item->value1 ?? '') !== '' && ($item->value2 ?? '') !== '') ? ' / ' : '') . ($item->value2 ?? ''));
-                                                    @endphp
-                                                    <option value="{{$item->product}}" selected>{{$item->item_code}} - {{$item->product_name}}{{ $itemVariant !== '' ? ' ('.$itemVariant.')' : '' }}</option>
+                                                    <option value="{{$item->product}}" selected>{{$item->item_code}} - {{ \App\product::nameWithVariantInline($item->product_name, $item->value1 ?? null, $item->value2 ?? null) }}</option>
                                                     {{--                                                        @foreach($product as $prod)--}}
-                                                    {{--                                                            <option value="{{$prod->id}}">{{$prod->product_name}}</option>--}}
+                                                    {{--                                                            <option value="{{$prod->id}}">{{ \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) }}</option>--}}
                                                     {{--                                                        @endforeach--}}
                                                 </select>
 

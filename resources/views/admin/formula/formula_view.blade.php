@@ -101,7 +101,7 @@
                                                         ?>
                                                         <tr>
                                                             <td>
-                                                                {{$fm->product_name}}
+                                                                <x-product-name :row="$fm" />
                                                                 <!--<select name="material[]" class="form-control">-->
                                                                 <!--    <option value="{{$fm->material}}"></option>-->
                                                                 <!--</select>-->

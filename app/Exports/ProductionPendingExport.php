@@ -45,7 +45,7 @@ class ProductionPendingExport implements FromCollection, WithHeadings, ShouldAut
         return [
             $row->batch_no,
             $this->stageLabel,
-            $row->product_name ?? '-',
+            \App\product::nameWithVariantInline($row->product_name ?? '-', $row->value1 ?? null, $row->value2 ?? null),
             $row->customer_name ?? '-',
             $row->machine_name ?? '-',
             $row->nos,

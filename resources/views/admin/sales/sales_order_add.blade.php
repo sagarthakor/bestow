@@ -319,10 +319,7 @@
                                                         <select class="product listPrice smallInputBox inputElement"
                                                                 onchange="get_product(this)" name="product[]"
                                                                 id="product{{$srno}}" required>
-                                                            @php
-                                                                $itemVariantLabel = trim(($item->value1 ?? '') . ((($item->value1 ?? '') !== '' && ($item->value2 ?? '') !== '') ? ' / ' : '') . ($item->value2 ?? ''));
-                                                            @endphp
-                                                            <option value="{{$item->product}}" selected>{{$item->item_code}} - {{$item->product_name}}{{ $itemVariantLabel !== '' ? ' ('.$itemVariantLabel.')' : '' }}</option>
+                                                            <option value="{{$item->product}}" selected>{{$item->item_code}} - {{ \App\product::nameWithVariantInline($item->product_name, $item->value1 ?? null, $item->value2 ?? null) }}</option>
                                                         </select>
 
                                                     </div>

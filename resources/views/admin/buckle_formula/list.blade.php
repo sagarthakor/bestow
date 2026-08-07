@@ -65,7 +65,7 @@
                                         <td style="width:5%;text-align:center;">{{ $loop->iteration }}</td>
                                         <td>
                                             <a href="{{ route('admin.production.buckle_formula_edit', ['id' => $list->id]) }}">
-                                                {{ $list->product_item->product_name ?? '-' }}
+                                                <x-product-name :name="$list->product_item->product_name ?? '-'" :color="$list->product_item->value1 ?? null" :size="$list->product_item->value2 ?? null" />
                                             </a>
                                         </td>
                                         <td style="text-align:center;">{{ $list->size }}</td>

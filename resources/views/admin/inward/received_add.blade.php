@@ -95,7 +95,7 @@
                                                 <tr>
                                                     <td style="width: 50%;">
                                                         <input type="hidden" name="item[]" value="{{$item->product}}">
-                                                        {{$item->product_name}}</td>
+                                                        <x-product-name :row="$item" /></td>
                                                     <td><input type="text" readonly name="order[]" class="form-control order" value="{{$item->qty}}">{{$item->uom_name}}</td>
                                                     <td><input type="text" name="received[]" class="form-control received" readonly value="{{$item->received_qty ?? 0}}">{{$item->uom_name}}</td>
                                                     <td><input type="text" class="form-control remain_qty" readonly id="remain_qty" name="remain_qty[]" value="{{$item->remain_qty ?? $item->qty}}">{{$item->uom_name}}</td>
@@ -159,7 +159,7 @@
                                 {{--                        @foreach($received_item as $ritem)--}}
                                 {{--                            <tr>--}}
                                 {{--                                <td>{{date('d-m-Y',strtotime($ritem->receive_date))}}</td>--}}
-                                {{--                                <td style="width: 60%;">{{$ritem->product_name}}</td>--}}
+                                {{--                                <td style="width: 60%;"><x-product-name :row="$ritem" /></td>--}}
                                 {{--                                <td>{{$ritem->order_qty}}</td>--}}
                                 {{--                                <td>{{$ritem->qty_received}}</td>--}}
                                 {{--                            </tr>--}}

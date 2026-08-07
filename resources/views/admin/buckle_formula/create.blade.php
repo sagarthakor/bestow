@@ -48,7 +48,7 @@
                                         <select name="product" class="form-control js-example-basic-single" required>
                                             <option value="">Select belt product</option>
                                             @foreach($product as $prod)
-                                                <option value="{{ $prod->id }}">{{ $prod->product_name }}</option>
+                                                <option value="{{ $prod->id }}">{{ \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -113,7 +113,7 @@
                                             <select name="material[]" class="form-control js-example-basic-single material-select" onchange="updateUomHint(this)">
                                                 <option value="">Select raw material</option>
                                                 @foreach($rawmaterial as $mat)
-                                                    <option value="{{ $mat->id }}" data-uom="{{ strtoupper($mat->uomName->uom_name ?? '') }}">{{ $mat->product_name }}</option>
+                                                    <option value="{{ $mat->id }}" data-uom="{{ strtoupper($mat->uomName->uom_name ?? '') }}">{{ \App\product::nameWithVariantInline($mat->product_name, $mat->value1 ?? null, $mat->value2 ?? null) }}</option>
                                                 @endforeach
                                             </select>
                                         </td>
@@ -151,9 +151,11 @@
             $('.js-example-basic-single').select2();
         });
 
-        var materialOptions = `@foreach($rawmaterial as $mat)<option value="{{ $mat->id }}" data-uom="{{ strtoupper($mat->uomName->uom_name ?? '') }}">{{ $mat->product_name }}</option>@endforeach`;
+        var materialOptions = `@foreach($rawmaterial as $mat)<option value="{{ $mat->id }}" data-uom="{{ strtoupper($mat->uomName->uom_name ?? '') }}">{{ \App\product::nameWithVariantInline($mat->product_name, $mat->value1 ?? null, $mat->value2 ?? null) }}</option>@endforeach`;
 
-        var rawMaterialNames = {!! $rawmaterial->pluck('product_name', 'id')->toJson() !!};
+        var rawMaterialNames = {!! $rawmaterial->mapWithKeys(function ($m) {
+            return [$m->id => \App\product::nameWithVariantInline($m->product_name, $m->value1 ?? null, $m->value2 ?? null)];
+        })->toJson() !!};
 
         var savedGroupItems = {};
 

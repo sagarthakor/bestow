@@ -88,7 +88,7 @@
                                             <td>{{ $srno + 1 }}</td>
                                             <td>{{ $list->particular }}</td>
                                             <td>{{ date('d-m-Y', strtotime($list->inward_date)) }}</td>
-                                            <td>{{ $list->product_name }}</td>
+                                            <td><x-product-name :row="$list" /></td>
                                             <td>{{ $list->inward_qty ?? 0 }}</td>
                                             <td>{{ $list->outward_qty ?? 0 }}</td>
                                             {{--<td>{{ $list->user_name }}</td>--}}
@@ -164,7 +164,7 @@
                                         <!--<td>{{$list->customer_name}}</td>-->
                                         <!--<td>{{$list->vendor_name}}</td>-->
                                         <!--<td>{{$list->inward_type}}</td>-->
-                                            <td>{{$list->product_name}}</td>
+                                            <td><x-product-name :row="$list" /></td>
                                             <td style="width:5%;text-align:center">{{$list->inward_qty ?? 0}}</td>
                                             <td style="width:5%;text-align:center">{{$list->outward_qty ?? 0}}</td>
                                             <td style="width:5%;text-align:center">{{$list->user_name}}</td>

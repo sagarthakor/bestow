@@ -87,7 +87,7 @@
                                     ?>
                                     <tr>
                                         <td style="width: 5%"> {{$srno}}</td>
-                                        <td style="text-align:center"><a  target="_blank" title="View" href="{{url('formula_view/'.$list->id)}}">{{ $list->product_item->product_name ?? "" }}</a></td>
+                                        <td style="text-align:center"><a  target="_blank" title="View" href="{{url('formula_view/'.$list->id)}}"><x-product-name :name="$list->product_item->product_name ?? ''" :color="$list->product_item->value1 ?? null" :size="$list->product_item->value2 ?? null" /></a></td>
                                         <td style="text-align:center">{{$list->nos}}</td>
                                         <td style="text-align:center">{{$list->size}}</td>
                                         <td style="text-align:center">{{$list->required_qty}}</td>

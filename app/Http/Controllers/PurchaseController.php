@@ -55,7 +55,7 @@ class PurchaseController extends Controller
     {
         // $pagesize = $request->pagesize;
         $data=new product();
-        $data=$data->select("product.id","product.product_name","product.hsn","product.price","gst.gst_per","product.product_image","product.item_code");
+        $data=$data->select("product.id","product.product_name", "product.value1", "product.value2","product.hsn","product.price","gst.gst_per","product.product_image","product.item_code");
         $data=$data->leftJoin("gst","gst.id","product.gst");
         if(isset($request->product_name))
         {
@@ -124,7 +124,7 @@ class PurchaseController extends Controller
             $po_receive=purchase_receive::where("purchase_no",$purchase->purchase_no)
             ->get();
 
-            $po_receive_item=purchase_receive_item::select("purchase_receive_item.*","product.product_name")
+            $po_receive_item=purchase_receive_item::select("purchase_receive_item.*","product.product_name", "product.value1", "product.value2")
             ->leftJoin("product","product.id","purchase_receive_item.item")
             ->where("purchase_receive_item.purchase_no",$purchase->purchase_no)
             ->get();
@@ -228,7 +228,7 @@ class PurchaseController extends Controller
             ->where("purchase_requirement.id",$request->id)
             ->first();
 
-        $item=purchase_required_material::select("purchase_required_material.*","product.product_image","product.product_name","product.purchase_price","uom.uom_name","product.purchase_price","product.id as pid")
+        $item=purchase_required_material::select("purchase_required_material.*","product.product_image","product.product_name", "product.value1", "product.value2","product.purchase_price","uom.uom_name","product.purchase_price","product.id as pid")
             ->leftJoin("product","product.id","purchase_required_material.raw_material")
             ->leftJoin('uom','uom.id','product.uom')
             ->where("purchase_required_material.order_id",$list->id)
@@ -287,7 +287,7 @@ class PurchaseController extends Controller
       <td style="vertical-align: top !important;width: 20%">
       <div class="form-group">
       <select class="form-control product js-example-basic-single" onchange="get_product(this)" name="product[]" id="product'.$srno.'">
-      <option value="'.$item->id.'">'.$item->product_name.'</option>';
+      <option value="'.$item->id.'">'.\App\product::nameWithVariantInline($item->product_name, $item->value1 ?? null, $item->value2 ?? null).'</option>';
       $str .='</select>
       </div>
       <div class="form-group">
@@ -446,7 +446,7 @@ class PurchaseController extends Controller
             ->where("purchase_requirement.id",$request->id)
             ->first();
 
-        $item=purchase_required_material::select("purchase_required_material.*","product.product_name","uom.uom_name")
+        $item=purchase_required_material::select("purchase_required_material.*","product.product_name", "product.value1", "product.value2","uom.uom_name")
             ->leftJoin("product","product.id","purchase_required_material.raw_material")
             ->leftJoin('uom','uom.id','product.uom')
             ->where("purchase_required_material.order_id",$list->id)
@@ -507,7 +507,7 @@ class PurchaseController extends Controller
             ->where('product.id',$request->product)
             ->first();
 
-        $sub_product=bom_sub_product::select('product.product_name')
+        $sub_product=bom_sub_product::select('product.product_name', 'product.value1', 'product.value2')
             ->leftJoin('product','product.id','bom_sub_product.product')
             ->where('bom_sub_product.bom_id',$data->id)
             ->get();
@@ -564,7 +564,7 @@ class PurchaseController extends Controller
     public function stock_book(Request $request)
     {
         $query = stock_book::query()
-            ->select('stock_book.*', 'product.product_name', 'customers.customer_name', 'vendor.vendor_name')
+            ->select('stock_book.*', 'product.product_name', 'product.value1', 'product.value2', 'customers.customer_name', 'vendor.vendor_name')
             ->leftJoin('product', 'product.id', '=', 'stock_book.product')
             ->leftJoin('customers', 'customers.id', '=', 'stock_book.customer')
             ->leftJoin('vendor', 'vendor.id', '=', 'stock_book.vendor');
@@ -643,7 +643,7 @@ class PurchaseController extends Controller
     function stock_status(Request $request)
     {
         $status=new stock_status();
-        $status=$status->select('stock_status.*','product.product_name');
+        $status=$status->select('stock_status.*','product.product_name','product.value1','product.value2');
         $status=$status->leftJoin('product','product.id','stock_status.product');
         if(isset($request->product_name))
         {
@@ -739,7 +739,7 @@ class PurchaseController extends Controller
                 ->get()->pluck('customer_name','id')->toArray();
 
 
-        $item=inward_item::select('inward_item.*','product.product_name')
+        $item=inward_item::select('inward_item.*','product.product_name', 'product.value1', 'product.value2')
                 ->leftJoin('product','product.id','inward_item.product')
                 ->where("inward_item.id",$request->id)
                 ->first();
@@ -759,7 +759,7 @@ class PurchaseController extends Controller
     function inward_list(Request $request)
     {
         $inward=new inward_item();
-        $inward=$inward->select('inward_item.*','product.product_name','customers.customer_name','vendor.vendor_name');
+        $inward=$inward->select('inward_item.*','product.product_name', 'product.value1', 'product.value2','customers.customer_name','vendor.vendor_name');
         $inward=$inward->leftJoin('product','product.id','inward_item.product');
         $inward=$inward->leftJoin('customers','customers.id','inward_item.customer');
         $inward=$inward->leftJoin('vendor','vendor.id','inward_item.vendor');
@@ -925,7 +925,7 @@ class PurchaseController extends Controller
     }
     function get_po_item(Request $request)
     {
-        $poitem = purchase_item::SELECT('purchase_item.*', 'product.product_name','product.product_image', 'product.material_name', 'category.category_image')
+        $poitem = purchase_item::SELECT('purchase_item.*', 'product.product_name', 'product.value1', 'product.value2','product.product_image', 'product.material_name', 'category.category_image')
             ->leftJoin('product', 'product.id', 'purchase_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->where('purchase_item.pono', $request->purchase_no)
@@ -958,7 +958,7 @@ class PurchaseController extends Controller
                                                 <td style="vertical-align: top !important;width: 50%">
 
      <select class="form-control" onchange="get_product(this.value,' . $srno . ')" name="product[]" id="product' . $srno . '">
-                                                        <option value="' . $item->product . '">' . $item->product_name . '</option>';
+                                                        <option value="' . $item->product . '">' . \App\product::nameWithVariantInline($item->product_name, $item->value1 ?? null, $item->value2 ?? null) . '</option>';
 
                                                 $str .= '</select>
 
@@ -1031,13 +1031,13 @@ class PurchaseController extends Controller
             ->first();
         $vendor=vendor::WHERE('id',$po->vendor)->first();
 
-        $poitem = purchase_item::SELECT('purchase_item.*', 'product.product_name','product.product_image', 'product.material_name', 'category.category_image')
+        $poitem = purchase_item::SELECT('purchase_item.*', 'product.product_name', 'product.value1', 'product.value2','product.product_image', 'product.material_name', 'category.category_image')
             ->leftJoin('product', 'product.id', 'purchase_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->where('purchase_item.poid', $po->pono)
             ->get();
 
-        $discsum = purchase_item::SELECT('purchase_item.*', 'product.product_name', 'product.product_image', 'product.material_name', 'category.category_image')
+        $discsum = purchase_item::SELECT('purchase_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.product_image', 'product.material_name', 'category.category_image')
             ->leftJoin('product', 'product.id', 'purchase_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->where('purchase_item.poid', $po->pono)
@@ -1095,13 +1095,13 @@ class PurchaseController extends Controller
 
         $vendor=vendor::where('id',$po->vendor)->first();
 
-        $poitem = purchase_item::select('purchase_item.*', 'product.product_name','product.product_image', 'product.material_name', 'category.category_image')
+        $poitem = purchase_item::select('purchase_item.*', 'product.product_name', 'product.value1', 'product.value2','product.product_image', 'product.material_name', 'category.category_image')
             ->leftJoin('product', 'product.id', 'purchase_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->where('purchase_item.poid', $po->id)
             ->get();
 
-        $discsum = purchase_item::select('purchase_item.*', 'product.product_name', 'product.product_image', 'product.material_name', 'category.category_image')
+        $discsum = purchase_item::select('purchase_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.product_image', 'product.material_name', 'category.category_image')
             ->leftJoin('product', 'product.id', 'purchase_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->where('purchase_item.poid', $po->pono)
@@ -1140,7 +1140,7 @@ class PurchaseController extends Controller
             ->where('purchase_item.pono', $po->purchase_no)
             ->get();
 
-        $discsum = purchase_item::select('purchase_item.*', 'product.product_name', 'product.product_image', 'product.material_name', 'category.category_image')
+        $discsum = purchase_item::select('purchase_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.product_image', 'product.material_name', 'category.category_image')
             ->leftJoin('product', 'product.id', 'purchase_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->where('purchase_item.pono', $po->purchase_no)
@@ -1180,7 +1180,7 @@ class PurchaseController extends Controller
             ->where('purchase_item.pono', $po->purchase_no)
             ->get();
 
-        $discsum = purchase_item::select('purchase_item.*', 'product.product_name', 'product.product_image', 'product.material_name', 'category.category_image')
+        $discsum = purchase_item::select('purchase_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.product_image', 'product.material_name', 'category.category_image')
             ->leftJoin('product', 'product.id', 'purchase_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->where('purchase_item.pono', $po->purchase_no)
@@ -1223,7 +1223,7 @@ class PurchaseController extends Controller
             ->where('purchase_item.pono', $po->purchase_no)
             ->get();
 
-        $discsum = purchase_item::select('purchase_item.*', 'product.product_name', 'product.product_image', 'product.material_name', 'category.category_image')
+        $discsum = purchase_item::select('purchase_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.product_image', 'product.material_name', 'category.category_image')
             ->leftJoin('product', 'product.id', 'purchase_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
              ->where('purchase_item.pono', $po->purchase_no)
@@ -1265,7 +1265,7 @@ class PurchaseController extends Controller
             ->where('purchase_item.pono', $po->purchase_no)
             ->get();
 
-        $discsum = purchase_item::select('purchase_item.*', 'product.product_name', 'product.product_image', 'product.material_name', 'category.category_image')
+        $discsum = purchase_item::select('purchase_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.product_image', 'product.material_name', 'category.category_image')
             ->leftJoin('product', 'product.id', 'purchase_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
              ->where('purchase_item.pono', $po->purchase_no)
@@ -1511,7 +1511,7 @@ class PurchaseController extends Controller
         $quot = purchase::where('id', $request->id)
             ->first();
         //dd($quot);
-        $quotitem = purchase_item::select('purchase_item.*', 'product.product_name',"product.product_image", 'product.make', 'product.model')
+        $quotitem = purchase_item::select('purchase_item.*', 'product.product_name', 'product.value1', 'product.value2',"product.product_image", 'product.make', 'product.model')
             ->leftJoin('product', 'product.id', 'purchase_item.product')
             ->where('purchase_item.poid', $quot->pono)
             ->get();
@@ -1735,7 +1735,7 @@ class PurchaseController extends Controller
         //dd($result)
         $receive_detail=purchase_receive::orderBy("id","desc")->get();
 
-        $receive_item=purchase_receive_item::select("purchase_receive_item.*","product.product_name")
+        $receive_item=purchase_receive_item::select("purchase_receive_item.*","product.product_name", "product.value1", "product.value2")
         ->leftJoin("product","product.id","purchase_receive_item.item")
         ->orderBy("purchase_receive_item.id","desc")
         ->get();

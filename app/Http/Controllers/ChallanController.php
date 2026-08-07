@@ -150,7 +150,7 @@ class ChallanController extends Controller
         $terms=[''=>'select terms']+terms::query()
                 ->get()->pluck('module','id')->toArray();
 
-        $challan_item=delivery_challan_item::select("delivery_challan_item.*",'product.product_name')
+        $challan_item=delivery_challan_item::select("delivery_challan_item.*",'product.product_name', 'product.value1', 'product.value2')
             ->leftJoin('product','product.id','delivery_challan_item.product')
             ->where('delivery_challan_item.challan_no',$data->challan_number)
             ->get();
@@ -211,7 +211,7 @@ class ChallanController extends Controller
                     $str .= "</tr>";
                 }
             }else{
-                $bomproduct=bom_sub_product::select('bom_sub_product.*','product.product_name','material.material_name','product.outer_diameter','product.inner_diameter','product.thikness')
+                $bomproduct=bom_sub_product::select('bom_sub_product.*','product.product_name', 'product.value1', 'product.value2','material.material_name','product.outer_diameter','product.inner_diameter','product.thikness')
                     ->leftJoin('product','product.id','bom_sub_product.product')
                     ->leftJoin('material','material.id','product.material')
                     ->where('bom_sub_product.bom_id',$prod->id)
@@ -261,7 +261,7 @@ class ChallanController extends Controller
         }
 
 
-        $soitem=salesorder_item::select('salesorder_item.*','product.product_name','material.material_name','product.outer_diameter','product.inner_diameter','product.thikness')
+        $soitem=salesorder_item::select('salesorder_item.*','product.product_name', 'product.value1', 'product.value2','material.material_name','product.outer_diameter','product.inner_diameter','product.thikness')
             ->leftJoin('product','product.id','salesorder_item.product')
             ->leftJoin('material','material.id','product.material')
             ->where('salesorder_item.sono',$data->sales_order)
@@ -312,7 +312,7 @@ class ChallanController extends Controller
                     $str .= "</tr>";
                 }
             }else{
-                $bomproduct=bom_sub_product::select('bom_sub_product.*','product.product_name','material.material_name','product.outer_diameter','product.inner_diameter','product.thikness')
+                $bomproduct=bom_sub_product::select('bom_sub_product.*','product.product_name', 'product.value1', 'product.value2','material.material_name','product.outer_diameter','product.inner_diameter','product.thikness')
                     ->leftJoin('product','product.id','bom_sub_product.product')
                     ->leftJoin('material','material.id','product.material')
                     ->where('bom_sub_product.bom_id',$prod->id)

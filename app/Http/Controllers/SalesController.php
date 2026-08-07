@@ -155,7 +155,7 @@ class SalesController extends Controller
         $so=customer_order::where('id',$request->id)
             ->first();
 
-        $soitem=customer_order_item::select('customer_order_item.*','product.product_name','product.make','product.model',"product.product_image")
+        $soitem=customer_order_item::select('customer_order_item.*','product.product_name', 'product.value1', 'product.value2','product.make','product.model',"product.product_image")
             ->leftJoin('product','product.id','customer_order_item.product')
             ->where('customer_order_item.order_no',$so->order_number)
             ->get();
@@ -243,12 +243,12 @@ class SalesController extends Controller
         $data=salesorder::where('id',$request->salesid)
             ->first();
 
-        $quotitem=salesorder_item::select('salesorder_item.*','product.product_name','product.make','product.model')
+        $quotitem=salesorder_item::select('salesorder_item.*','product.product_name', 'product.value1', 'product.value2','product.make','product.model')
             ->leftJoin('product','product.id','salesorder_item.product')
             ->where('salesorder_item.sono',$data->id)
             ->get();
 
-        $discsum=salesorder_item::select('salesorder_item.*','product.product_name','product.make','product.model')
+        $discsum=salesorder_item::select('salesorder_item.*','product.product_name', 'product.value1', 'product.value2','product.make','product.model')
             ->leftJoin('product','product.id','salesorder_item.product')
             ->where('salesorder_item.sono',$data->id)
             ->sum('salesorder_item.discount_amount');
@@ -345,7 +345,7 @@ class SalesController extends Controller
 
        // dd($soitem);
 
-        $discsum=salesorder_item::select('salesorder_item.*','product.product_name','product.make','product.model')
+        $discsum=salesorder_item::select('salesorder_item.*','product.product_name', 'product.value1', 'product.value2','product.make','product.model')
             ->leftJoin('product','product.id','salesorder_item.product')
             ->where('salesorder_item.sono',$so->salaesorder_no)
             ->sum('salesorder_item.discount_amount');
@@ -422,7 +422,7 @@ class SalesController extends Controller
             ->first();
         //dd($so);
 
-        $soitem=salesorder_item::select('salesorder_item.*',"product.item_code",'product.product_name',"product.product_image",'product.make','product.model','uom.uom_name','product.product_image','product.material_name','category.category_image')
+        $soitem=salesorder_item::select('salesorder_item.*',"product.item_code",'product.product_name', 'product.value1', 'product.value2',"product.product_image",'product.make','product.model','uom.uom_name','product.product_image','product.material_name','category.category_image')
             ->leftJoin('product','product.id','salesorder_item.product')
             ->leftJoin('category','category.id','product.category')
             ->leftJoin("uom","uom.id","product.uom")
@@ -431,7 +431,7 @@ class SalesController extends Controller
 
         //dd($soitem);
 
-        $discsum=salesorder_item::select('salesorder_item.*',"product.item_code",'product.product_name','product.make','product.model')
+        $discsum=salesorder_item::select('salesorder_item.*',"product.item_code",'product.product_name', 'product.value1', 'product.value2','product.make','product.model')
             ->leftJoin('product','product.id','salesorder_item.product')
             ->where('salesorder_item.sono',$so->salaesorder_no)
             ->sum('salesorder_item.discount_amount');
@@ -1186,7 +1186,7 @@ class SalesController extends Controller
         $quot=quotation::where('id',$request->id)
             ->first();
 
-        $quotitem=quotation_item::select('quot_item.*','product.product_name','product.make','product.model',"product.item_code")
+        $quotitem=quotation_item::select('quot_item.*','product.product_name', 'product.value1', 'product.value2','product.make','product.model',"product.item_code")
             ->leftJoin('product','product.id','quot_item.product')
             ->where('quot_item.quot_no',$quot->quot_no)
             ->get();
