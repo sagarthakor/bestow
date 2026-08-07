@@ -55,7 +55,7 @@ input[type="text"].inputElement, input[type="password"].inputElement {
                            <!--      <td  style="vertical-align: top;"></td>
                             <td  style="vertical-align: top;"></td> -->
                             <td  style="vertical-align: top;">{{$data->customer_name}}</td>
-                            <td  style="vertical-align: top;">{{$data->product_name}}</td>
+                            <td  style="vertical-align: top;"><x-product-name :row="$data" /></td>
                             <td  style="vertical-align: top;width:7%;text-align: left;">{{number_format($data->price)}}
                             </td>
                             

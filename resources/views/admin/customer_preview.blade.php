@@ -1,4 +1,4 @@
-@extends('admin.layout.master')
+@extends('admin.layout.master_material')
 
 @section('title', 'Customer Preview')
 
@@ -57,7 +57,7 @@
                                         @endcan
 
                                     </ul>
-                                    <table class="table table-borderless" style="border:0px !important">
+                                    <table class="table" style="border:0px !important">
                                         <caption style="color: #222;font-weight: 600">Organization Details</caption>
                                         <tr>
                                             <td style="width: 20%">Customer Name </td>

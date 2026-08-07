@@ -1,4 +1,4 @@
-@extends('admin.layout.table_master')
+@extends('admin.layout.table_master_material')
 
 @section('title', 'All Stitching Process')
 
@@ -59,6 +59,70 @@
 
                     <div class="col-sm-12">
 
+                        <div class="card-box">
+                            <h4 class="m-t-0 header-title">Filter</h4>
+                            <form method="get">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Machine</label>
+                                            <input type="text" value="{{ request('machine') }}" name="machine" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Batch No</label>
+                                            <input type="text" value="{{ request('batch_no') }}" name="batch_no" id="batch_no" class="form-control" autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Customer</label>
+                                            <input type="text" value="{{ request('client_name') }}" name="client_name" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Finish Product</label>
+                                            <input type="text" value="{{ request('product') }}" name="product" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Nos</label>
+                                            <input type="text" value="{{ request('nos') }}" name="nos" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Stitching Nos</label>
+                                            <input type="text" value="{{ request('stitching_nos') }}" name="stitching_nos" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Size</label>
+                                            <input type="text" value="{{ request('size') }}" name="size" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Status</label>
+                                            <select name="status" class="form-control">
+                                                <option value="" @selected(request('status') === null || request('status') === '')>All</option>
+                                                <option value="Y" @selected(request('status') === 'Y')>Complete</option>
+                                                <option value="N" @selected(request('status') === 'N')>Pending</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="hidden-xs">&nbsp;</label>
+                                        <button class="btn btn-primary btn-block waves-effect waves-light"><i class="mdi mdi-file-find"></i> Search</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
                         <div class="card-box table-responsive">
                             {{Form::open(['method'=>'get'])}}
                             <table class="table table-striped table-bordered">
@@ -74,48 +138,6 @@
                                     <th>Size</th>
                                     <th>Status</th>
                                     <th>Action</th>
-                                </tr>
-                                <tr>
-                                    <td>
-
-
-
-                                    </td>
-                                    <td>
-                                        <input type="text" value="<?php if(isset($_GET['machine'])){echo $_GET['machine'];} ?>" name="machine" class="listSearchContributor inputElement">
-                                    </td>
-                                    <td>
-                                        <input type="text" value="<?php if(isset($_GET['batch_no'])){echo $_GET['batch_no'];} ?>" name="batch_no"  class="listSearchContributor inputElement" id="batch_no" autocomplete="off">
-                                    </td>
-                                    <td>
-                                        <input type="text" value="<?php if(isset($_GET['client_name'])){echo $_GET['client_name'];} ?>" name="client_name"  class="listSearchContributor inputElement">
-                                    </td>
-                                    <td>
-                                        <input type="text" name="product" class="listSearchContributor inputElement" value="<?php if(isset($_GET['product'])){echo $_GET['product'];} ?>" >
-                                    </td>
-                                    <td>
-                                        <input type="text" name="nos" style="width:85px;border-radius: 1px;
-                    box-shadow: none;
-                    border: 1px solid #cccccc;height: 30px;padding: 3px 8px;"   value="<?php if(isset($_GET['nos'])){echo $_GET['nos'];} ?>">
-                                    </td>
-                                    <td>
-                                        <input type="text" name="stitching_nos" style="width:85px;border-radius: 1px;
-                    box-shadow: none;
-                    border: 1px solid #cccccc;height: 30px;padding: 3px 8px;"   value="<?php if(isset($_GET['stitching_nos'])){echo $_GET['stitching_nos'];} ?>">
-                                    </td>
-                                    <td>
-                                        <input type="text" name="size" class="listSearchContributor inputElement" value="<?php if(isset($_GET['size'])){echo $_GET['size'];} ?>">
-                                    </td>
-                                    <td>
-                                        <select name="status" class="listSearchContributor inputElement">
-                                            <option value="<?php if(isset($_GET['status'])){ echo $_GET['status']; }else{echo "";}?>"><?php if(isset($_GET['status'])){ if($_GET['status']=="Y"){ echo "Complete";}else if($_GET['status']==""){echo "All";}else if($_GET['status']=="N"){echo "Pending";}else{echo "";}}?></option>
-                                            <option value="">All</option>
-                                            <option value="Y">Complete</option>
-                                            <option value="N">Pending</option>
-                                        </select>
-                                    </td>
-
-                                    <td><button class="btn btn-brown">search</button></td>
                                 </tr>
                                 </thead>
 
@@ -137,7 +159,7 @@
                                         </td>
 
                                         <td  style="vertical-align: top;text-align: center">{{$data->customer_name}}</td>
-                                        <td  style="vertical-align: top;text-align: center">{{$data->product_name}}</td>
+                                        <td  style="vertical-align: top;text-align: center"><x-product-name :row="$data" /></td>
                                         <td  style="vertical-align: top;text-align: center">{{$data->nos}}</td>
                                         <td  style="vertical-align: top;text-align: center">{{$data->total_stitching}}</td>
                                         <td  style="vertical-align: top;text-align: center;width: 10%">{{$data->size}}</td>

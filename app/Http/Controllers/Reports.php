@@ -21,7 +21,7 @@ class Reports extends Controller
 
         $product=$product->select('quotation.*','customers.customer_name','customers.primary_email','customers.secondary_email');
         $product=$product->leftJoin('customers','customers.id','quotation.customer');
-        $product=$product->where('quotation.website_id',Session::get('website_id'));
+        $product=$product;
 
         if($request->quot_no != '')
         {
@@ -118,7 +118,7 @@ class Reports extends Controller
         //echo print_r($request->all());
 
         $product=$product->orderBy('quotation.id','desc');
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
 
         $company_name=company::select('company_name')->first();
 

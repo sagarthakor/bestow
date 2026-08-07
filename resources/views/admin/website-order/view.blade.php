@@ -1,4 +1,4 @@
-@extends('admin.layout.table_master')
+@extends('admin.layout.table_master_material')
 
 @section('title', 'Order Details')
 
@@ -96,7 +96,7 @@
                                          onerror="this.src='{{ asset('website-assets/img/placeholder.jpg') }}'">
                                 </td>
                                 <td>
-                                    <strong>{{ $item->product->product_name ?? 'N/A' }}</strong><br>
+                                    <strong><x-product-name :name="$item->product->product_name ?? 'N/A'" :color="$item->product->value1 ?? null" :size="$item->product->value2 ?? null" /></strong><br>
                                     <small>
                                         @if($item->product->value1) Color: {{ $item->product->value1 }} @endif
                                         @if($item->product->value2) | Size: {{ $item->product->value2 }} @endif

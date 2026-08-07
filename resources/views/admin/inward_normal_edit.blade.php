@@ -181,7 +181,7 @@
                                     </tr>
 
                                         <tr>
-                                            <td><input type="hidden" value="{{$item->product}}" name="product"/> {{$item->product_name}}</td>
+                                            <td><input type="hidden" value="{{$item->product}}" name="product"/> <x-product-name :row="$item" /></td>
                                             <td style="vertical-align: top !important;text-align: center;">
                                                 <input type="text" name="qty" onkeyup="cal(this)" value="{{$item->total_qty}}" class="qty form-control" id="qty' . $srno . '">
                                             </td>

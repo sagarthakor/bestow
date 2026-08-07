@@ -141,7 +141,7 @@
                                  ?>
                                  <tr>
                                     <td style="width: 5%">{{$srno}}</td>
-                                    <td><a href="{{url('client/product/normal/preview/'.$list->id)}}">{{$list->product_name}}</a></td>
+                                    <td><a href="{{url('client/product/normal/preview/'.$list->id)}}"><x-product-name :row="$list" /></a></td>
                                     <td style="text-align: center;">{{$list->category_name}}</td>
                                     <td style="text-align: center;">{{$list->material_name}}</td>
                                     <td style="text-align: center;">{{$list->uom_name}}</td>

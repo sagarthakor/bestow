@@ -16,8 +16,29 @@ class ProductController extends Controller
     {
         $query = product::query()
             ->where('status','product')
-            ->selectRaw('*, COUNT(DISTINCT value1) as color_count')
-            ->groupBy('item_code');
+            ->selectRaw('
+                MIN(id)            as id,
+                slug,
+                item_code,
+                MIN(product_name)  as product_name,
+                MIN(cover_image)   as cover_image,
+                MIN(product_image) as product_image,
+                MIN(price)         as price,
+                MIN(category)      as category,
+                MIN(subcategory)   as subcategory,
+                MIN(brand)         as brand,
+                MIN(value1)        as value1,
+                MIN(value2)        as value2,
+                (SELECT COUNT(DISTINCT p2.value1)
+                 FROM product p2
+                 WHERE p2.slug      = product.slug
+                   AND p2.item_code = product.item_code
+                   AND p2.status    = "product"
+                   AND p2.value1 IS NOT NULL
+                   AND p2.value1   != ""
+                ) as color_count
+            ')
+            ->groupBy('slug', 'item_code');
 
         /* =======================
    KEYWORD SEARCH
@@ -171,27 +192,33 @@ class ProductController extends Controller
         ]);
     }
 
-    public function details(Request $request, $slug)
+    public function details(Request $request, $slug, $code = null)
     {
-        // Find the anchor product by slug
-        $anchor = product::where('status','product')->where('slug',$slug)->first();
+        // Find the anchor product — by ID when available (avoids duplicate-slug collision), else by slug
+        if ($code) {
+            $anchor = product::where('status','product')->where('id', $code)->first();
+        }
+        if (empty($anchor)) {
+            $anchor = product::where('status','product')->where('slug',$slug)->first();
+        }
         if (!$anchor) abort(404);
 
-        // All variants that share the same item_code
+        // Always scope variants to same slug + item_code so unrelated
+        // products sharing item_code don't bleed into this product's colors/sizes.
         $allVariants = product::where('status','product')
+            ->where('slug', $anchor->slug)
             ->where('item_code', $anchor->item_code)
             ->get();
 
-        // Build color groups
-        // - If value1 (color) is set  → group by value1 (multiple colors, same slug)
-        // - If value1 is empty        → group by slug (each design is its own group)
+        // Build color groups — each group also carries the representative product id for URL building
         $colorGroups = [];
         foreach ($allVariants as $v) {
             $color = trim($v->value1 ?? '');
-            $groupKey = $color !== '' ? $color : $v->slug; // slug-based when no color
+            $groupKey = $color !== '' ? $color : $v->slug;
 
             if (!isset($colorGroups[$groupKey])) {
                 $colorGroups[$groupKey] = [
+                    'id'    => $v->id,
                     'color' => $color !== '' ? $color : $v->product_name,
                     'slug'  => $v->slug,
                     'image' => $v->cover_image ?: $v->product_image,
@@ -224,7 +251,14 @@ class ProductController extends Controller
             $selectedVariant = $anchor;
         }
 
-        $selectedColor = trim($selectedVariant->value1 ?? '') ?: 'Default';
+        // Match the color label exactly as stored in colorGroups so JS can auto-select it
+        $anchorColorVal = trim($selectedVariant->value1 ?? '');
+        if ($anchorColorVal !== '') {
+            $selectedColor = $anchorColorVal;
+        } else {
+            $matchingGroup = collect($colorGroups)->firstWhere('slug', $selectedVariant->slug);
+            $selectedColor = $matchingGroup['color'] ?? 'Default';
+        }
 
         return view('website.product.details', [
             'product'       => $selectedVariant,

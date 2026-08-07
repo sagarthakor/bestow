@@ -1,477 +1,214 @@
-@extends('admin.layout.master')
+@extends('admin.layout.master_material')
 
-@section('title', 'Out Of Stock Report')
+@section('title', 'Report | Out Of Stock')
+
+@section('sidebar')
+    @parent
+@endsection
 
 @section('content')
 
-<style>
-    /* ── Page wrapper ── */
-    .oos-page { padding: 20px 10px; }
+    <style type="text/css">
+        nav { float: right; }
+        .rpt-panel-heading {
+            background: #188ae2;
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 10px 16px;
+            border-radius: 3px 3px 0 0;
+        }
+        .rpt-panel-body { padding: 18px 16px 6px; }
+        .rpt-panel-body label { font-weight: 600; color: #555; font-size: 12.5px; margin-bottom: 4px; }
+        .rpt-actions { padding: 0 16px 16px; text-align: right; border-top: 1px solid #eceff5; margin-top: 12px; padding-top: 14px; }
+        table.rpt-table thead th { background: #f4f6fa; font-weight: 600; color: #444; border-bottom: 2px solid #e3e6ee; vertical-align: middle; }
+        table.rpt-table { border: 1px solid #e3e6ee; border-collapse: collapse; box-shadow: 0 1px 3px rgba(20,30,60,.04); }
+        table.rpt-table th, table.rpt-table td { border: 1px solid #eceff5; padding: 10px 12px; vertical-align: middle; }
+        table.rpt-table tbody tr:hover { background-color: #f5f8fc; }
+        .rpt-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+        .rpt-badge-green  { background: #e6f9f1; color: #17a673; }
+        .rpt-badge-red    { background: #fdeaea; color: #d63b40; }
+        .rpt-badge-amber  { background: #fff1e0; color: #c9760a; }
+    </style>
 
-    /* ── Page header ── */
-    .oos-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 22px;
-    }
-    .oos-header .header-icon {
-        width: 46px; height: 46px;
-        background: linear-gradient(135deg, #e74c3c, #c0392b);
-        border-radius: 12px;
-        display: flex; align-items: center; justify-content: center;
-        color: #fff; font-size: 20px;
-        box-shadow: 0 4px 12px rgba(231,76,60,.35);
-        flex-shrink: 0;
-    }
-    .oos-header h4 { margin: 0; font-size: 20px; font-weight: 700; color: #2d3748; }
-    .oos-header p  { margin: 0; font-size: 12px; color: #718096; }
-
-    /* ── Filter card ── */
-    .filter-card {
-        background: #fff;
-        border-radius: 14px;
-        box-shadow: 0 2px 16px rgba(0,0,0,.08);
-        padding: 20px 22px 16px;
-        margin-bottom: 22px;
-        border-top: 4px solid #4e73df;
-    }
-    .filter-card .section-label {
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: .8px;
-        color: #4e73df;
-        margin-bottom: 14px;
-    }
-    .filter-card label {
-        font-size: 12px;
-        font-weight: 600;
-        color: #4a5568;
-        margin-bottom: 5px;
-        display: block;
-    }
-    .filter-card .form-control {
-        border-radius: 8px;
-        border: 1px solid #e2e8f0;
-        font-size: 13px;
-        height: 38px;
-        transition: border-color .2s, box-shadow .2s;
-    }
-    .filter-card .form-control:focus {
-        border-color: #4e73df;
-        box-shadow: 0 0 0 3px rgba(78,115,223,.15);
-        outline: none;
-    }
-    .filter-divider {
-        border: none; border-top: 1px solid #f0f0f0;
-        margin: 14px 0;
-    }
-    .btn-search {
-        background: linear-gradient(135deg, #4e73df, #224abe);
-        color: #fff; border: none;
-        border-radius: 8px; height: 38px;
-        font-size: 13px; font-weight: 600;
-        width: 100%;
-        transition: opacity .2s, transform .1s;
-    }
-    .btn-search:hover { opacity: .9; transform: translateY(-1px); color: #fff; }
-
-    .btn-reset {
-        background: #fff;
-        color: #e74c3c;
-        border: 1.5px solid #e74c3c;
-        border-radius: 8px; height: 38px;
-        font-size: 13px; font-weight: 600;
-        width: 100%;
-        transition: background .2s, color .2s;
-    }
-    .btn-reset:hover { background: #e74c3c; color: #fff; }
-
-    .btn-export {
-        background: linear-gradient(135deg, #1cc88a, #17a673);
-        color: #fff; border: none;
-        border-radius: 8px;
-        padding: 8px 18px;
-        font-size: 13px; font-weight: 600;
-        transition: opacity .2s, transform .1s;
-        white-space: nowrap;
-    }
-    .btn-export:hover { opacity: .9; transform: translateY(-1px); color: #fff; }
-
-    /* ── Summary cards ── */
-    .summary-row { margin-bottom: 22px; }
-    .stat-card {
-        border-radius: 14px;
-        padding: 18px 20px;
-        color: #fff;
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        box-shadow: 0 4px 16px rgba(0,0,0,.12);
-        margin-bottom: 14px;
-        transition: transform .2s;
-    }
-    .stat-card:hover { transform: translateY(-3px); }
-    .stat-card.blue  { background: linear-gradient(135deg, #4e73df, #224abe); }
-    .stat-card.red   { background: linear-gradient(135deg, #e74c3c, #c0392b); }
-    .stat-card .stat-icon {
-        width: 48px; height: 48px;
-        background: rgba(255,255,255,.2);
-        border-radius: 12px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 22px; flex-shrink: 0;
-    }
-    .stat-card .stat-body h6 { margin: 0 0 4px; font-size: 12px; font-weight: 600; opacity: .85; text-transform: uppercase; letter-spacing: .5px; }
-    .stat-card .stat-body h3 { margin: 0; font-size: 28px; font-weight: 700; line-height: 1; }
-
-    /* ── Table card ── */
-    .table-card {
-        background: #fff;
-        border-radius: 14px;
-        box-shadow: 0 2px 16px rgba(0,0,0,.08);
-        overflow: hidden;
-        margin-bottom: 30px;
-    }
-    .table-card-header {
-        padding: 14px 20px;
-        background: linear-gradient(135deg, #f8f9fc, #edf0fa);
-        border-bottom: 1px solid #e3e6f0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-    .table-card-header h6 {
-        margin: 0;
-        font-size: 14px;
-        font-weight: 700;
-        color: #4a5568;
-    }
-    .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .oos-table { width: 100%; margin: 0; border-collapse: separate; border-spacing: 0; }
-    .oos-table thead tr th {
-        background: #f8f9fc;
-        color: #4a5568;
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: .6px;
-        padding: 12px 14px;
-        border-bottom: 2px solid #e3e6f0;
-        white-space: nowrap;
-        text-align: center;
-    }
-    .oos-table tbody tr td {
-        padding: 11px 14px;
-        font-size: 13px;
-        color: #4a5568;
-        border-bottom: 1px solid #f0f3f9;
-        vertical-align: middle;
-        text-align: center;
-    }
-    .oos-table tbody tr:last-child td { border-bottom: none; }
-    .oos-table tbody tr:hover td { background: #f8f9ff; }
-
-    .badge-so {
-        background: #edf2ff;
-        color: #4e73df;
-        font-size: 12px;
-        font-weight: 700;
-        padding: 4px 10px;
-        border-radius: 20px;
-        white-space: nowrap;
-    }
-    .badge-cat {
-        background: #e6fffa;
-        color: #1a9e7e;
-        font-size: 11px;
-        font-weight: 600;
-        padding: 3px 9px;
-        border-radius: 20px;
-        white-space: nowrap;
-    }
-    .badge-sub {
-        background: #fff8e1;
-        color: #b7791f;
-        font-size: 11px;
-        font-weight: 600;
-        padding: 3px 9px;
-        border-radius: 20px;
-        white-space: nowrap;
-    }
-    .qty-cell { font-weight: 600; }
-    .balance-neg { color: #e74c3c; font-weight: 700; }
-    .balance-pos { color: #27ae60; font-weight: 700; }
-    .serial-no {
-        color: #a0aec0;
-        font-size: 12px;
-        font-weight: 600;
-    }
-
-    .empty-state {
-        padding: 50px 20px;
-        text-align: center;
-        color: #a0aec0;
-    }
-    .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
-    .empty-state p { font-size: 15px; font-weight: 600; margin: 0; }
-
-    /* ── Pagination wrapper ── */
-    .pagination-wrap {
-        padding: 14px 20px;
-        border-top: 1px solid #f0f3f9;
-        display: flex;
-        justify-content: flex-end;
-    }
-    .pagination-wrap .pagination { margin: 0; }
-
-    /* ── Mobile tweaks ── */
-    @media (max-width: 767px) {
-        .filter-card { padding: 16px 14px 12px; }
-        .filter-card .col-md-2,
-        .filter-card .col-md-3 { margin-bottom: 10px; }
-        .stat-card h3 { font-size: 22px; }
-        .table-card-header { flex-direction: column; align-items: flex-start; }
-        .btn-export { width: 100%; text-align: center; }
-        .oos-header h4 { font-size: 17px; }
-    }
-</style>
-
-<div class="content-page">
-    <div class="content">
-        <div class="container-fluid oos-page">
-
-            {{-- Page Header --}}
-            <div class="oos-header">
-                <div class="header-icon">&#128230;</div>
-                <div>
-                    <h4>Out Of Stock Report</h4>
-                    <p>Sales orders with items that have insufficient stock</p>
-                </div>
-            </div>
-
-            {{ Form::model(request(), ['method' => 'get']) }}
-
-            {{-- Filter Card --}}
-            <div class="filter-card">
-                <div class="section-label">&#128269; Filter Options</div>
+    <div class="content-page">
+        <div class="content">
+            <div class="container">
 
                 <div class="row">
-                    <div class="col-md-2 col-sm-6 col-xs-12" style="margin-bottom:12px;">
-                        <label>SO No</label>
-                        <input type="text" name="order_no" value="{{ request('order_no') }}"
-                               class="form-control" placeholder="e.g. SO-001">
-                    </div>
-
-                    <div class="col-md-2 col-sm-6 col-xs-12" style="margin-bottom:12px;">
-                        <label>Customer</label>
-                        <input type="text" name="customer" value="{{ request('customer') }}"
-                               class="form-control" placeholder="Customer name">
-                    </div>
-
-                    <div class="col-md-2 col-sm-6 col-xs-12" style="margin-bottom:12px;">
-                        <label>Product</label>
-                        <input type="text" name="product" value="{{ request('product') }}"
-                               class="form-control" placeholder="Product name">
-                    </div>
-
-                    <div class="col-md-2 col-sm-6 col-xs-12" style="margin-bottom:12px;">
-                        <label>Category</label>
-                        <select name="category" id="category_filter" class="form-control">
-                            <option value="">All Categories</option>
-                            @foreach($categories as $cat)
-                                <option value="{{ $cat->id }}" {{ request('category') == $cat->id ? 'selected' : '' }}>
-                                    {{ $cat->category_name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="col-md-2 col-sm-6 col-xs-12" style="margin-bottom:12px;">
-                        <label>Subcategory</label>
-                        <select name="subcategory" id="subcategory_filter" class="form-control">
-                            <option value="">All Subcategories</option>
-                            @foreach($subcategories as $sc)
-                                <option value="{{ $sc->id }}"
-                                        data-category="{{ $sc->category }}"
-                                        {{ request('subcategory') == $sc->id ? 'selected' : '' }}>
-                                    {{ $sc->subcategory_name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="col-md-2 col-sm-6 col-xs-12" style="margin-bottom:12px;">
-                        <label>From Date</label>
-                        <input type="date" name="from_date" value="{{ request('from_date') }}" class="form-control">
-                    </div>
-
-                    <div class="col-md-2 col-sm-6 col-xs-12" style="margin-bottom:12px;">
-                        <label>To Date</label>
-                        <input type="date" name="end_date" value="{{ request('end_date') }}" class="form-control">
-                    </div>
-                </div>
-
-                <hr class="filter-divider">
-
-                <div class="row">
-                    <div class="col-md-2 col-sm-4 col-xs-6" style="margin-bottom:8px;">
-                        <button type="submit" class="btn-search">
-                            &#128269; Search
-                        </button>
-                    </div>
-                    <div class="col-md-2 col-sm-4 col-xs-6" style="margin-bottom:8px;">
-                        <a href="{{ url()->current() }}" class="btn-reset" style="display:flex;align-items:center;justify-content:center;text-decoration:none;">
-                            &#10006; Reset
-                        </a>
-                    </div>
-                    <div class="col-md-8 col-sm-12 col-xs-12" style="margin-bottom:8px;text-align:right;">
-                        <button type="submit" name="export_excel" value="export_excel" class="btn-export">
-                            &#11015; Export Excel
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Summary Cards --}}
-            <div class="row summary-row">
-                <div class="col-md-3 col-sm-6 col-xs-12">
-                    <div class="stat-card blue">
-                        <div class="stat-icon">&#128203;</div>
-                        <div class="stat-body">
-                            <h6>Total Records</h6>
-                            <h3>{{ $list->total() }}</h3>
+                    <div class="col-xs-12">
+                        <div class="page-title-box">
+                            <h4 class="page-title">Out Of Stock Report</h4>
+                            <ol class="breadcrumb p-0 m-0">
+                                <li><a href="{{ url('admin') }}">{{Session::get('software_title')}}</a></li>
+                                <li>Reports</li>
+                                <li class="active">Sales Out of Stock Items</li>
+                            </ol>
+                            <div class="clearfix"></div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3 col-sm-6 col-xs-12">
-                    <div class="stat-card red">
-                        <div class="stat-icon">&#128230;</div>
-                        <div class="stat-body">
-                            <h6>This Page</h6>
-                            <h3>{{ $list->count() }}</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            {{-- Table Card --}}
-            <div class="table-card">
-                <div class="table-card-header">
-                    <h6>&#128203; Out Of Stock Items</h6>
-                    <span style="font-size:12px;color:#718096;">
-                        Showing {{ $list->firstItem() ?? 0 }}–{{ $list->lastItem() ?? 0 }}
-                        of {{ $list->total() }} records
-                    </span>
-                </div>
+                {{ Form::model(request(), ['method' => 'get']) }}
 
-                <div class="table-responsive">
-                    <table class="oos-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>SO No</th>
-                                <th>Date</th>
-                                <th>Customer</th>
-                                <th>Category</th>
-                                <th>Subcategory</th>
-                                <th>Product</th>
-                                <th>Sold Qty</th>
-                                <th>Stock Qty</th>
-                                <th>Balance</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        @forelse($list as $data)
-                            <tr>
-                                <td>
-                                    <span class="serial-no">
-                                        {{ ($list->currentPage() - 1) * $list->perPage() + $loop->iteration }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge-so">{{ $data->order_no }}</span>
-                                </td>
-                                <td style="white-space:nowrap;">
-                                    {{ \Carbon\Carbon::parse($data->order_date)->format('d M Y') }}
-                                </td>
-                                <td style="text-align:left;">{{ $data->customer }}</td>
-                                <td>
-                                    @if($data->category_name)
-                                        <span class="badge-cat">{{ $data->category_name }}</span>
-                                    @else
-                                        <span style="color:#cbd5e0;">—</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($data->subcategory_name)
-                                        <span class="badge-sub">{{ $data->subcategory_name }}</span>
-                                    @else
-                                        <span style="color:#cbd5e0;">—</span>
-                                    @endif
-                                </td>
-                                <td style="text-align:left;">{{ $data->product }}</td>
-                                <td class="qty-cell">{{ number_format($data->sold_qty, 2) }}</td>
-                                <td class="qty-cell">{{ number_format($data->stock_qty, 2) }}</td>
-                                <td class="{{ $data->balance <= 0 ? 'balance-neg' : 'balance-pos' }}">
-                                    {{ number_format($data->balance, 2) }}
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="10">
-                                    <div class="empty-state">
-                                        <div class="empty-icon">&#128230;</div>
-                                        <p>No out of stock items found</p>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="panel panel-default">
+                            <div class="rpt-panel-heading">Filter</div>
+                            <div class="rpt-panel-body">
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <label>SO No</label>
+                                        <input type="text" name="order_no" value="{{ request('order_no') }}" class="form-control" placeholder="e.g. SO-001">
                                     </div>
-                                </td>
-                            </tr>
-                        @endforelse
-                        </tbody>
-                    </table>
+                                    <div class="col-sm-3">
+                                        <label>Customer</label>
+                                        <input type="text" name="customer" value="{{ request('customer') }}" class="form-control" placeholder="Customer name">
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <label>Product</label>
+                                        <input type="text" name="product" value="{{ request('product') }}" class="form-control" placeholder="Product name">
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <label>Category</label>
+                                        <select name="category" id="category_filter" class="form-control">
+                                            <option value="">All Categories</option>
+                                            @foreach($categories as $cat)
+                                                <option value="{{ $cat->id }}" {{ request('category') == $cat->id ? 'selected' : '' }}>{{ $cat->category_name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-top:12px;">
+                                    <div class="col-sm-3">
+                                        <label>Subcategory</label>
+                                        <select name="subcategory" id="subcategory_filter" class="form-control">
+                                            <option value="">All Subcategories</option>
+                                            @foreach($subcategories as $sc)
+                                                <option value="{{ $sc->id }}" data-category="{{ $sc->category }}" {{ request('subcategory') == $sc->id ? 'selected' : '' }}>{{ $sc->subcategory_name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <label>From Date</label>
+                                        <input type="date" name="from_date" value="{{ request('from_date') }}" class="form-control">
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <label>To Date</label>
+                                        <input type="date" name="end_date" value="{{ request('end_date') }}" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="rpt-actions">
+                                <a href="{{ url()->current() }}" class="btn btn-default">Reset</a>
+                                <button type="submit" class="btn btn-primary">Search</button>
+                                <button type="submit" name="export_excel" value="export_excel" class="btn btn-success">Export Excel</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="pagination-wrap">
-                    {{ $list->appends(request()->input())->links() }}
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="card-box" style="padding:0;">
+
+                            @include('admin.reports.partials.stat_cards', ['stats' => [
+                                ['label' => 'Records', 'value' => number_format($list->total()), 'icon' => 'mdi-format-list-bulleted', 'color' => 'blue'],
+                                ['label' => 'Products Affected', 'value' => number_format($summary->affected_products ?? 0), 'icon' => 'mdi-alert-circle', 'color' => 'orange'],
+                                ['label' => 'Sales Orders Affected', 'value' => number_format($summary->affected_orders ?? 0), 'icon' => 'mdi-alert-circle', 'color' => 'orange'],
+                                ['label' => 'Total Sold Qty', 'value' => number_format($summary->total_sold_qty ?? 0, 2), 'icon' => 'mdi-package-variant', 'color' => 'purple'],
+                            ]])
+
+                            <div class="table-responsive">
+                                <table class="table table-striped rpt-table">
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>SO No</th>
+                                        <th>Date</th>
+                                        <th>Customer</th>
+                                        <th>Category</th>
+                                        <th>Subcategory</th>
+                                        <th>Product</th>
+                                        <th>Sold Qty</th>
+                                        <th>Stock Qty</th>
+                                        <th>Need To Purchase Qty</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    @forelse($list as $data)
+                                        <tr>
+                                            <td style="width:2%;text-align:center;">
+                                                {{ ($list->currentPage() - 1) * $list->perPage() + $loop->iteration }}
+                                            </td>
+                                            <td><a href="{{ route('admin.sales.view', $data->so_id) }}">{{ $data->order_no }}</a></td>
+                                            <td style="white-space:nowrap;">{{ \Carbon\Carbon::parse($data->order_date)->format('d-m-Y') }}</td>
+                                            <td>{{ $data->customer }}</td>
+                                            <td>{{ $data->category_name ?? '-' }}</td>
+                                            <td>{{ $data->subcategory_name ?? '-' }}</td>
+                                            <td><x-product-name :name="$data->product" :color="$data->value1 ?? null" :size="$data->value2 ?? null" /></td>
+                                            <td style="text-align:right;">{{ number_format($data->sold_qty, 2) }}</td>
+                                            <td style="text-align:right;">{{ number_format($data->stock_qty, 2) }}</td>
+                                            <td style="text-align:right;">
+                                                @php
+                                                    $need = (float) $data->need_to_purchase_qty;
+                                                    $needClass = $need <= 0 ? 'rpt-badge-green' : ($need < $data->sold_qty ? 'rpt-badge-amber' : 'rpt-badge-red');
+                                                @endphp
+                                                <span class="rpt-badge {{ $needClass }}">{{ number_format($need, 2) }}</span>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="10" class="text-center" style="padding:30px;color:#999;">No out of stock items found</td>
+                                        </tr>
+                                    @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div style="padding: 10px 16px;">
+                                {{ $list->appends(request()->input())->links() }}
+                            </div>
+
+                        </div>
+                    </div>
                 </div>
+
+                {{ Form::close() }}
+
             </div>
-
-            {{ Form::close() }}
-
         </div>
     </div>
-</div>
 
-<script>
-(function () {
-    var categorySelect    = document.getElementById('category_filter');
-    var subcategorySelect = document.getElementById('subcategory_filter');
-    var allOptions        = Array.from(subcategorySelect.options);
+    <script src="{{asset('/admin/assets/js/jquery.min.js')}}"></script>
+    <script>
+        (function () {
+            var categorySelect    = document.getElementById('category_filter');
+            var subcategorySelect = document.getElementById('subcategory_filter');
+            var allOptions        = Array.from(subcategorySelect.options);
 
-    function filterSubcategories() {
-        var selectedCategory = categorySelect.value;
-        var currentSub       = subcategorySelect.value;
+            function filterSubcategories() {
+                var selectedCategory = categorySelect.value;
+                var currentSub       = subcategorySelect.value;
 
-        while (subcategorySelect.options.length > 1) {
-            subcategorySelect.remove(1);
-        }
+                while (subcategorySelect.options.length > 1) {
+                    subcategorySelect.remove(1);
+                }
 
-        allOptions.forEach(function (opt) {
-            if (opt.value === '') return;
-            if (!selectedCategory || opt.dataset.category === selectedCategory) {
-                subcategorySelect.appendChild(opt.cloneNode(true));
+                allOptions.forEach(function (opt) {
+                    if (opt.value === '') return;
+                    if (!selectedCategory || opt.dataset.category === selectedCategory) {
+                        subcategorySelect.appendChild(opt.cloneNode(true));
+                    }
+                });
+
+                subcategorySelect.value = currentSub;
             }
-        });
 
-        subcategorySelect.value = currentSub;
-    }
-
-    categorySelect.addEventListener('change', filterSubcategories);
-    filterSubcategories();
-    subcategorySelect.value = '{{ request('subcategory') }}';
-})();
-</script>
+            categorySelect.addEventListener('change', filterSubcategories);
+            filterSubcategories();
+            subcategorySelect.value = '{{ request('subcategory') }}';
+        })();
+    </script>
 
 @endsection

@@ -140,6 +140,15 @@ return [
             'Delete' => 'formula_delete',
 
         ],
+        'Buckle Formula Master' => [
+            'Create' => 'buckle_formula_create',
+            'Update' => 'buckle_formula_update',
+            'View' => 'buckle_formula_view',
+            'Delete' => 'buckle_formula_delete',
+        ],
+        'Belt Production' => [
+            'View' => 'belt_production_view',
+        ],
     ],
 
     'Reports' =>[
@@ -151,7 +160,43 @@ return [
         ],
         'Invoice Report' => [
             'View' => 'invoice_report_view',
-        ]
+        ],
+        'Sales Report - Daily/Monthly' => [
+            'View' => 'sales_summary_report_view',
+        ],
+        'Product Wise Sales Report' => [
+            'View' => 'product_wise_sales_report_view',
+        ],
+        'Sales-MAN Wise Sales Report' => [
+            'View' => 'salesman_wise_sales_report_view',
+        ],
+        'Product Wise Available Stock Report' => [
+            'View' => 'stock_available_report_view',
+        ],
+        'RAW Material Required Pending Report' => [
+            'View' => 'raw_material_pending_report_view',
+        ],
+        'Production Pending Report' => [
+            'View' => 'production_pending_report_view',
+        ],
+        'Stitching Pending Report' => [
+            'View' => 'stitching_pending_report_view',
+        ],
+        'Press Pending Report' => [
+            'View' => 'pressing_pending_report_view',
+        ],
+        'Packing Pending Report' => [
+            'View' => 'packaging_pending_report_view',
+        ],
+        'Belt Production Report' => [
+            'View' => 'belt_production_report_view',
+        ],
+        'Socks Products Without Formula Report' => [
+            'View' => 'socks_missing_formula_report_view',
+        ],
+        'Belt Products Without Formula Report' => [
+            'View' => 'belt_missing_formula_report_view',
+        ],
     ],
 
     'Machine Master' =>[

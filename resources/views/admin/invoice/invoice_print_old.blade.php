@@ -251,7 +251,7 @@ if($discsum==0)
                     ?>
                     <tr>
                         <td style="border-left:1px solid #ddd;text-align: center;vertical-align:top;width: 5%;border: 1px solid #ddd">{{$srno}}</td>
-                        <td style="vertical-align:top;width:30%;border: 1px solid #ddd">{{$item->product_name}}<br>HSN Code: {{$item->product_name}}</td>
+                        <td style="vertical-align:top;width:30%;border: 1px solid #ddd">{{$item->item_code}} - <x-product-name :row="$item" print /><br>HSN Code: {{$item->hsn}}</td>
                         <td style="text-align: center;vertical-align:top;width: 10%;border: 1px solid #ddd">{{$item->qty}} {{$item->uom_name}}</td>
                         
                         <td style="text-align: center;vertical-align:top;border: 1px solid #ddd">{{number_format($item->price,2,'.',',')}}</td>

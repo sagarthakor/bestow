@@ -123,7 +123,7 @@
         <div class="col-lg-5">
             <div class="gallery-main mb-3">
                 <img id="mainImage"
-                     src="{{ asset('product_image/' . ($product->cover_image ?: $initialImage)) }}"
+                     src="{{ asset('product_image/' . $initialImage) }}"
                      alt="{{ $product->clean_name ?: $product->product_name }}">
             </div>
         </div>
@@ -171,7 +171,7 @@
             @endif
 
             <!-- Size Selection -->
-            <div class="mb-4">
+            <div id="sizeSectionWrap" class="mb-4" style="display:none;">
                 <label style="font-size:15px; font-weight:700; margin-bottom:10px; display:block;">
                     Size:
                     <span id="selectedSizeLabel" style="color:var(--brand); font-weight:600;"></span>
@@ -274,11 +274,18 @@
     const COLOR_GROUPS    = @json($colorGroups);
     const SELECTED_COLOR  = @json($selectedColor);
     const DEFAULT_SIZE    = @json($defaultSize);
+    const PRODUCT_ID      = {{ $product->id }};
+    const INITIAL_PRICE   = {{ $initialPrice }};
+
+    const hasSizes = COLOR_GROUPS.some(g => g.sizes && g.sizes.length > 0);
 
     let activeColor   = SELECTED_COLOR;
-    let selectedVariant = null;
+    let selectedVariant = hasSizes ? null : { id: PRODUCT_ID, price: INITIAL_PRICE };
 
     document.addEventListener('DOMContentLoaded', () => {
+        if (hasSizes) {
+            document.getElementById('sizeSectionWrap').style.display = 'block';
+        }
         renderColors();
         renderSizes(activeColor);
     });
@@ -321,11 +328,16 @@
         // Re-render sizes for new color (no pre-selection)
         renderSizes(color);
 
-        // Update URL to this color's slug
+        // Update URL to /details/{slug}/{id} format (same as listing → detail link)
         if (grp && grp.slug) {
             const url = new URL(window.location);
-            const newPath = url.pathname.replace(/\/[^\/]+$/, '/' + grp.slug);
-            window.history.replaceState({}, '', newPath);
+            const detailsIdx = url.pathname.indexOf('/details/');
+            if (detailsIdx !== -1) {
+                url.pathname = url.pathname.substring(0, detailsIdx + '/details/'.length)
+                               + grp.slug + (grp.id ? '/' + grp.id : '');
+            }
+            url.search = '';
+            window.history.replaceState({}, '', url);
         }
     }
 
@@ -336,7 +348,13 @@
         selectedVariant = null;
 
         const grp = COLOR_GROUPS.find(g => g.color === color);
-        if (!grp || !grp.sizes.length) return;
+        if (!grp || !grp.sizes.length) {
+            // No sizes — use the color group's own product id directly
+            if (grp && grp.id) {
+                selectedVariant = { id: grp.id, price: INITIAL_PRICE };
+            }
+            return;
+        }
 
         grp.sizes.forEach(size => {
             const btn = document.createElement('button');
@@ -363,12 +381,17 @@
         selectedVariant = {
             id:    btn.dataset.id,
             price: parseFloat(btn.dataset.price),
+            image: btn.dataset.image,
         };
 
         document.getElementById('priceBox').textContent = selectedVariant.price.toFixed(2);
         document.getElementById('selectedSizeLabel').textContent = btn.textContent;
 
-        // Image does NOT change on size select — only changes when color/design is switched
+        // Each size can have its own photo, so switch the main image too.
+        if (selectedVariant.image) {
+            document.getElementById('mainImage').src = '/product_image/' + selectedVariant.image;
+        }
+
         const url = new URL(window.location);
         url.searchParams.set('variant', selectedVariant.id);
         window.history.replaceState({}, '', url);
@@ -389,12 +412,12 @@
 
     /* ── Cart / Buy Now ── */
     function addToCartAction() {
-        if (!selectedVariant) { window.toast('Please select a size', 'warning'); return; }
+        if (hasSizes && !selectedVariant) { window.toast('Please select a size', 'warning'); return; }
         window.addToCart(selectedVariant.id, getQty());
     }
 
     function buyNowAction() {
-        if (!selectedVariant) { window.toast('Please select a size', 'warning'); return; }
+        if (hasSizes && !selectedVariant) { window.toast('Please select a size', 'warning'); return; }
         window.buyNow(selectedVariant.id, getQty());
     }
 </script>

@@ -1,4 +1,4 @@
-@extends('admin.layout.table_master')
+@extends('admin.layout.table_master_material')
 
 @section('title', 'List | Delivery Challan')
 
@@ -64,6 +64,60 @@
 
                     <div class="col-sm-12">
 
+                        <div class="card-box">
+                            <h4 class="m-t-0 header-title">Filter</h4>
+                            <form method="get">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Challan No</label>
+                                            <input type="text" value="{{ request('invoice_no') }}" name="invoice_no" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>From Date</label>
+                                            <input type="date" value="{{ request('from_date') }}" name="from_date" id="start_date" class="form-control" autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>End Date</label>
+                                            <input type="date" value="{{ request('end_date') }}" name="end_date" id="end_date" class="form-control" autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Client Name</label>
+                                            <input type="text" value="{{ request('client_name') }}" name="client_name" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Subject</label>
+                                            <input type="text" value="{{ request('subject') }}" name="subject" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Amount</label>
+                                            <input type="text" value="{{ request('amount') }}" name="amount" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Status</label>
+                                            <input type="text" value="{{ request('status') }}" name="status" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="hidden-xs">&nbsp;</label>
+                                        <button class="btn btn-primary btn-block waves-effect waves-light"><i class="mdi mdi-file-find"></i> Search</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
                         <div class="card-box table-responsive">
                             {{Form::open(['method'=>'get'])}}
                             <table class="table table-striped table-bordered">
@@ -78,32 +132,6 @@
                                     <th>Status</th>
                                     <th>Invoice</th>
                                     <th></th>
-                                </tr>
-                                <tr>
-                                    <td></td>
-                                    <td>
-                                        <input type="text" value="<?php if(isset($_GET['invoice_no'])){echo $_GET['invoice_no'];} ?>" placeholder="Challan No." name="invoice_no" class="listSearchContributor inputElement">
-                                    </td>
-                                    <td>
-                                        <input type="date" value="<?php if(isset($_GET['from_date'])){echo $_GET['from_date'];} ?>" name="from_date" placeholder='From date' class="listSearchContributor inputElement" id="start_date" autocomplete="off">
-
-                                        <input type="date" value="<?php if(isset($_GET['end_date'])){echo $_GET['end_date'];} ?>" name="end_date" placeholder='End Date' class="listSearchContributor inputElement" id="end_date" autocomplete="off">
-                                    </td>
-                                    <td>
-                                        <input type="text" value="<?php if(isset($_GET['client_name'])){echo $_GET['client_name'];} ?>" name="client_name" placeholder="Client Name" class="listSearchContributor inputElement">
-                                    </td>
-                                    <td>
-                                        <input type="text" name="subject" class="listSearchContributor inputElement" value="<?php if(isset($_GET['subject'])){echo $_GET['subject'];} ?>" placeholder="Subject">
-                                    </td>
-                                    <td>
-                                        <input type="text" name="amount" class="listSearchContributor inputElement" value="<?php if(isset($_GET['amount'])){echo $_GET['amount'];} ?>" placeholder="Amount">
-                                    </td>
-                                    <td>
-                                        <input type="text" name="status" class="listSearchContributor inputElement" value="<?php if(isset($_GET['status'])){echo $_GET['status'];} ?>" placeholder="Status">
-                                    </td>
-                                    <td></td>
-                                    <td style="text-align: center"><button class="btn btn-brown">Search</button></td>
-
                                 </tr>
                                 </thead>
 

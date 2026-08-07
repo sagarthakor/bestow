@@ -31,7 +31,7 @@ class SalesmanController extends Controller
         $order=customer_order::where("salesman",Session::get("salesman_code"))->orderBy("id","desc")
             ->get();
         //dd($order);
-        $order_item=customer_order_item::select("customer_order_item.*","product.product_name","product.product_image")
+        $order_item=customer_order_item::select("customer_order_item.*","product.product_name", "product.value1", "product.value2","product.product_image")
             ->leftJoin("product","product.id","customer_order_item.product")
             ->get();
 
@@ -91,7 +91,7 @@ class SalesmanController extends Controller
     }
     function index(Request $request)
     {
-        $list=salesman::orderBy("id","desc")->paginate(10);
+        $list=salesman::orderBy("id","desc")->paginate(session('records_per_page', 30));
         return view("admin.salesman.list",compact('list'));
     }
 }

@@ -155,7 +155,7 @@
                                                             </td>
                                                             <td style="width:20%">
                                                                 <input type="hidden" name="product[]" class="product" value="{{$list->id}}">
-                                                               {{$list->product_name}}
+                                                               <x-product-name :row="$list" />
                                                             </td>
                                                             <td>
                                                                 <img style="height:80px" src="{{asset('public/product_image/'.$list->product_image)}}"
@@ -263,7 +263,7 @@
                                                         <tr>
                                                             <td> {{$srno}}</td>
 
-                                                            <td>{{$list->product_name}}</td>
+                                                            <td><x-product-name :row="$list" /></td>
 
 
                                                             <td style="text-align: center;">{{$list->catname}}</td>

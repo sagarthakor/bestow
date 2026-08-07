@@ -105,7 +105,7 @@
                                                       <table class="table table-borderless" style="border:0px !important">
                                                         <tr>
                                                              <td style="width: 20%">Product Name </td>
-                                                             <td style="color: #222;"> {{$data->product_name}}</td>
+                                                             <td style="color: #222;"> <x-product-name :row="$data" /></td>
                                                               <td style="width: 20%">Vendor</td>
                                                              <td style="color: #222;">  {{$vendor_name}}
                                                              </td>

@@ -78,7 +78,6 @@ class FollowupController extends Controller
         $quot=quotation::select('quotation.id as quotid','quotation.quotation_no','quotation.quot_date','quotation.quot_stage','customers.customer_name')
             ->leftJoin('customers','customers.id','quotation.customer')
             ->where('quotation.id',$request->id)
-            ->where('quotation.website_id',Session::get('website_id'))
             ->first();
 
         $followup=quot_followup::where('quot_id',$request->id)->orderBy('id','desc')->get();

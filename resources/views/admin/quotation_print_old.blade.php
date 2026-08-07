@@ -216,7 +216,7 @@
         @endphp
         <tr>
             <td class="text-center">{{ $srno }}</td>
-            <td>{{ $item->product_name }}<br>HSN: {{ $item->hsn }}</td>
+            <td><x-product-name :row="$item" print /><br>HSN: {{ $item->hsn }}</td>
             @if(isset($isInternalPrint) && $isInternalPrint == 'yes')
                 <td class="text-center">
                     @if($item->product_image)

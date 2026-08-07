@@ -1,4 +1,4 @@
-@extends('admin.layout.table_master')
+@extends('admin.layout.table_master_material')
 
 @section('title', 'List of Roles')
 
@@ -8,13 +8,6 @@
 @endsection
 
 @section('content')
-<style>
-    /* Custom CSS to set a fixed height and enable scrolling */
-    .table-responsive {
-        max-height: 300px; /* Adjust the height as needed */
-        overflow-y: auto;
-    }
-</style>
 
     <!-- ============================================================== -->
     <!-- Start right Content here -->
@@ -57,13 +50,13 @@
 
                             @if(session()->has('message'))
                                 <div class="col-sm-12">
-                                    <div class="alert alert-info" style="background-color: #188ae2 !important">
-                                        <strong style="color: #fff">{{session()->get('message')}}</strong>
+                                    <div class="alert alert-info">
+                                        <strong>{{session()->get('message')}}</strong>
                                     </div>
                                 </div>
                             @endif
                             <div class="table-responsive">
-                                <table class="table table-bordered">
+                                <table class="table table-bordered table-striped table-hover">
                                     <tr>
                                         <th>No</th>
                                         <th>Name</th>
@@ -74,19 +67,8 @@
                                             <td>{{ ++$i }}</td>
                                             <td>{{ $role->name }}</td>
                                             <td>
-                                                <div class="dropdown">
-                                                    <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Action
-                                                        <span class="caret"></span></button>
-                                                    <ul class="dropdown-menu">
-
-                                                        {{--@can('role-edit')--}}
-                                                        <li><a title="Edit" href="{{ route('admin.roles.edit',['id' => $role->id]) }}">Edit</a></li>
-                                                        {{-- @endcan
-                                                         @can('role-delete')--}}
-                                                        <li><a title="Delete" href="{{ route('admin.roles.destroy',['id' => $role->id]) }}">Delete</a></li>
-                                                        {{--   @endcan--}}
-                                                    </ul>
-                                                </div>
+                                                <a title="Edit" href="{{ route('admin.roles.edit',['id' => $role->id]) }}" class="btn btn-xs btn-primary waves-effect"><i class="fa fa-pencil"></i> Edit</a>
+                                                <a title="Delete" href="{{ route('admin.roles.destroy',['id' => $role->id]) }}" class="btn btn-xs btn-danger waves-effect" onclick="return confirm('Are you sure you want to delete this item?');"><i class="fa fa-trash-o"></i> Delete</a>
                                             </td>
                                         </tr>
                                     @endforeach

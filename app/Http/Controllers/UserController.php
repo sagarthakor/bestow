@@ -136,15 +136,15 @@ class UserController extends Controller
         $order=customer_order::where("customer",Session::get("customer_session"))->orderBy("id","desc")
             ->get();
 
-        $order_item=customer_order_item::select("customer_order_item.*","product.product_name","product.product_image")
+        $order_item=customer_order_item::select("customer_order_item.*","product.product_name", "product.value1", "product.value2","product.product_image")
             ->leftJoin("product","product.id","customer_order_item.product")
             ->get();
 
         $details=customers::findorFail(Session::get("customer_session"));
 
-        $industry=[''=>'select industry']+industry::where('website_id',Session::get('website_id'))
+        $industry=[''=>'select industry']+industry::query()
                 ->orderBy('industry_name')->get()->pluck('industry_name','id')->toArray();
-        $type=[''=>'select type']+type::where('website_id',Session::get('website_id'))
+        $type=[''=>'select type']+type::query()
                 ->orderBy('type_name')->get()->pluck('type_name','id')->toArray();
 
         $country=[''=>'select country']+country::orderBy('country_name','asc')
@@ -774,7 +774,6 @@ class UserController extends Controller
     function user_add(Request $req)
     {
         $website=website::orderBy('website_name','asc')
-            ->where('website.id',Session()->get('website_id'))
             ->get()
             ->pluck('website_name','id')
             ->toArray();
@@ -823,7 +822,6 @@ class UserController extends Controller
     {
         $data=website_user::select('website_user.*','website.website_name')
             ->leftJoin('website','website.id','website_user.website')
-            ->where('website_user.website',Session::get('website_id'))
             ->orderBy('website_user.id','desc')
             ->get();
 
@@ -841,7 +839,7 @@ class UserController extends Controller
     {
         $data = User::orderBy('id','DESC')
 
-            ->paginate(15);
+            ->paginate(session('records_per_page', 30));
         return view('admin.user.index',compact('data'))
             ->with('i', ($request->input('page', 1) - 1) * 5);
     }

@@ -1,0 +1,85 @@
+/* ==========================================================================
+   DASHBOARD (v2) — page-specific styles.
+   Everything generic (buttons, badges, cards, tables) already comes from
+   theme.css. This file only adds dashboard-only widgets: KPI hero cards,
+   revenue widgets, leaderboards, and the entrance animation.
+   ========================================================================== */
+
+.dash-welcome {
+  color: var(--color-text-secondary);
+  font-size: var(--fs-md);
+  margin-bottom: var(--space-5);
+}
+
+/* ---- Entrance animation ("premium" polish) ---------------------------- */
+.reveal {
+  animation: dashFadeUp 0.55s cubic-bezier(.22,.61,.36,1) both;
+  animation-delay: calc(var(--d, 0) * 80ms);
+}
+@keyframes dashFadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal { animation: none; }
+}
+
+/* ---- KPI hero cards ----------------------------------------------------*/
+.kpi-card-v2 {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  color: #fff;
+  box-shadow: var(--shadow-md);
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  height: 100%;
+}
+.kpi-card-v2:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); color: #fff; }
+.kpi-v2-icon { position: absolute; right: 14px; top: 10px; font-size: 44px; opacity: 0.25; }
+.kpi-v2-value { font-size: var(--fs-3xl); font-weight: var(--fw-bold); line-height: 1.1; }
+.kpi-v2-label { text-transform: uppercase; font-size: var(--fs-xs); letter-spacing: .4px; opacity: 0.9; margin-top: 4px; }
+.kpi-v2-sub { font-size: var(--fs-xs); opacity: 0.85; margin-top: 6px; }
+
+.kpi-v2-red    { background: linear-gradient(135deg, #ff7875, #e74a3b); }
+.kpi-v2-green  { background: linear-gradient(135deg, #3ddc97, #1cc88a); }
+.kpi-v2-blue   { background: linear-gradient(135deg, #6c8ef5, #4e73df); }
+.kpi-v2-orange { background: linear-gradient(135deg, #ffc266, #f6a623); }
+.kpi-v2-purple { background: linear-gradient(135deg, #9d7bea, #6f42c1); }
+
+/* ---- Revenue widgets -----------------------------------------------------*/
+.revenue-card { padding: var(--space-5); height: 100%; }
+.revenue-card-head { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3); }
+.revenue-icon { width: 3rem; height: 3rem; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.3rem; flex-shrink: 0; }
+.revenue-value { font-size: var(--fs-2xl); font-weight: var(--fw-bold); color: var(--color-text-primary); }
+.revenue-label { font-size: var(--fs-sm); color: var(--color-text-secondary); }
+.revenue-sparkline { width: 100%; max-height: 40px; }
+.revenue-foot { font-size: var(--fs-xs); color: var(--color-text-muted); margin-top: var(--space-2); }
+.revenue-mini-grid { display: flex; justify-content: space-between; text-align: center; margin-top: var(--space-3); }
+
+.view-all { font-size: var(--fs-sm); font-weight: var(--fw-semibold); }
+
+/* ---- Breakdown chart legend ----------------------------------------------*/
+.breakdown-legend > div { padding: 4px 0; font-size: var(--fs-sm); border-bottom: 1px dashed var(--color-border); }
+.breakdown-legend > div:last-child { border-bottom: 0; }
+
+/* ---- Leaderboards (Top Products / Top Customers) -------------------------*/
+.rank-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 6px;
+  font-weight: var(--fw-bold); font-size: 11px; color: #fff; margin-right: 10px; flex-shrink: 0;
+}
+.rank-1 { background: #e74a3b; }
+.rank-2 { background: #6b7280; }
+.rank-3 { background: #f6a623; }
+.rank-other { background: var(--color-border-strong); }
+.lb-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--color-border); font-size: var(--fs-sm); }
+.lb-row:last-child { border-bottom: 0; }
+.lb-name { display: flex; align-items: center; font-weight: var(--fw-medium); color: var(--color-text-primary); }
+.lb-sub { color: var(--color-text-muted); font-size: var(--fs-xs); }
+.lb-value { font-weight: var(--fw-bold); color: var(--color-primary); }
+
+/* ---- Pending-quotations alert box ------------------------------------------*/
+.alert-box { display: flex; flex-direction: column; align-items: center; text-align: center; padding: var(--space-4) var(--space-2); }
+.alert-box .alert-icon { font-size: 2.5rem; margin-bottom: var(--space-2); }

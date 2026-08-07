@@ -3,9 +3,9 @@
     $vid        = $product->id ?? '';
     $name       = $product->clean_name ?: ($product->product_name ?? 'Product');
     $price      = $product->price ?? 0;
-    $img        = $product->cover_image ?: ($product->product_image ?? '');
+    $img        = $product->product_image ?? '';
     $colorCount = $product->color_count ?? 1;
-    $link       = route('website.product.details', ['slug' => $slug]);
+    $link       = route('website.product.details', ['slug' => $slug, 'code' => $vid]);
 @endphp
 
 <div class="product-card h-100">

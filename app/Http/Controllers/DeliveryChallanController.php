@@ -97,7 +97,7 @@ class DeliveryChallanController extends Controller
         $product = $product->where('delivery_challan.customer', $request->id);
         $product = $product->whereNull('delivery_challan.delete_status');
         $product=$product->orderBy('delivery_challan.id','desc');
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
 
         $company_name = company::select('company_name')->first();
 
@@ -118,7 +118,7 @@ class DeliveryChallanController extends Controller
             ->where('delivery_challan.id',$request->id)
             ->first();
 
-        $soitem=delivery_challan_item::select('delivery_challan_item.*',"product.item_code",'product.product_name','product.make','product.model','uom.uom_name','product.product_image','product.material_name','category.category_image')
+        $soitem=delivery_challan_item::select('delivery_challan_item.*',"product.item_code",'product.product_name','product.value1','product.value2','product.make','product.model','uom.uom_name','product.product_image','product.material_name','category.category_image')
             ->leftJoin('product','product.id','delivery_challan_item.product')
             ->leftJoin('category','category.id','product.category')
             ->leftJoin("uom","uom.id","product.uom")
@@ -127,7 +127,7 @@ class DeliveryChallanController extends Controller
         $state = state::where('state_name', $so->billing_state)->first();
         //dd($soitem);
 
-        $discsum=delivery_challan_item::select('delivery_challan_item.*','product.product_name','product.make','product.model')
+        $discsum=delivery_challan_item::select('delivery_challan_item.*','product.product_name', 'product.value1', 'product.value2','product.make','product.model')
             ->leftJoin('product','product.id','delivery_challan_item.product')
             ->where('delivery_challan_item.invoice_no',$so->challan_number)
             ->sum('delivery_challan_item.discount_amount');
@@ -144,7 +144,6 @@ class DeliveryChallanController extends Controller
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
             ->where('product.status','product')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
@@ -196,10 +195,9 @@ class DeliveryChallanController extends Controller
             ->leftJoin('website_user','website_user.id','delivery_challan_without.user_id')
             ->leftJoin("customers","customers.id","delivery_challan_without.customer")
             ->where('delivery_challan_without.id',$request->id)
-            ->where('delivery_challan_without.website_id',Session::get('website_id'))
             ->first();
 
-        $soitem=delivery_challan_item_without::select('delivery_challan_item_without.*','product.product_name','product.make','product.model','uom.uom_name','product.product_image','product.material_name','category.category_image')
+        $soitem=delivery_challan_item_without::select('delivery_challan_item_without.*','product.product_name', 'product.value1', 'product.value2','product.make','product.model','uom.uom_name','product.product_image','product.material_name','category.category_image')
             ->leftJoin('product','product.id','delivery_challan_item_without.product')
             ->leftJoin('category','category.id','product.category')
             ->leftJoin("uom","uom.id","product.uom")
@@ -208,7 +206,7 @@ class DeliveryChallanController extends Controller
 
         //dd($soitem);
 
-        $discsum=delivery_challan_item_without::select('delivery_challan_item_without.*','product.product_name','product.make','product.model')
+        $discsum=delivery_challan_item_without::select('delivery_challan_item_without.*','product.product_name', 'product.value1', 'product.value2','product.make','product.model')
             ->leftJoin('product','product.id','delivery_challan_item_without.product')
             ->where('delivery_challan_item_without.invoice_no',$so->challan_number)
             ->sum('delivery_challan_item_without.discount_amount');
@@ -217,7 +215,6 @@ class DeliveryChallanController extends Controller
 
         $customer=customers::select("customers.*",'state.state_name')
             ->leftJoin("state","state.id","customers.billing_state")
-            ->where('customers.website_id',Session::get('website_id'))
             ->where('customers.id',$so->customer)
             ->first();
 
@@ -226,7 +223,6 @@ class DeliveryChallanController extends Controller
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
             ->where('product.status','product')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
@@ -234,20 +230,19 @@ class DeliveryChallanController extends Controller
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
             ->where('product.status','service')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $module=terms::where("website_id",Session::get('website_id'))
+        $module=terms::query()
             ->get()
             ->pluck('module','id')
             ->toArray();
 
         $company=company::select("company.*","state.state_name")
             ->leftJoin("state","state.id","company.state")
-            ->where('company.website_id',Session::get('website_id'))->first();
+            ->first();
         $filename=$so->challan_number.'_';
         $filename .=$customer->customer_name;
         $filename .='.pdf';
@@ -280,10 +275,9 @@ class DeliveryChallanController extends Controller
             ->leftJoin('website_user','website_user.id','delivery_challan.user_id')
             ->leftJoin("customers","customers.id","delivery_challan.customer")
             ->where('delivery_challan.id',$request->id)
-            ->where('delivery_challan.website_id',Session::get('website_id'))
             ->first();
 
-        $soitem=delivery_challan_item::select('delivery_challan_item.*',"product.item_code",'product.product_name','product.make','product.model','uom.uom_name','product.product_image','product.material_name','category.category_image')
+        $soitem=delivery_challan_item::select('delivery_challan_item.*',"product.item_code",'product.product_name','product.value1','product.value2','product.make','product.model','uom.uom_name','product.product_image','product.material_name','category.category_image')
             ->leftJoin('product','product.id','delivery_challan_item.product')
             ->leftJoin('category','category.id','product.category')
             ->leftJoin("uom","uom.id","product.uom")
@@ -292,7 +286,7 @@ class DeliveryChallanController extends Controller
 
         //dd($soitem);
 
-        $discsum=delivery_challan_item::select('delivery_challan_item.*','product.product_name','product.make','product.model')
+        $discsum=delivery_challan_item::select('delivery_challan_item.*','product.product_name', 'product.value1', 'product.value2','product.make','product.model')
             ->leftJoin('product','product.id','delivery_challan_item.product')
             ->where('delivery_challan_item.invoice_no',$so->challan_number)
             ->sum('delivery_challan_item.discount_amount');
@@ -301,7 +295,6 @@ class DeliveryChallanController extends Controller
 
         $customer=customers::select("customers.*",'state.state_name')
             ->leftJoin("state","state.id","customers.billing_state")
-            ->where('customers.website_id',Session::get('website_id'))
             ->where('customers.id',$so->customer)
             ->first();
 
@@ -310,7 +303,6 @@ class DeliveryChallanController extends Controller
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
             ->where('product.status','product')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
@@ -318,20 +310,19 @@ class DeliveryChallanController extends Controller
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
             ->where('product.status','service')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $module=terms::where("website_id",Session::get('website_id'))
+        $module=terms::query()
             ->get()
             ->pluck('module','id')
             ->toArray();
 
         $company=company::select("company.*","state.state_name")
             ->leftJoin("state","state.id","company.state")
-            ->where('company.website_id',Session::get('website_id'))->first();
+            ->first();
 
         $filename=$customer->customer_name;
         $filename .=date('ymdhis');
@@ -376,10 +367,9 @@ class DeliveryChallanController extends Controller
             ->leftJoin('website_user','website_user.id','delivery_challan_without.user_id')
             ->leftJoin("customers","customers.id","delivery_challan_without.customer")
             ->where('delivery_challan_without.id',$request->id)
-            ->where('delivery_challan_without.website_id',Session::get('website_id'))
             ->first();
 
-        $soitem=delivery_challan_item_without::select('delivery_challan_item_without.*',"product.item_code",'product.product_name','product.make','product.model','uom.uom_name','product.product_image','product.material_name','category.category_image')
+        $soitem=delivery_challan_item_without::select('delivery_challan_item_without.*',"product.item_code",'product.product_name', 'product.value1', 'product.value2','product.make','product.model','uom.uom_name','product.product_image','product.material_name','category.category_image')
             ->leftJoin('product','product.id','delivery_challan_item_without.product')
             ->leftJoin('category','category.id','product.category')
             ->leftJoin("uom","uom.id","product.uom")
@@ -388,7 +378,7 @@ class DeliveryChallanController extends Controller
 
         //dd($soitem);
 
-        $discsum=delivery_challan_item_without::select('delivery_challan_item_without.*','product.product_name','product.make','product.model')
+        $discsum=delivery_challan_item_without::select('delivery_challan_item_without.*','product.product_name', 'product.value1', 'product.value2','product.make','product.model')
             ->leftJoin('product','product.id','delivery_challan_item_without.product')
             ->where('delivery_challan_item_without.invoice_no',$so->challan_number)
             ->sum('delivery_challan_item_without.discount_amount');
@@ -397,7 +387,6 @@ class DeliveryChallanController extends Controller
 
         $customer=customers::select("customers.*",'state.state_name')
             ->leftJoin("state","state.id","customers.billing_state")
-            ->where('customers.website_id',Session::get('website_id'))
             ->where('customers.id',$so->customer)
             ->first();
 
@@ -406,7 +395,6 @@ class DeliveryChallanController extends Controller
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
             ->where('product.status','product')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
@@ -414,20 +402,19 @@ class DeliveryChallanController extends Controller
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
             ->where('product.status','service')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $module=terms::where("website_id",Session::get('website_id'))
+        $module=terms::query()
             ->get()
             ->pluck('module','id')
             ->toArray();
 
         $company=company::select("company.*","state.state_name")
             ->leftJoin("state","state.id","company.state")
-            ->where('company.website_id',Session::get('website_id'))->first();
+            ->first();
 
         $filename=$customer->customer_name;
         $filename .=date('ymdhis');
@@ -468,7 +455,7 @@ class DeliveryChallanController extends Controller
     function invoice_add(Request $request)
     {
         $invoice_no=0;
-        $module=terms::where("website_id",Session::get('website_id'))
+        $module=terms::query()
             ->get()
             ->pluck('module','id')
             ->toArray();
@@ -509,7 +496,7 @@ class DeliveryChallanController extends Controller
 
             $invoice_no=$n2;
             //dd($invoice_no);
-            $quotitem = delivery_challan_item::select('delivery_challan_item.*',"product.product_image",'product.product_name', 'uom.uom_name', 'stock_status.qty as stockqty')
+            $quotitem = delivery_challan_item::select('delivery_challan_item.*',"product.product_image",'product.product_name', 'product.value1', 'product.value2', 'uom.uom_name', 'stock_status.qty as stockqty')
                 ->leftJoin('product', 'product.id', 'delivery_challan_item.product')
                 ->leftJoin("uom", "uom.id", "product.uom")
                 ->leftJoin("stock_status", "stock_status.product", "delivery_challan_item.product")
@@ -529,7 +516,7 @@ class DeliveryChallanController extends Controller
 
             if(empty($quot->contact_name))
             {
-            $contact_name=[''=>'select contact']+contact::where('website_id',Session::get('website_id'))
+            $contact_name=[''=>'select contact']+contact::query()
                     ->where('customer',$quot->customer)
                     ->orderBy('contact_name','asc')
                     ->get()
@@ -538,7 +525,7 @@ class DeliveryChallanController extends Controller
             }else{
             $cname=contact::select('id','contact_name')->where('id',$quot->contact_name)->first();
 
-            $contact_name=[$cname->id=>$cname->contact_name]+contact::where('website_id',Session::get('website_id'))
+            $contact_name=[$cname->id=>$cname->contact_name]+contact::query()
                     ->where('customer',$quot->customer)
                     ->orderBy('contact_name','asc')
                     ->get()
@@ -546,7 +533,7 @@ class DeliveryChallanController extends Controller
                     ->toArray();
             }
 
-            $module=terms::where("website_id",Session::get('website_id'))
+            $module=terms::query()
             ->get()
             ->pluck('module','id')
             ->toArray();
@@ -579,37 +566,16 @@ class DeliveryChallanController extends Controller
         }
 
 
-        $product = product::select('product.*', 'gst.gst_per', 'uom.uom_name',"stock_status.qty as stockqty")
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->leftJoin("stock_status","stock_status.product","product.id")
-            ->where('product.status', 'product')
-            ->where('product.website_id', Session::get('website_id'))
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $service = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'service')
-            ->where('product.website_id', Session::get('website_id'))
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $bom = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.website_id', Session::get('website_id'))
-            ->where('product.status', 'bom')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
+        // Product/service/BOM picking on this page uses the select2 AJAX
+        // search endpoint (product_search_options) now, so the full
+        // product-table dump that used to be passed to the view is gone.
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
 
         $stockstatus = stock_status::get();
 
-        return view("admin.invoice.deliverychallan_invoice")->with(["contact_name"=>$contact_name,'invoice_no'=>$invoice_no,'stockstatus' => $stockstatus, 'duedate' => $duedate, 'payment_terms' => $pterms, 'bom' => $bom, 'data' => $quot, 'quotitem' => $quotitem, 'customer' => $customer, 'product' => $product, 'service' => $service, 'module' => $module, 'salesMan' => $salesMan]);
+        return view("admin.invoice.deliverychallan_invoice")->with(["contact_name"=>$contact_name,'invoice_no'=>$invoice_no,'stockstatus' => $stockstatus, 'duedate' => $duedate, 'payment_terms' => $pterms, 'data' => $quot, 'quotitem' => $quotitem, 'customer' => $customer, 'module' => $module, 'salesMan' => $salesMan]);
 
     }
 
@@ -621,7 +587,7 @@ class DeliveryChallanController extends Controller
             ->where("delivery_challan.id", $request->id)
             ->first();
 
-        $quotitem = delivery_challan_item::select('delivery_challan_item.*',"product.product_image", 'product.product_name', 'uom.uom_name', 'stock_status.qty as stockqty')
+        $quotitem = delivery_challan_item::select('delivery_challan_item.*',"product.product_image", 'product.product_name', 'product.item_code', 'product.value1', 'product.value2', 'uom.uom_name', 'stock_status.qty as stockqty')
             ->leftJoin('product', 'product.id', 'delivery_challan_item.product')
             ->leftJoin("uom", "uom.id", "product.uom")
             ->leftJoin("stock_status", "stock_status.product", "delivery_challan_item.product")
@@ -1103,7 +1069,7 @@ class DeliveryChallanController extends Controller
 
         if(empty($quot->contact_name))
         {
-            $contact_name=[''=>'select contact']+contact::where('website_id',Session::get('website_id'))
+            $contact_name=[''=>'select contact']+contact::query()
                     ->where('customer',$quot->customer)
                     ->orderBy('contact_name','asc')
                     ->get()
@@ -1112,7 +1078,7 @@ class DeliveryChallanController extends Controller
         }else{
             $cname=contact::select('id','contact_name')->where('id',$quot->contact_name)->first();
 
-            $contact_name=[$cname->id=>$cname->contact_name]+contact::where('website_id',Session::get('website_id'))
+            $contact_name=[$cname->id=>$cname->contact_name]+contact::query()
                     ->where('customer',$quot->customer)
                     ->orderBy('contact_name','asc')
                     ->get()
@@ -1120,7 +1086,7 @@ class DeliveryChallanController extends Controller
                     ->toArray();
         }
 
-        $quotitem = delivery_challan_item::select('delivery_challan_item.*', 'product.product_name', 'uom.uom_name', 'stock_status.qty as stockqty')
+        $quotitem = delivery_challan_item::select('delivery_challan_item.*', 'product.product_name', 'product.value1', 'product.value2', 'uom.uom_name', 'stock_status.qty as stockqty')
             ->leftJoin('product', 'product.id', 'delivery_challan_item.product')
             ->leftJoin("uom", "uom.id", "product.uom")
             ->leftJoin("stock_status", "stock_status.product", "delivery_challan_item.product")
@@ -1137,7 +1103,6 @@ class DeliveryChallanController extends Controller
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->leftJoin("stock_status","stock_status.product","product.id")
             ->where('product.status', 'product')
-            ->where('product.website_id', Session::get('website_id'))
             ->orderBy('product.product_name', 'asc')
             ->get();
 
@@ -1145,21 +1110,19 @@ class DeliveryChallanController extends Controller
             ->leftJoin('gst', 'gst.id', 'product.gst')
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->where('product.status', 'service')
-            ->where('product.website_id', Session::get('website_id'))
             ->orderBy('product.product_name', 'asc')
             ->get();
 
         $bom = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
             ->leftJoin('gst', 'gst.id', 'product.gst')
             ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.website_id', Session::get('website_id'))
             ->where('product.status', 'bom')
             ->orderBy('product.product_name', 'asc')
             ->get();
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $term = terms::where("website_id", Session::get('website_id'))
+        $term = terms::query()
             ->get();
 
         $customer_terms = customers::where('id', $quot->customer)
@@ -1192,7 +1155,7 @@ class DeliveryChallanController extends Controller
 
         $stockstatus = stock_status::get();
 
-        $module=[''=>'select terms']+terms::where("website_id",Session::get('website_id'))
+        $module=[''=>'select terms']+terms::query()
             ->get()
             ->pluck('module','id')
             ->toArray();
@@ -1209,7 +1172,7 @@ class DeliveryChallanController extends Controller
 
         if(empty($quot->contact_name))
         {
-            $contact_name=[''=>'select contact']+contact::where('website_id',Session::get('website_id'))
+            $contact_name=[''=>'select contact']+contact::query()
                     ->where('customer',$quot->customer)
                     ->orderBy('contact_name','asc')
                     ->get()
@@ -1218,7 +1181,7 @@ class DeliveryChallanController extends Controller
         }else{
             $cname=contact::select('id','contact_name')->where('id',$quot->contact_name)->first();
 
-            $contact_name=[$cname->id=>$cname->contact_name]+contact::where('website_id',Session::get('website_id'))
+            $contact_name=[$cname->id=>$cname->contact_name]+contact::query()
                     ->where('customer',$quot->customer)
                     ->orderBy('contact_name','asc')
                     ->get()
@@ -1226,7 +1189,7 @@ class DeliveryChallanController extends Controller
                     ->toArray();
         }
 
-        $quotitem = delivery_challan_item::select('delivery_challan_item.*',"product.product_image",'product.product_name', 'uom.uom_name', 'stock_status.qty as stockqty')
+        $quotitem = delivery_challan_item::select('delivery_challan_item.*',"product.product_image",'product.product_name', 'product.item_code', 'product.value1', 'product.value2', 'uom.uom_name', 'stock_status.qty as stockqty')
             ->leftJoin('product', 'product.id', 'delivery_challan_item.product')
             ->leftJoin("uom", "uom.id", "product.uom")
             ->leftJoin("stock_status", "stock_status.product", "delivery_challan_item.product")
@@ -1238,34 +1201,13 @@ class DeliveryChallanController extends Controller
             ->toArray();
 
 
-        $product = product::select('product.*', 'gst.gst_per', 'uom.uom_name','stock_status.qty as stockqty')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->leftJoin("stock_status","stock_status.product","product.id")
-            ->where('product.status', 'product')
-            ->where('product.website_id', Session::get('website_id'))
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $service = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'service')
-            ->where('product.website_id', Session::get('website_id'))
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $bom = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.website_id', Session::get('website_id'))
-            ->where('product.status', 'bom')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
+        // Product/service/BOM picking on this page uses the select2 AJAX
+        // search endpoint (product_search_options) now, so the full
+        // product-table dump that used to be passed to the view is gone.
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $term = terms::where("website_id", Session::get('website_id'))
+        $term = terms::query()
             ->get();
 
         $customer_terms = customers::where('id', $quot->customer)
@@ -1298,13 +1240,13 @@ class DeliveryChallanController extends Controller
 
         $stockstatus = stock_status::get();
 
-        $module=[''=>'select terms']+terms::where("website_id",Session::get('website_id'))
+        $module=[''=>'select terms']+terms::query()
             ->get()
             ->pluck('module','id')
             ->toArray();
 
         return view("admin.challan.deliverychallanedit")
-            ->with(['contact_name'=>$contact_name,'module'=>$module,'stockstatus' => $stockstatus, 'duedate' => $duedate, 'payment_terms' => $pterms, 'bom' => $bom, 'data' => $quot, 'quotitem' => $quotitem, 'customer' => $customer, 'product' => $product, 'service' => $service, 'term' => $term]);
+            ->with(['contact_name'=>$contact_name,'module'=>$module,'stockstatus' => $stockstatus, 'duedate' => $duedate, 'payment_terms' => $pterms, 'data' => $quot, 'quotitem' => $quotitem, 'customer' => $customer, 'term' => $term]);
 
     }
 
@@ -1315,7 +1257,7 @@ class DeliveryChallanController extends Controller
 
         if(empty($quot->contact_name))
         {
-            $contact_name=[''=>'select contact']+contact::where('website_id',Session::get('website_id'))
+            $contact_name=[''=>'select contact']+contact::query()
                     ->where('customer',$quot->customer)
                     ->orderBy('contact_name','asc')
                     ->get()
@@ -1324,7 +1266,7 @@ class DeliveryChallanController extends Controller
         }else{
             $cname=contact::select('id','contact_name')->where('id',$quot->contact_name)->first();
 
-            $contact_name=[$cname->id=>$cname->contact_name]+contact::where('website_id',Session::get('website_id'))
+            $contact_name=[$cname->id=>$cname->contact_name]+contact::query()
                     ->where('customer',$quot->customer)
                     ->orderBy('contact_name','asc')
                     ->get()
@@ -1332,7 +1274,7 @@ class DeliveryChallanController extends Controller
                     ->toArray();
         }
 
-        $quotitem = delivery_challan_item_without::select('delivery_challan_item_without.*', 'product.product_name', 'uom.uom_name', 'stock_status.qty as stockqty')
+        $quotitem = delivery_challan_item_without::select('delivery_challan_item_without.*', 'product.product_name', 'product.value1', 'product.value2', 'uom.uom_name', 'stock_status.qty as stockqty')
             ->leftJoin('product', 'product.id', 'delivery_challan_item_without.product')
             ->leftJoin("uom", "uom.id", "product.uom")
             ->leftJoin("stock_status", "stock_status.product", "delivery_challan_item_without.product")
@@ -1349,7 +1291,6 @@ class DeliveryChallanController extends Controller
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->leftJoin("stock_status","stock_status.product","product.id")
             ->where('product.status', 'product')
-            ->where('product.website_id', Session::get('website_id'))
             ->orderBy('product.product_name', 'asc')
             ->get();
 
@@ -1357,21 +1298,19 @@ class DeliveryChallanController extends Controller
             ->leftJoin('gst', 'gst.id', 'product.gst')
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->where('product.status', 'service')
-            ->where('product.website_id', Session::get('website_id'))
             ->orderBy('product.product_name', 'asc')
             ->get();
 
         $bom = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
             ->leftJoin('gst', 'gst.id', 'product.gst')
             ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.website_id', Session::get('website_id'))
             ->where('product.status', 'bom')
             ->orderBy('product.product_name', 'asc')
             ->get();
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $term = terms::where("website_id", Session::get('website_id'))
+        $term = terms::query()
             ->get();
 
         $customer_terms = customers::where('id', $quot->customer)
@@ -1404,7 +1343,7 @@ class DeliveryChallanController extends Controller
 
         $stockstatus = stock_status::get();
 
-        $module=[''=>'select terms']+terms::where("website_id",Session::get('website_id'))
+        $module=[''=>'select terms']+terms::query()
             ->get()
             ->pluck('module','id')
             ->toArray();
@@ -1463,7 +1402,7 @@ class DeliveryChallanController extends Controller
         //$product = $product->where('delivery_challan.finacial_year', Session::get('finacial_year_id'));
         $product=$product->orderBy('delivery_challan.id','desc');
         $product = $product->whereNull('delivery_challan.delete_status');
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
 
         $company_name = company::select('company_name')->first();
 
@@ -1524,7 +1463,7 @@ class DeliveryChallanController extends Controller
         $product = $product->where('delivery_challan_without.finacial_year', Session::get('finacial_year_id'));
         $product=$product->orderBy('delivery_challan_without.id','desc');
         $product = $product->whereNull('delivery_challan.delete_status');
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
 
         $company_name = company::select('company_name')->first();
 
@@ -1972,7 +1911,7 @@ class DeliveryChallanController extends Controller
 
             if(empty($quot->contact_name))
             {
-                $contact_name=[''=>'select contact']+contact::where('website_id',Session::get('website_id'))
+                $contact_name=[''=>'select contact']+contact::query()
                         ->orderBy('contact_name','asc')
                         ->where('customer',$quot->customer)
                         ->get()
@@ -1982,7 +1921,7 @@ class DeliveryChallanController extends Controller
 
                 $cname=contact::select('id','contact_name')->where('id',$quot->contact_name)->first();
 
-                $contact_name=[$cname->id=>$cname->contact_name]+contact::where('website_id',Session::get('website_id'))
+                $contact_name=[$cname->id=>$cname->contact_name]+contact::query()
                         ->where('customer',$quot->customer)
                         ->orderBy('contact_name','asc')
                         ->get()
@@ -1991,7 +1930,7 @@ class DeliveryChallanController extends Controller
                 //dd($contact_name);
             }
 
-            $quotitem = salesorder_item::select('salesorder_item.*', 'product.product_name', 'uom.uom_name', 'stock_status.qty as stockqty')
+            $quotitem = salesorder_item::select('salesorder_item.*', 'product.product_name', 'product.value1', 'product.value2', 'uom.uom_name', 'stock_status.qty as stockqty')
                 ->leftJoin('product', 'product.id', 'salesorder_item.product')
                 ->leftJoin("uom", "uom.id", "product.uom")
                 ->leftJoin("stock_status", "stock_status.product", "salesorder_item.product")
@@ -2038,7 +1977,6 @@ class DeliveryChallanController extends Controller
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->leftJoin("stock_status", "stock_status.product", "product.id")
             ->where('product.status', 'product')
-            ->where('product.website_id', Session::get('website_id'))
             ->orderBy('product.product_name', 'asc')
             ->get();
 
@@ -2046,21 +1984,19 @@ class DeliveryChallanController extends Controller
             ->leftJoin('gst', 'gst.id', 'product.gst')
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->where('product.status', 'service')
-            ->where('product.website_id', Session::get('website_id'))
             ->orderBy('product.product_name', 'asc')
             ->get();
 
         $bom = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
             ->leftJoin('gst', 'gst.id', 'product.gst')
             ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.website_id', Session::get('website_id'))
             ->where('product.status', 'bom')
             ->orderBy('product.product_name', 'asc')
             ->get();
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $term = terms::where("website_id", Session::get('website_id'))
+        $term = terms::query()
             ->get();
 
 
@@ -2078,7 +2014,7 @@ class DeliveryChallanController extends Controller
 
         $contact_name=array();
 
-        $module=terms::where("website_id",Session::get('website_id'))
+        $module=terms::query()
             ->get()
             ->pluck('module','id')
             ->toArray();
@@ -2119,7 +2055,7 @@ class DeliveryChallanController extends Controller
 
             if(empty($quot->contact_name))
             {
-                $contact_name=[''=>'select contact']+contact::where('website_id',Session::get('website_id'))
+                $contact_name=[''=>'select contact']+contact::query()
                         ->orderBy('contact_name','asc')
                         ->where('customer',$quot->customer)
                         ->get()
@@ -2129,7 +2065,7 @@ class DeliveryChallanController extends Controller
 
                 $cname=contact::select('id','contact_name')->where('id',$quot->contact_name)->first();
 
-                $contact_name=[$cname->id=>$cname->contact_name]+contact::where('website_id',Session::get('website_id'))
+                $contact_name=[$cname->id=>$cname->contact_name]+contact::query()
                         ->where('customer',$quot->customer)
                         ->orderBy('contact_name','asc')
                         ->get()
@@ -2138,7 +2074,7 @@ class DeliveryChallanController extends Controller
                 //dd($contact_name);
             }
 
-            $quotitem = salesorder_item::select('salesorder_item.*', 'product.product_name', 'uom.uom_name', 'stock_status.qty as stockqty',"product.product_image","product.bar_code")
+            $quotitem = salesorder_item::select('salesorder_item.*', 'product.product_name', 'product.item_code', 'product.value1', 'product.value2', 'uom.uom_name', 'stock_status.qty as stockqty',"product.product_image","product.bar_code")
                 ->leftJoin('product', 'product.id', 'salesorder_item.product')
                 ->leftJoin("uom", "uom.id", "product.uom")
                 ->leftJoin("stock_status", "stock_status.product", "salesorder_item.product")
@@ -2181,40 +2117,19 @@ class DeliveryChallanController extends Controller
             }
 
 
-            $module=terms::where("website_id",Session::get('website_id'))
+            $module=terms::query()
             ->get()
             ->pluck('module','id')
             ->toArray();
         }
 
-        $product = product::select('product.*', 'gst.gst_per', 'uom.uom_name','stock_status.qty as stockqty')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->leftJoin("stock_status", "stock_status.product", "product.id")
-            ->where('product.status', 'product')
-            ->where('product.website_id', Session::get('website_id'))
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $service = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'service')
-            ->where('product.website_id', Session::get('website_id'))
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $bom = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.website_id', Session::get('website_id'))
-            ->where('product.status', 'bom')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
+        // Product/service/BOM picking on this page uses the select2 AJAX
+        // search endpoint (product_search_options) now, so the full
+        // product-table dump that used to be passed to the view is gone.
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $term = terms::where("website_id", Session::get('website_id'))
+        $term = terms::query()
             ->get();
 
 
@@ -2223,7 +2138,7 @@ class DeliveryChallanController extends Controller
 
 
 
-        return view("admin.challan.deliverychallan_new")->with(['contact_name'=>$contact_name,'stockstatus' => $stockstatus, 'duedate' => $duedate, 'payment_terms' => $pterms, 'bom' => $bom, 'data' => $quot, 'quotitem' => $quotitem, 'customer' => $customer, 'product' => $product, 'service' => $service, 'module' => $module, 'term' => $term, 'salesMan' => $salesMan]);
+        return view("admin.challan.deliverychallan_new")->with(['contact_name'=>$contact_name,'stockstatus' => $stockstatus, 'duedate' => $duedate, 'payment_terms' => $pterms, 'data' => $quot, 'quotitem' => $quotitem, 'customer' => $customer, 'module' => $module, 'term' => $term, 'salesMan' => $salesMan]);
 
     }
 }

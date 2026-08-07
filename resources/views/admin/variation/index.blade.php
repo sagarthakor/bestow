@@ -1,4 +1,4 @@
-@extends('admin.layout.table_master')
+@extends('admin.layout.table_master_material')
 
 @section('title', 'List | Variations')
 
@@ -52,8 +52,8 @@
                 <div class="row">
                     @if(session()->has('message'))
                         <div class="col-sm-12">
-                            <div class="alert alert-info" style="background-color: #188ae2 !important">
-                                <strong style="color: #fff">{{session()->get('message')}}</strong>
+                            <div class="alert alert-info">
+                                <strong>{{session()->get('message')}}</strong>
                             </div>
                         </div>
                     @endif
@@ -63,7 +63,7 @@
                             <h4 class="m-t-0 header-title"><b>Variation List</b></h4>
 
 
-                            <table class="table table-striped table-bordered dt-responsive nowrap" cellspacing="0"
+                            <table class="table table-striped table-bordered table-hover dt-responsive nowrap" cellspacing="0"
                                    width="100%">
                                 <thead>
                                 <tr>
@@ -88,10 +88,10 @@
                                         <td style="width: 60%">{{$lst->variation_name}}</td>
                                         <td class="actions" style="width: 10%">
                                             @can('product_update')
-                                                <a href="{{route('admin.variation.edit',['id' => $lst->id] )}}" class="on-default edit-row"><i class="fa fa-pencil"></i></a>
+                                                <a href="{{route('admin.variation.edit',['id' => $lst->id] )}}" class="btn btn-xs btn-primary waves-effect"><i class="fa fa-pencil"></i> Edit</a>
                                             @endcan
                                             @can('product_delete')
-                                                <a href="{{route('admin.variation.delete',['id' => $lst->id])}}" class="on-default remove-row" onclick="return confirm('Are you sure you want to delete this item?');"><i class="fa fa-trash-o"></i></a>
+                                                <a href="{{route('admin.variation.delete',['id' => $lst->id])}}" class="btn btn-xs btn-danger waves-effect" onclick="return confirm('Are you sure you want to delete this item?');"><i class="fa fa-trash-o"></i> Delete</a>
                                             @endcan
                                         </td>
                                     </tr>

@@ -1,4 +1,4 @@
-@extends('admin.layout.table_master')
+@extends('admin.layout.table_master_material')
 
 @section('title', 'List of Vendor')
 
@@ -27,6 +27,11 @@
                                 <li class="active">
                                     Vendor List
                                 </li>
+                                @can('vendor_create')
+                                    <li style="text-align: right;margin-bottom: 5px">
+                                        <a class="btn btn-primary" href="{{route('admin.vendor.add')}}">Add New</a>
+                                    </li>
+                                @endcan
                             </ol>
                             <div class="clearfix"></div>
                         </div>
@@ -34,33 +39,66 @@
                 </div>
                 <!-- end row -->
 
-
-
-
-                <div class="row">
-                    <div class="col-sm-4">
-                    </div>
-                    <div class="col-sm-4">
-                    </div>
-                    @can('vendor_create')
-                        <div class="col-sm-4" style="text-align: right;margin-bottom: 5px">
-                            <a class="btn btn-primary" href="{{route('admin.vendor.add')}}">Add New</a>
-                        </div>
-                    @endcan
-                </div>
                 <div class="row">
                     @if(session()->has('message'))
                         <div class="col-sm-12">
-                            <div class="alert alert-info" style="background-color: #188ae2 !important">
-                                <strong style="color: #fff">{{session()->get('message')}}</strong>
+                            <div class="alert alert-info">
+                                <strong>{{session()->get('message')}}</strong>
                             </div>
                         </div>
                     @endif
                     <form method="get" id="formid">
                         <div class="col-sm-12">
 
+                            <div class="card-box">
+                                <h4 class="m-t-0 header-title">Filter</h4>
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>Vendor Name</label>
+                                            <input type="text" placeholder="Vendor Name" class="form-control" value="<?php if(isset($_GET['vendor_name'])){echo $_GET['vendor_name'];} ?>" name="vendor_name">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>Primary Phone</label>
+                                            <input type="text" placeholder="Primary Phone" class="form-control" name="primary_phone" value="<?php if(isset($_GET['primary_phone'])){echo $_GET['primary_phone'];} ?>">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>Primary Email</label>
+                                            <input type="text" placeholder="Primary Email" class="form-control" name="primary_email" value="<?php if(isset($_GET['primary_email'])){echo $_GET['primary_email'];} ?>">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>Contact Name</label>
+                                            <input type="text" placeholder="Contact Name" class="form-control" name="owner_name" value="<?php if(isset($_GET['owner_name'])){echo $_GET['owner_name'];} ?>">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>Contact Phone</label>
+                                            <input type="text" placeholder="Contact Phone" class="form-control" name="owner_mobile" value="<?php if(isset($_GET['owner_mobile'])){echo $_GET['owner_mobile'];} ?>">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>Contact Email</label>
+                                            <input type="text" placeholder="Contact Email" class="form-control" name="owner_email" value="<?php if(isset($_GET['owner_email'])){echo $_GET['owner_email'];} ?>">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <button class="btn btn-primary waves-effect waves-light"><i class="fa fa-search"></i> Search</button>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="card-box table-responsive">
-                                <table class="table table-striped table-bordered">
+                                <table class="table table-striped table-bordered table-hover">
                                     <thead>
                                     <tr>
                                         <th>Sr.</th>
@@ -70,27 +108,7 @@
                                         <th>Contact Name</th>
                                         <th>Contact Phone</th>
                                         <th>Contact Email</th>
-
-                                    </tr>
-
-                                    <tr>
-                                        <td><button>Search</button></td>
-                                        <td><input type="text" placeholder="Vendor Name" class="listSearchContributor inputElement" value="<?php if(isset($_GET['vendor_name'])){echo $_GET['vendor_name'];} ?>" name="vendor_name"></td>
-                                        <td>
-                                            <input type="text" placeholder="Primary Phone" class="listSearchContributor inputElement" name="primary_phone" value="<?php if(isset($_GET['primary_phone'])){echo $_GET['primary_phone'];} ?>">
-                                        </td>
-                                        <td>
-                                            <input type="text" placeholder="Primary Email" class="listSearchContributor inputElement" name="primary_email" value="<?php if(isset($_GET['primary_email'])){echo $_GET['primary_email'];} ?>">
-                                        </td>
-                                        <td>
-                                            <input type="text" placeholder="Contact Name" class="listSearchContributor inputElement" name="owner_name" value="<?php if(isset($_GET['owner_name'])){echo $_GET['owner_name'];} ?>">
-                                        </td>
-                                        <td>
-                                            <input type="text" placeholder="Contact Phone" class="listSearchContributor inputElement" name="owner_mobile" value="<?php if(isset($_GET['owner_mobile'])){echo $_GET['owner_mobile'];} ?>">
-                                        </td>
-                                        <td>
-                                            <input type="text" placeholder="Contact Email" class="listSearchContributor inputElement" name="owner_email" value="<?php if(isset($_GET['owner_email'])){echo $_GET['owner_email'];} ?>">
-                                        </td>
+                                        <th></th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -122,7 +140,14 @@
                                             <td  style="vertical-align: top;text-align: center;">
                                                 <a href="mailto:{{$data->owner_email}}">{{$data->owner_email}}</a></td>
 
-                                            <!-- <td  style="vertical-align: top;"></td> -->
+                                            <td class="actions" style="vertical-align: top;white-space: nowrap;">
+                                                @can('vendor_update')
+                                                    <a href="{{route('admin.vendor.edit',['id' => $data->id])}}" class="btn btn-xs btn-primary waves-effect"><i class="fa fa-pencil"></i> Edit</a>
+                                                @endcan
+                                                @can('vendor_delete')
+                                                    <a href="{{route('admin.vendor.delete',['id' => $data->id])}}" class="btn btn-xs btn-danger waves-effect" onclick="return confirm('Are you sure you want to delete this item?');"><i class="fa fa-trash-o"></i> Delete</a>
+                                                @endcan
+                                            </td>
 
                                         </tr>
                                     @endforeach

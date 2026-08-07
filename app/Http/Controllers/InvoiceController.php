@@ -75,7 +75,7 @@ class InvoiceController extends Controller
         //echo print_r($request->all());
         $product = $product->where('invoice.customer', $request->id);
         $product = $product->orderBy('invoice.id', 'desc');
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
 
         $company_name = company::select('company_name')->first();
 
@@ -104,7 +104,7 @@ class InvoiceController extends Controller
 
         $contact = contact::find($so->contact_name);
         //dd($contact);
-        $soitem = invoice_item::select('invoice_item.*', 'product.product_name', 'product.make', 'product.model', 'uom.uom_name', 'product.product_image', 'product.material_name', 'category.category_image', 'product.hsn')
+        $soitem = invoice_item::select('invoice_item.*', 'product.product_name', 'product.item_code', 'product.value1', 'product.value2', 'product.make', 'product.model', 'uom.uom_name', 'product.product_image', 'product.material_name', 'category.category_image', 'product.hsn')
             ->leftJoin('product', 'product.id', 'invoice_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->leftJoin("uom", "uom.id", "product.uom")
@@ -113,7 +113,7 @@ class InvoiceController extends Controller
 
         //dd($soitem);
 
-        $discsum = invoice_item::select('invoice_item.*', 'product.product_name', 'product.make', 'product.model')
+        $discsum = invoice_item::select('invoice_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model')
             ->leftJoin('product', 'product.id', 'invoice_item.product')
             ->where('invoice_item.invoice_no', $so->invoice_number)
             ->sum('invoice_item.discount_amount');
@@ -163,7 +163,7 @@ class InvoiceController extends Controller
 
         $contact = contact::find($so->contact_name);
         //dd($contact);
-        $soitem = invoice_item::select('invoice_item.*', 'product.product_name', 'product.make', 'product.model', 'uom.uom_name', 'product.product_image', 'product.material_name', 'category.category_image', 'product.hsn')
+        $soitem = invoice_item::select('invoice_item.*', 'product.product_name', 'product.item_code', 'product.value1', 'product.value2', 'product.make', 'product.model', 'uom.uom_name', 'product.product_image', 'product.material_name', 'category.category_image', 'product.hsn')
             ->leftJoin('product', 'product.id', 'invoice_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->leftJoin("uom", "uom.id", "product.uom")
@@ -172,7 +172,7 @@ class InvoiceController extends Controller
 
         //dd($soitem);
 
-        $discsum = invoice_item::select('invoice_item.*', 'product.product_name', "product.product_image", 'product.make', 'product.model')
+        $discsum = invoice_item::select('invoice_item.*', 'product.product_name', 'product.value1', 'product.value2', "product.product_image", 'product.make', 'product.model')
             ->leftJoin('product', 'product.id', 'invoice_item.product')
             ->where('invoice_item.invoice_no', $so->invoice_number)
             ->sum('invoice_item.discount_amount');
@@ -188,7 +188,6 @@ class InvoiceController extends Controller
             ->leftJoin('gst', 'gst.id', 'product.gst')
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->where('product.status', 'product')
-            ->where('product.website_id', Session::get('website_id'))
             ->orderBy('product.product_name', 'asc')
             ->get();
 
@@ -196,7 +195,6 @@ class InvoiceController extends Controller
             ->leftJoin('gst', 'gst.id', 'product.gst')
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->where('product.status', 'service')
-            ->where('product.website_id', Session::get('website_id'))
             ->orderBy('product.product_name', 'asc')
             ->get();
 
@@ -208,7 +206,7 @@ class InvoiceController extends Controller
 
         $company = company::select("company.*", "state.state_name")
             ->leftJoin("state", "state.id", "company.state")
-            ->where('company.website_id', Session::get('website_id'))->first();
+            ->first();
 
         $filename = date("ymdhis") . '_' . $so->invoice_number . '_';
         $filename .= $customer->customer_name;
@@ -250,7 +248,7 @@ class InvoiceController extends Controller
             ->where("invoice.id", $request->id)
             ->first();
 
-        $quotitem = invoice_item::select('invoice_item.*', 'product.product_name', 'uom.uom_name', 'stock_status.qty as stockqty')
+        $quotitem = invoice_item::select('invoice_item.*', 'product.product_name', 'product.item_code', 'product.value1', 'product.value2', 'uom.uom_name', 'stock_status.qty as stockqty')
             ->leftJoin('product', 'product.id', 'invoice_item.product')
             ->leftJoin("uom", "uom.id", "product.uom")
             ->leftJoin("stock_status", "stock_status.product", "invoice_item.product")
@@ -392,7 +390,7 @@ class InvoiceController extends Controller
             ->first();
 
         if (empty($quot->contact_name)) {
-            $contact_name = ['' => 'select contact'] + contact::where('website_id', Session::get('website_id'))
+            $contact_name = ['' => 'select contact'] + contact::query()
                     ->where('customer', $quot->customer)
                     ->orderBy('contact_name', 'asc')
                     ->get()
@@ -401,7 +399,7 @@ class InvoiceController extends Controller
         } else {
             $cname = contact::select('id', 'contact_name')->where('id', $quot->contact_name)->first();
 
-            $contact_name = [$cname->id => $cname->contact_name] + contact::where('website_id', Session::get('website_id'))
+            $contact_name = [$cname->id => $cname->contact_name] + contact::query()
                     ->where('customer', $quot->customer)
                     ->orderBy('contact_name', 'asc')
                     ->get()
@@ -409,7 +407,7 @@ class InvoiceController extends Controller
                     ->toArray();
         }
 
-        $quotitem = invoice_item::select('invoice_item.*', 'product.product_name', "product.product_image", 'uom.uom_name', 'stock_status.qty as stockqty', "product.bar_code")
+        $quotitem = invoice_item::select('invoice_item.*', 'product.product_name', 'product.item_code', 'product.value1', 'product.value2', "product.product_image", 'uom.uom_name', 'stock_status.qty as stockqty', "product.bar_code")
             ->leftJoin('product', 'product.id', 'invoice_item.product')
             ->leftJoin("uom", "uom.id", "product.uom")
             ->leftJoin("stock_status", "stock_status.product", "invoice_item.product")
@@ -421,29 +419,9 @@ class InvoiceController extends Controller
             ->toArray();
 
 
-        $product = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'product')
-            ->where('product.website_id', Session::get('website_id'))
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $service = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'service')
-            ->where('product.website_id', Session::get('website_id'))
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $bom = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.website_id', Session::get('website_id'))
-            ->where('product.status', 'bom')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
+        // Product/service/BOM picking on this page uses the select2 AJAX
+        // search endpoint (product_search_options) now, so the full
+        // product-table dump that used to be passed to the view is gone.
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
@@ -478,13 +456,13 @@ class InvoiceController extends Controller
 
         $stockstatus = stock_status::get();
 
-        $module = ['' => 'select terms'] + terms::where("website_id", Session::get('website_id'))
+        $module = ['' => 'select terms'] + terms::query()
                 ->get()
                 ->pluck('module', 'id')
                 ->toArray();
 
         return view("admin.invoice.edit")
-            ->with(['contact_name' => $contact_name, 'module' => $module, 'stockstatus' => $stockstatus, 'duedate' => $duedate, 'payment_terms' => $pterms, 'bom' => $bom, 'data' => $quot, 'quotitem' => $quotitem, 'customer' => $customer, 'product' => $product, 'service' => $service, 'term' => $term]);
+            ->with(['contact_name' => $contact_name, 'module' => $module, 'stockstatus' => $stockstatus, 'duedate' => $duedate, 'payment_terms' => $pterms, 'data' => $quot, 'quotitem' => $quotitem, 'customer' => $customer, 'term' => $term]);
 
     }
 
@@ -536,7 +514,7 @@ class InvoiceController extends Controller
         //echo print_r($request->all());
 
         $product = $product->orderBy('invoice.id', 'desc');
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
 
         $company_name = company::select('company_name')->first();
 
@@ -557,12 +535,11 @@ class InvoiceController extends Controller
             ->leftJoin("stock_status", "stock_status.product", "product.id")
             ->orderBy('product_name', 'asc')
             ->where('product.id', $request->product)
-            ->where('product.website_id', Session::get('website_id'))
             ->first();
 
         $stockqty = $data->stockqty ?? 0;
 
-        $sub_product = bom_sub_product::select('product.product_name', "stock_status.qty")
+        $sub_product = bom_sub_product::select('product.product_name', 'product.value1', 'product.value2', "stock_status.qty")
             ->leftJoin('product', 'product.id', 'bom_sub_product.product')
             ->leftJoin("stock_status", "stock_status.product", "product.id")
             ->where('bom_sub_product.bom_id', $data->id)
@@ -635,10 +612,9 @@ class InvoiceController extends Controller
             ->leftJoin("stock_status", "stock_status.product", "product.id")
             ->orderBy('product_name', 'asc')
             ->where('product.id', $request->product)
-            ->where('product.website_id', Session::get('website_id'))
             ->first();
         $stockqty = $data->stockqty ?? 0;
-        $sub_product = bom_sub_product::select('product.product_name', "stock_status.qty")
+        $sub_product = bom_sub_product::select('product.product_name', 'product.value1', 'product.value2', "stock_status.qty")
             ->leftJoin('product', 'product.id', 'bom_sub_product.product')
             ->leftJoin("stock_status", "stock_status.product", "product.id")
             ->where('bom_sub_product.bom_id', $data->id)
@@ -900,7 +876,7 @@ class InvoiceController extends Controller
                 ->first();
 
             if (empty($quot->contact_name)) {
-                $contact_name = ['' => 'select contact'] + contact::where('website_id', Session::get('website_id'))
+                $contact_name = ['' => 'select contact'] + contact::query()
                         ->orderBy('contact_name', 'asc')
                         ->where('customer', $quot->customer)
                         ->get()
@@ -910,7 +886,7 @@ class InvoiceController extends Controller
 
                 $cname = contact::select('id', 'contact_name')->where('id', $quot->contact_name)->first();
 
-                $contact_name = [$cname->id => $cname->contact_name] + contact::where('website_id', Session::get('website_id'))
+                $contact_name = [$cname->id => $cname->contact_name] + contact::query()
                         ->where('customer', $quot->customer)
                         ->orderBy('contact_name', 'asc')
                         ->get()
@@ -919,7 +895,7 @@ class InvoiceController extends Controller
                 //dd($contact_name);
             }
 
-            $quotitem = salesorder_item::select('salesorder_item.*', 'product.product_name', 'uom.uom_name', 'stock_status.qty as stockqty', "product.bar_code")
+            $quotitem = salesorder_item::select('salesorder_item.*', 'product.product_name', 'product.item_code', 'product.value1', 'product.value2', 'uom.uom_name', 'stock_status.qty as stockqty', "product.bar_code")
                 ->leftJoin('product', 'product.id', 'salesorder_item.product')
                 ->leftJoin("uom", "uom.id", "product.uom")
                 ->leftJoin("stock_status", "stock_status.product", "salesorder_item.product")
@@ -962,29 +938,9 @@ class InvoiceController extends Controller
         }
 
 
-        $product = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'product')
-            ->where('product.website_id', Session::get('website_id'))
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $service = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'service')
-            ->where('product.website_id', Session::get('website_id'))
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $bom = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.website_id', Session::get('website_id'))
-            ->where('product.status', 'bom')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
+        // Product/service/BOM picking on this page uses the select2 AJAX
+        // search endpoint (product_search_options) now, so the full
+        // product-table dump that used to be passed to the view is gone.
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
@@ -992,7 +948,7 @@ class InvoiceController extends Controller
 
         $stockstatus = stock_status::get();
 
-        return view("admin.invoice.create")->with(['contact_name' => $contact_name, 'stockstatus' => $stockstatus, 'duedate' => $duedate, 'payment_terms' => $pterms, 'bom' => $bom, 'data' => $quot, 'quotitem' => $quotitem, 'customer' => $customer, 'product' => $product, 'service' => $service, 'term' => $term, 'salesMan' => $salesMan]);
+        return view("admin.invoice.create")->with(['contact_name' => $contact_name, 'stockstatus' => $stockstatus, 'duedate' => $duedate, 'payment_terms' => $pterms, 'data' => $quot, 'quotitem' => $quotitem, 'customer' => $customer, 'term' => $term, 'salesMan' => $salesMan]);
 
     }
 

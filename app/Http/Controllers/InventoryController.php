@@ -18,7 +18,7 @@ class InventoryController extends Controller
         $product=$product->leftJoin('category','category.id','product.category');
         $product=$product->leftJoin('material','material.id','product.material');
         $product=$product->where('product.status','product');
-        $product=$product->where('product.website_id',Session::get('website_id'));
+        $product=$product;
 
 
         if(isset($request->product_name))
@@ -55,7 +55,7 @@ class InventoryController extends Controller
 
         }
         $product=$product->orderBy("id","desc");
-        $product=$product->paginate(10);
+        $product=$product->paginate(session('records_per_page', 30));
 
 
         // dd($product);

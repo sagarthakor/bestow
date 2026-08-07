@@ -1182,38 +1182,40 @@ class MasterController extends Controller
 
             Session::put('software_title',$wensite_detail->software_title);
 
+            $company_settings = \App\company::first();
+            Session::put('records_per_page', $company_settings->records_per_page ?? 30);
 
-            $totcustomer=customers::where('website_id',Session::get('website_id'))->count();
 
-            $totquotation=quotation::where('website_id',Session::get('website_id'))
+            $totcustomer=customers::query()->count();
+
+            $totquotation=quotation::query()
                 ->where("finacial_year",Session::get('finacial_year_id'))
                 ->count();
 
-            $totsales=salesorder::where('website_id',Session::get('website_id'))
+            $totsales=salesorder::query()
                 ->where("finacial_year",Session::get('finacial_year_id'))
                 ->count();
 
-            $totpurchase=purchase::where('website_id',Session::get('website_id'))
+            $totpurchase=purchase::query()
                 ->where("finacial_year",Session::get('finacial_year_id'))
                 ->count();
 
-            $totdelivery=delivery_challan::where('website_id',Session::get('website_id'))
+            $totdelivery=delivery_challan::query()
                 ->where("finacial_year",Session::get('finacial_year_id'))
                 ->count();
 
-            $totinvoice=invoice::where('website_id',Session::get('website_id'))
+            $totinvoice=invoice::query()
                 ->where("finacial_year",Session::get('finacial_year_id'))
                 ->count();
 
-            $totproduct=product::where('website_id',Session::get('website_id'))->count();
+            $totproduct=product::query()->count();
 
-            $service_renewal=service_renewal::select('service_renewal.*','customers.customer_name','uom.uom_name','category.category_name','product.product_name')
+            $service_renewal=service_renewal::select('service_renewal.*','customers.customer_name','uom.uom_name','category.category_name','product.product_name', 'product.value1', 'product.value2')
                 ->leftJoin('customers','customers.id','service_renewal.customer')
                 ->leftJoin('uom','uom.id','service_renewal.usage_unit')
                 ->leftJoin('category','category.id','service_renewal.category')
                 ->leftJoin('product','product.id','service_renewal.service')
                 ->orderBy('service_renewal.support_expiry_date','desc')
-                ->where('service_renewal.website_id',Session::get('website_id'))
                 ->get();
 
 
@@ -1225,7 +1227,7 @@ class MasterController extends Controller
 
             $product=$product->select('quotation.*','customers.customer_name','customers.primary_email','customers.secondary_email');
             $product=$product->leftJoin('customers','customers.id','quotation.customer');
-            $product=$product->where('quotation.website_id',Session::get('website_id'));
+            $product=$product;
             $product=$product->whereBetween('quotation.quot_date', [$start, $end]);
             $product=$product->orderBy('id','desc');
             $product=$product->where("quotation.finacial_year",$request->finacial_year);

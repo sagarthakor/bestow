@@ -213,7 +213,7 @@ class OrderController extends Controller
     {
         $orderlist=customer_order::find($request->id);
 
-        $quotitem=customer_order_item::select('customer_order_item.*','uom.uom_name','product.product_name','product.product_image',"product.item_code","stock_status.qty as stockqty","product.price as pprice")
+        $quotitem=customer_order_item::select('customer_order_item.*','uom.uom_name','product.product_name', 'product.value1', 'product.value2','product.product_image',"product.item_code","stock_status.qty as stockqty","product.price as pprice")
             ->leftJoin('product','product.id','customer_order_item.product')
             ->leftJoin('uom','uom.id','product.uom')
             ->leftJoin("stock_status","stock_status.product","product.id")
@@ -230,7 +230,7 @@ class OrderController extends Controller
 
         if(empty($orderlist->contact_name))
         {
-            $contact_name=contact::where('website_id',Session::get('website_id'))
+            $contact_name=contact::query()
                     ->where('customer',$orderlist->customer)
                     ->orderBy('contact_name','asc')
                     ->get()
@@ -239,7 +239,7 @@ class OrderController extends Controller
         }else{
             $cname=contact::select('id','contact_name')->where('id',$orderlist->contact_name)->first();
 
-            $contact_name=[$cname->id=>$cname->contact_name]+contact::where('website_id',Session::get('website_id'))
+            $contact_name=[$cname->id=>$cname->contact_name]+contact::query()
                     ->where('customer',$orderlist->customer)
                     ->orderBy('contact_name','asc')
                     ->get()
@@ -252,7 +252,6 @@ class OrderController extends Controller
             ->leftJoin('uom','uom.id','product.uom')
             ->leftJoin("stock_status","stock_status.product","product.id")
             ->where('product.status','product')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
@@ -260,21 +259,19 @@ class OrderController extends Controller
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
             ->where('product.status','service')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
         $bom=product::select('product.*','gst.gst_per','uom.uom_name')
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
-            ->where('product.website_id',Session::get('website_id'))
             ->where('product.status','bom')
             ->orderBy('product.product_name','asc')
             ->get();
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $term=terms::where("website_id",Session::get('website_id'))
+        $term=terms::query()
             ->get();
         $customer_terms = customers::where('id', $orderlist->customer)
             ->first();
@@ -329,7 +326,7 @@ class OrderController extends Controller
 
         $duedate = Date('d-m-Y', strtotime('+ 15 days'));
 
-        $module=[''=>'select terms']+terms::where("website_id",Session::get('website_id'))
+        $module=[''=>'select terms']+terms::query()
                 ->get()
                 ->pluck('module','id')
                 ->toArray();
@@ -398,7 +395,7 @@ class OrderController extends Controller
     {
         $orderlist=customer_order::find($request->id);
 
-        $quotitem=customer_order_item::select('customer_order_item.*','product.product_name')
+        $quotitem=customer_order_item::select('customer_order_item.*','product.product_name', 'product.value1', 'product.value2')
             ->leftJoin('product','product.id','customer_order_item.product')
             ->where('customer_order_item.order_no',$orderlist->order_number)
             ->get();
@@ -415,7 +412,6 @@ class OrderController extends Controller
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
             ->where('product.status','product')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
@@ -423,21 +419,19 @@ class OrderController extends Controller
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
             ->where('product.status','service')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
         $bom=product::select('product.*','gst.gst_per','uom.uom_name')
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
-            ->where('product.website_id',Session::get('website_id'))
             ->where('product.status','bom')
             ->orderBy('product.product_name','asc')
             ->get();
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $term=terms::where("website_id",Session::get('website_id'))
+        $term=terms::query()
             ->get();
         $customer_terms = customers::where('id', $orderlist->customer)
             ->first();
@@ -492,7 +486,7 @@ class OrderController extends Controller
 
         $duedate = Date('d-m-Y', strtotime('+ 15 days'));
 
-        $module=[''=>'select terms']+terms::where("website_id",Session::get('website_id'))
+        $module=[''=>'select terms']+terms::query()
                 ->get()
                 ->pluck('module','id')
                 ->toArray();
@@ -517,7 +511,7 @@ class OrderController extends Controller
             $orderlist=$orderlist->where("customer_name","like",'%'.$request->client_name.'%');
         }
         $orderlist=$orderlist->orderBy("id","desc");
-        $orderlist=$orderlist->paginate(10);
+        $orderlist=$orderlist->paginate(session('records_per_page', 30));
         $company_name=company::select('company_name')->first();
         return view("admin.order.list")->with(['list'=>$orderlist,'company'=>$company_name->company_name]);
     }

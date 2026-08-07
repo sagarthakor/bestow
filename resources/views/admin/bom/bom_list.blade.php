@@ -98,7 +98,7 @@
                                    <td style="width: 10%"> {{($bom->currentPage() - 1) * $bom->perPage() + $loop->iteration}}</td>
 
                                    <td style="text-align: left;">
-                                       <a href="{{url('client/bom/preview/'.$list->id)}}">{{$list->product_name}}
+                                       <a href="{{url('client/bom/preview/'.$list->id)}}"><x-product-name :row="$list" />
                                        </a></td>
                                    <td style="text-align: center;width: 10%">{{$list->price}}</td>
 

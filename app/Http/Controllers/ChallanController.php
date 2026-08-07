@@ -147,10 +147,10 @@ class ChallanController extends Controller
         $sales_order=[$data->sales_order ?? ''=>$data->sales_order ?? ''];
         $quotation=[$data->quotation ?? '' =>$data->quotation ?? ''];
         $contact_name=[$contact->id ?? '' =>$contact->contact_name ?? ''];
-        $terms=[''=>'select terms']+terms::where("website_id",Session::get('website_id'))
+        $terms=[''=>'select terms']+terms::query()
                 ->get()->pluck('module','id')->toArray();
 
-        $challan_item=delivery_challan_item::select("delivery_challan_item.*",'product.product_name')
+        $challan_item=delivery_challan_item::select("delivery_challan_item.*",'product.product_name', 'product.value1', 'product.value2')
             ->leftJoin('product','product.id','delivery_challan_item.product')
             ->where('delivery_challan_item.challan_no',$data->challan_number)
             ->get();
@@ -211,7 +211,7 @@ class ChallanController extends Controller
                     $str .= "</tr>";
                 }
             }else{
-                $bomproduct=bom_sub_product::select('bom_sub_product.*','product.product_name','material.material_name','product.outer_diameter','product.inner_diameter','product.thikness')
+                $bomproduct=bom_sub_product::select('bom_sub_product.*','product.product_name', 'product.value1', 'product.value2','material.material_name','product.outer_diameter','product.inner_diameter','product.thikness')
                     ->leftJoin('product','product.id','bom_sub_product.product')
                     ->leftJoin('material','material.id','product.material')
                     ->where('bom_sub_product.bom_id',$prod->id)
@@ -261,7 +261,7 @@ class ChallanController extends Controller
         }
 
 
-        $soitem=salesorder_item::select('salesorder_item.*','product.product_name','material.material_name','product.outer_diameter','product.inner_diameter','product.thikness')
+        $soitem=salesorder_item::select('salesorder_item.*','product.product_name', 'product.value1', 'product.value2','material.material_name','product.outer_diameter','product.inner_diameter','product.thikness')
             ->leftJoin('product','product.id','salesorder_item.product')
             ->leftJoin('material','material.id','product.material')
             ->where('salesorder_item.sono',$data->sales_order)
@@ -312,7 +312,7 @@ class ChallanController extends Controller
                     $str .= "</tr>";
                 }
             }else{
-                $bomproduct=bom_sub_product::select('bom_sub_product.*','product.product_name','material.material_name','product.outer_diameter','product.inner_diameter','product.thikness')
+                $bomproduct=bom_sub_product::select('bom_sub_product.*','product.product_name', 'product.value1', 'product.value2','material.material_name','product.outer_diameter','product.inner_diameter','product.thikness')
                     ->leftJoin('product','product.id','bom_sub_product.product')
                     ->leftJoin('material','material.id','product.material')
                     ->where('bom_sub_product.bom_id',$prod->id)
@@ -373,7 +373,7 @@ class ChallanController extends Controller
         $challan=$challan->select('delivery_challan.*','customers.customer_name');
         $challan=$challan->leftJoin('customers','customers.id','delivery_challan.customer');
         $challan=$challan->orderBy('id','desc');
-        $challan=$challan->paginate(10);
+        $challan=$challan->paginate(session('records_per_page', 30));
 
         return view("admin/challan/challan_list",compact('challan'));
     }
@@ -382,7 +382,7 @@ class ChallanController extends Controller
         date_default_timezone_set('Asia/Kolkata');
         //dd($request->all());
 
-        $qno=delivery_challan::where('website_id',Session::get('website_id'))
+        $qno=delivery_challan::query()
             ->max('challan_no');
 
         if(empty($qno))
@@ -499,7 +499,7 @@ class ChallanController extends Controller
                 ->pluck('customer_name','id')
                 ->toArray();
 
-        $terms=[''=>'select terms']+terms::where("website_id",Session::get('website_id'))
+        $terms=[''=>'select terms']+terms::query()
                 ->get()->pluck('module','id')->toArray();
 
         return view("admin/challan/challan_add",compact('customer','terms'));

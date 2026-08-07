@@ -1,0 +1,77 @@
+/* ==========================================================================
+   TABLES (v2) — DataTables (Bootstrap 5 skin) retheme + filter bar +
+   sticky header + export toolbar, on top of components.css .table styles.
+   ========================================================================== */
+
+/* ---- Filter bar (search/filters row above a table-v2 card) ---------------*/
+.table-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-bg-subtle);
+}
+.table-toolbar .form-label { margin-bottom: var(--space-1); }
+.table-toolbar-field { min-width: 180px; flex: 1 1 180px; }
+.table-toolbar-actions { display: flex; gap: var(--space-2); align-items: flex-end; margin-left: auto; }
+
+/* ---- DataTables <-> Bootstrap 5 skin remap onto tokens -------------------*/
+div.dt-container .dt-search input,
+div.dataTables_wrapper .dataTables_filter input {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: .4rem .75rem;
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+div.dataTables_wrapper .dataTables_length select {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+div.dataTables_wrapper .dataTables_info,
+div.dataTables_wrapper .dataTables_length,
+div.dataTables_wrapper .dataTables_filter label {
+  color: var(--color-text-secondary);
+  font-size: var(--fs-sm);
+}
+div.dataTables_wrapper .dataTables_paginate .page-link {
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  margin: 0 2px;
+}
+div.dataTables_wrapper .dataTables_paginate .page-item.active .page-link {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+/* Buttons extension (export toolbar) — reskin onto our .btn system */
+.dt-buttons .dt-button, .dt-button {
+  font-size: var(--fs-sm) !important;
+  font-weight: var(--fw-medium);
+  border: 1px solid var(--color-border-strong) !important;
+  background: var(--color-bg-surface) !important;
+  color: var(--color-text-primary) !important;
+  border-radius: var(--radius-md) !important;
+  padding: .4rem .85rem !important;
+  margin-right: var(--space-2);
+}
+.dt-buttons .dt-button:hover, .dt-button:hover {
+  background: var(--color-bg-subtle) !important;
+}
+
+/* Sticky header (FixedHeader ext) — keep it visually attached, add a
+   shadow only once it detaches from the top on scroll */
+table.fixedHeader-floating {
+  box-shadow: var(--shadow-md);
+  background: var(--color-bg-surface);
+}
+
+/* Card wrapper used by the reusable <x-v2.table> component */
+.table-card { padding: 0; overflow: hidden; }
+.table-card .card-header { display: flex; justify-content: space-between; align-items: center; }
+.table-card .table-responsive { border: 0; border-radius: 0; }

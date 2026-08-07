@@ -1,4 +1,4 @@
-@extends('admin.layout.master')
+@extends('admin.layout.master_material')
 
 @section('title', 'List | Production Machine')
 
@@ -70,7 +70,7 @@
                                                 <select onchange="getimage(this.value,{{$mlist->id}})" id="finish_product_{{$mlist->id}}" name="finish_product" class="js-example-basic-single form-control">
                                                     <option value="">Select product</option>
                                                     @foreach($product as $prod)
-                                                        <option value="{{$prod->id}}">{{$prod->product_name}}</option>
+                                                        <option value="{{$prod->id}}">{{ \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) }}</option>
                                                     @endforeach
                                                 </select>
                                             </div>

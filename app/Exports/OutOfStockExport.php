@@ -38,7 +38,7 @@ class OutOfStockExport implements FromCollection, WithHeadings, ShouldAutoSize, 
             'Product',
             'Sold Qty',
             'Stock Qty',
-            'Balance',
+            'Need To Purchase Qty',
         ];
     }
 
@@ -51,10 +51,10 @@ class OutOfStockExport implements FromCollection, WithHeadings, ShouldAutoSize, 
             $row->customer,
             $row->category_name ?? '-',
             $row->subcategory_name ?? '-',
-            $row->product,
+            \App\product::nameWithVariantInline($row->product, $row->value1 ?? null, $row->value2 ?? null),
             number_format($row->sold_qty, 2),
             number_format($row->stock_qty, 2),
-            number_format($row->balance, 2),
+            number_format($row->need_to_purchase_qty, 2),
         ];
     }
 }

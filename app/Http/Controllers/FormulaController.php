@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\category;
 use App\country;
 use App\formula_material;
 use App\formula_mst;
 use App\formula_mst_item;
 use App\product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Session;
-use App\raw_material_group;
 
 class FormulaController extends Controller
 {
@@ -27,7 +28,7 @@ class FormulaController extends Controller
     {
         $data=formula_mst::find($request->id);
 
-        $data_item=formula_mst_item::select("formula_mst_item.*","product.product_name","uom.uom_name")
+        $data_item=formula_mst_item::select("formula_mst_item.*","product.product_name","product.value1","product.value2","uom.uom_name")
             ->leftJoin("product","product.id","formula_mst_item.material")
             ->leftJoin("uom","uom.id","product.uom")
             ->orderBy("formula_mst_item.id","asc")
@@ -61,6 +62,9 @@ class FormulaController extends Controller
                 $tot=count($request->material);
                 for ($i=0;$i<$tot;$i++)
                 {
+                    if(empty($request->material[$i])){
+                        continue;
+                    }
                     $item=new formula_mst_item();
                     $item->formula_id=$formula_mst->id;
                     $item->nos=$request->nos;
@@ -93,24 +97,53 @@ class FormulaController extends Controller
     {
         $data=formula_mst::find($request->id);
 
-        $data_item=formula_mst_item::select("formula_mst_item.*","product.product_name","uom.uom_name")
-            ->leftJoin("product","product.id","formula_mst_item.material")
-            ->leftJoin("uom","uom.id","product.uom")
-            ->orderBy("formula_mst_item.id","asc")
-            ->where("formula_mst_item.formula_id",$data->id)
-            ->get();
-        //dd($data_item);
-        $rawmaterial=product::where("status","raw material")
-            ->orderBy("product_name","asc")->get();
+        $existingItems = formula_mst_item::where("formula_id", $data->id)->get()->keyBy('material');
 
-        return view("admin.formula.edit",compact('data','rawmaterial','data_item'));
+        // Fixed raw-material categories (matches ProductionController::getproduct_image,
+        // the same set that used to live on the product form before the redesign).
+        $categories = [
+            "Cotton" => "Cotton",
+            "Spendex" => "Spendex",
+            "Elastics" => "Elastics",
+            "Nylon" => "Nylon",
+            "Polyester" => "Polyester",
+            "P_P_Yarn" => "P.P Yarn",
+        ];
+
+        $categoryRows = [];
+        foreach ($categories as $group => $label) {
+            $materials = DB::table('product')
+                ->leftJoin('uom', 'uom.id', 'product.uom')
+                ->select('product.id', 'product.product_name', 'product.value1', 'product.value2', 'uom.uom_name')
+                ->where('product.raw_material_group', $group)
+                ->orderBy('product.product_name', 'asc')
+                ->get();
+
+            $selected = null;
+            foreach ($materials as $material) {
+                if ($existingItems->has($material->id)) {
+                    $selected = $existingItems->get($material->id);
+                    break;
+                }
+            }
+
+            $categoryRows[] = [
+                'group' => $group,
+                'label' => $label,
+                'materials' => $materials,
+                'selected_material' => $selected->material ?? '',
+                'selected_qty' => $selected->qty ?? '',
+            ];
+        }
+
+        return view("admin.formula.edit",compact('data','categoryRows'));
     }
 
     function formula_list(Request $request)
     {
 
-        $data=formula_mst::with('product_item:id,product_name')
-            ->search($request->search,['product_item.product_name', 'nos', 'size'])->paginate(20);
+        $data=formula_mst::with('product_item:id,product_name,value1,value2')
+            ->search($request->search,['product_item.product_name', 'nos', 'size'])->paginate(session('records_per_page', 30));
 
         return view("admin.formula.list",compact('data'));
     }
@@ -136,14 +169,16 @@ class FormulaController extends Controller
                 $tot=count($request->material);
                 for ($i=0;$i<$tot;$i++)
                 {
+                    if(empty($request->material[$i])){
+                        continue;
+                    }
                     $item=new formula_mst_item();
                     $item->formula_id=$formula_mst->id;
                     $item->nos=$request->nos;
                     $item->size=$request->size;
                     $item->required_qty=$request->required_qty;
                     $item->material=$request->material[$i];
-                    //$item->percentage=$request->percentage[$i];
-                    $item->qty=$request->percentage[$i];
+                    $item->qty=$request->qty[$i];
                     $item->product=$request->product;
                     $item->save();
                 }
@@ -160,14 +195,13 @@ class FormulaController extends Controller
         $rawmaterial=product::where("status","raw material")
             ->orderBy("product_name","asc")->get();
 
-        $product=product::orderBy("product_name","asc")->where("status","product")->get();
-        $formula_material=formula_material::select("formula_material.*","raw_material_group.group_name","raw_material_group.uom")
-            ->leftJoin("raw_material_group","raw_material_group.id","formula_material.raw_mat")
-            ->orderBy('formula_material.id','asc')
+        $socksCategoryId = category::where('category_name', 'Socks')->value('id');
+        $product=product::orderBy("product_name","asc")
+            ->where("status","product")
+            ->where("category", $socksCategoryId)
             ->get();
 
-        $raw_material_group=raw_material_group::all();
-        return view("admin.formula.create",compact('rawmaterial','formula_material','raw_material_group',"product"));
+        return view("admin.formula.create",compact('rawmaterial',"product"));
     }
     function formula_material_save(Request $request)
     {

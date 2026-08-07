@@ -114,7 +114,7 @@
                                             <tr>
                                                 <td>{{$srno}}</td>
                                                 <td>{{$list->customer_name}}</td>
-                                                <td>{{$list->product_name}}</td>
+                                                <td><x-product-name :row="$list" /></td>
                                                 <td>{{$list->uom_name}}</td>
 
                                                 <td>{{$list->category_name}}</td>

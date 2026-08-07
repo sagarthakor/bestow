@@ -52,7 +52,7 @@ class ProductionController extends Controller
 
         $machine = washing_machine::orderBy("machine_name", "asc")->get();
 
-        $production = washing::select("washing.*", 'customers.customer_name', "washing_machine.machine_name", "product.product_name", "product.product_image")
+        $production = washing::select("washing.*", 'customers.customer_name', "washing_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("washing_machine", "washing_machine.id", "washing.machine")
             ->leftJoin("product", "product.id", "washing.finish_product")
             ->leftJoin("customers", "customers.id", "washing.customer")
@@ -82,7 +82,7 @@ class ProductionController extends Controller
 
         $machine = pressing_machine::orderBy("machine_name", "asc")->get();
 
-        $production = pressing::select("pressing.*", 'customers.customer_name', "pressing_machine.machine_name", "product.product_name", "product.product_image")
+        $production = pressing::select("pressing.*", 'customers.customer_name', "pressing_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("pressing_machine", "pressing_machine.id", "pressing.machine")
             ->leftJoin("product", "product.id", "pressing.finish_product")
             ->leftJoin("customers", "customers.id", "pressing.customer")
@@ -98,7 +98,7 @@ class ProductionController extends Controller
 
         $machine = packaging_machine::orderBy("machine_name", "asc")->get();
 
-        $production = packaging::select("packaging.*", 'customers.customer_name', "packaging_machine.machine_name", "product.product_name", "product.product_image")
+        $production = packaging::select("packaging.*", 'customers.customer_name', "packaging_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("packaging_machine", "packaging_machine.id", "packaging.machine")
             ->leftJoin("product", "product.id", "packaging.finish_product")
             ->leftJoin("customers", "customers.id", "packaging.customer")
@@ -114,7 +114,7 @@ class ProductionController extends Controller
 
         $machine = stitching_machine::orderBy("machine_name", "asc")->get();
 
-        $production = stitching::select("stitching.*", 'customers.customer_name', "stitching_machine.machine_name", "product.product_name", "product.product_image")
+        $production = stitching::select("stitching.*", 'customers.customer_name', "stitching_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("stitching_machine", "stitching_machine.id", "stitching.machine")
             ->leftJoin("product", "product.id", "stitching.finish_product")
             ->leftJoin("customers", "customers.id", "stitching.customer")
@@ -130,7 +130,7 @@ class ProductionController extends Controller
         $machine = machine::find($request->id);
 
         $list =new production();
-        $list=$list->select("production.*", 'customers.customer_name', "machine.machine_name", "product.product_name", "product.product_image");
+        $list=$list->select("production.*", 'customers.customer_name', "machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image");
         $list=$list->leftJoin("machine", "machine.id", "production.machine");
         $list=$list->leftJoin("product", "product.id", "production.finish_product");
         $list=$list->leftJoin("customers", "customers.id", "production.customer");
@@ -166,20 +166,20 @@ class ProductionController extends Controller
         $list=$list->where("production.machine",$request->id);
         $list=$list->where("production.production_status","Y");
         $list=$list->orderBy("production.id", "desc");
-        $list=$list->paginate(20);
+        $list=$list->paginate(session('records_per_page', 30));
 
         return view("admin.production.machineWiseCompleteBatch", compact("list", "machine"));
 
     }
     function production_complete(Request $request)
     {
-        $list = production::select("production.*","customers.customer_name", "machine.machine_name", "product.product_name", "product.product_image")
+        $list = production::select("production.*","customers.customer_name", "machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("machine", "machine.id", "production.machine")
             ->leftJoin("customers", "customers.id", "production.customer")
             ->leftJoin("product", "product.id", "production.finish_product")
             ->where("production_status","=","Y")
             ->orderBy("production.id", "desc")
-            ->paginate(10);
+            ->paginate(session('records_per_page', 30));
 
         $machine=machine::orderBy("machine_name","asc")->get();
 
@@ -188,13 +188,13 @@ class ProductionController extends Controller
 
     function washing_complete(Request $request)
     {
-        $production = washing::select("washing.*","customers.customer_name", "washing_machine.machine_name", "product.product_name", "product.product_image")
+        $production = washing::select("washing.*","customers.customer_name", "washing_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("washing_machine", "washing_machine.id", "washing.machine")
             ->leftJoin("customers", "customers.id", "washing.customer")
             ->leftJoin("product", "product.id", "washing.finish_product")
             ->where("washing_status","=","Y")
             ->orderBy("washing.id", "desc")
-            ->paginate(10);
+            ->paginate(session('records_per_page', 30));
 
         $machine=washing_machine::orderBy("machine_name","asc")->get();
 
@@ -203,13 +203,13 @@ class ProductionController extends Controller
 
     function pressing_complete(Request $request)
     {
-        $production = pressing::select("pressing.*","customers.customer_name", "pressing_machine.machine_name", "product.product_name", "product.product_image")
+        $production = pressing::select("pressing.*","customers.customer_name", "pressing_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("pressing_machine", "pressing_machine.id", "pressing.machine")
             ->leftJoin("customers", "customers.id", "pressing.customer")
             ->leftJoin("product", "product.id", "pressing.finish_product")
             ->where("pressing_status","=","Y")
             ->orderBy("pressing.id", "desc")
-            ->paginate(10);
+            ->paginate(session('records_per_page', 30));
 
         $machine=pressing_machine::orderBy("machine_name","asc")->get();
 
@@ -218,13 +218,13 @@ class ProductionController extends Controller
 
     function packaging_complete(Request $request)
     {
-        $production = packaging::select("packaging.*","customers.customer_name", "packaging_machine.machine_name", "product.product_name", "product.product_image")
+        $production = packaging::select("packaging.*","customers.customer_name", "packaging_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("packaging_machine", "packaging_machine.id", "packaging.machine")
             ->leftJoin("customers", "customers.id", "packaging.customer")
             ->leftJoin("product", "product.id", "packaging.finish_product")
             ->where("packaging_status","=","Y")
             ->orderBy("packaging.id", "desc")
-            ->paginate(10);
+            ->paginate(session('records_per_page', 30));
 
         $machine=packaging_machine::orderBy("machine_name","asc")->get();
 
@@ -233,13 +233,13 @@ class ProductionController extends Controller
 
     function stitching_complete(Request $request)
         {
-            $production = stitching::select("stitching.*","customers.customer_name", "stitching_machine.machine_name", "product.product_name", "product.product_image")
+            $production = stitching::select("stitching.*","customers.customer_name", "stitching_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
                 ->leftJoin("stitching_machine", "stitching_machine.id", "stitching.machine")
                 ->leftJoin("customers", "customers.id", "stitching.customer")
                 ->leftJoin("product", "product.id", "stitching.finish_product")
                 ->where("stitching_status","=","Y")
                 ->orderBy("stitching.id", "desc")
-                ->paginate(10);
+                ->paginate(session('records_per_page', 30));
 
             $machine=stitching_machine::orderBy("machine_name","asc")->get();
 
@@ -248,82 +248,82 @@ class ProductionController extends Controller
 
     function production_dashboard(Request $request)
     {
-        $production = production::select("production.*", "machine.machine_name", "product.product_name", "product.product_image")
+        $production = production::select("production.*", "machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("machine", "machine.id", "production.machine")
             ->leftJoin("product", "product.id", "production.finish_product")
             ->orderBy("production.id", "desc")
             ->count();
        // dd($production);
-        $productionComplete=production::select("production.*", "machine.machine_name", "product.product_name", "product.product_image")
+        $productionComplete=production::select("production.*", "machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("machine", "machine.id", "production.machine")
             ->leftJoin("product", "product.id", "production.finish_product")
             ->where("production.production_status","Y")
             ->orderBy("production.id", "desc")
             ->count();
 
-        $productionPending=production::select("production.*", "machine.machine_name", "product.product_name", "product.product_image")
+        $productionPending=production::select("production.*", "machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("machine", "machine.id", "production.machine")
             ->leftJoin("product", "product.id", "production.finish_product")
             ->where("production.production_status","N")
             ->orderBy("production.id", "desc")
             ->count();
        // dd($productionPending);
-        $stitching = stitching::select("stitching.*", "stitching_machine.machine_name", "product.product_name", "product.product_image")
+        $stitching = stitching::select("stitching.*", "stitching_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("stitching_machine", "stitching_machine.id", "stitching.machine")
             ->leftJoin("product", "product.id", "stitching.finish_product")
             ->orderBy("stitching.id", "desc")
             ->count();
 
-        $stitchingComplete = stitching::select("stitching.*", "stitching_machine.machine_name", "product.product_name", "product.product_image")
+        $stitchingComplete = stitching::select("stitching.*", "stitching_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("stitching_machine", "stitching_machine.id", "stitching.machine")
             ->leftJoin("product", "product.id", "stitching.finish_product")
             ->where("stitching_status","Y")
             ->orderBy("stitching.id", "desc")
             ->count();
 
-        $stitchingPending = stitching::select("stitching.*", "stitching_machine.machine_name", "product.product_name", "product.product_image")
+        $stitchingPending = stitching::select("stitching.*", "stitching_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("stitching_machine", "stitching_machine.id", "stitching.machine")
             ->leftJoin("product", "product.id", "stitching.finish_product")
             ->where("stitching_status","N")
             ->orderBy("stitching.id", "desc")
             ->count();
 
-        $pressingComplete = pressing::select("pressing.*", "pressing_machine.machine_name", "product.product_name", "product.product_image")
+        $pressingComplete = pressing::select("pressing.*", "pressing_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("pressing_machine", "pressing_machine.id", "pressing.machine")
             ->leftJoin("product", "product.id", "pressing.finish_product")
             ->where("pressing_status","Y")
             ->orderBy("pressing.id", "desc")
             ->count();
 
-        $pressingPending = pressing::select("pressing.*", "pressing_machine.machine_name", "product.product_name", "product.product_image")
+        $pressingPending = pressing::select("pressing.*", "pressing_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("pressing_machine", "pressing_machine.id", "pressing.machine")
             ->leftJoin("product", "product.id", "pressing.finish_product")
             ->Where("pressing_status","N")
             ->orderBy("pressing.id", "desc")
             ->count();
 
-        $washingComplete = washing::select("washing.*", "washing_machine.machine_name", "product.product_name", "product.product_image")
+        $washingComplete = washing::select("washing.*", "washing_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("washing_machine", "washing_machine.id", "washing.machine")
             ->leftJoin("product", "product.id", "washing.finish_product")
             ->where("washing_status","Y")
             ->orderBy("washing.id", "desc")
             ->count();
 
-        $washingPending = washing::select("washing.*", "washing_machine.machine_name", "product.product_name", "product.product_image")
+        $washingPending = washing::select("washing.*", "washing_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("washing_machine", "washing_machine.id", "washing.machine")
             ->leftJoin("product", "product.id", "washing.finish_product")
             ->Where("washing_status","N")
             ->orderBy("washing.id", "desc")
             ->count();
 
-        $packagingComplete = packaging::select("packaging.*", "packaging_machine.machine_name", "product.product_name", "product.product_image")
+        $packagingComplete = packaging::select("packaging.*", "packaging_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("packaging_machine", "packaging_machine.id", "packaging.machine")
             ->leftJoin("product", "product.id", "packaging.finish_product")
             ->where("packaging_status","Y")
             ->orderBy("packaging.id", "desc")
             ->count();
 
-        $packagingPending = packaging::select("packaging.*", "packaging_machine.machine_name", "product.product_name", "product.product_image")
+        $packagingPending = packaging::select("packaging.*", "packaging_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("packaging_machine", "packaging_machine.id", "packaging.machine")
             ->leftJoin("product", "product.id", "packaging.finish_product")
             ->Where("packaging_status","N")
@@ -337,21 +337,21 @@ class ProductionController extends Controller
 
     function production_process(Request $request)
     {
-        $pending = production::select("production.*", "machine.machine_name", "product.product_name", "product.product_image")
+        $pending = production::select("production.*", "machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("machine", "machine.id", "production.machine")
             ->leftJoin("product", "product.id", "production.finish_product")
             ->where("production_status","N")
             ->orderBy("production.id", "desc")
             ->count();
         //dd($pending);
-        $complete = production::select("production.*", "machine.machine_name", "product.product_name", "product.product_image")
+        $complete = production::select("production.*", "machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("machine", "machine.id", "production.machine")
             ->leftJoin("product", "product.id", "production.finish_product")
             ->where("production_status","=","Y")
             ->orderBy("production.id", "desc")
             ->count();
 
-        $total = production::select("production.*", "machine.machine_name", "product.product_name", "product.product_image")
+        $total = production::select("production.*", "machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("machine", "machine.id", "production.machine")
             ->leftJoin("product", "product.id", "production.finish_product")
             ->orderBy("production.id", "desc")
@@ -363,7 +363,7 @@ class ProductionController extends Controller
 
     function washing_dashboard(Request $request)
     {
-        $pending = washing::select("washing.*", 'customers.customer_name', "washing_machine.machine_name", "product.product_name", "product.product_image")
+        $pending = washing::select("washing.*", 'customers.customer_name', "washing_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("washing_machine", "washing_machine.id", "washing.machine")
             ->leftJoin("product", "product.id", "washing.finish_product")
             ->leftJoin("customers", "customers.id", "washing.customer")
@@ -371,7 +371,7 @@ class ProductionController extends Controller
             ->orderBy("washing.id", "desc")
             ->count();
 
-        $complete = washing::select("washing.*", 'customers.customer_name', "washing_machine.machine_name", "product.product_name", "product.product_image")
+        $complete = washing::select("washing.*", 'customers.customer_name', "washing_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("washing_machine", "washing_machine.id", "washing.machine")
             ->leftJoin("product", "product.id", "washing.finish_product")
             ->leftJoin("customers", "customers.id", "washing.customer")
@@ -384,7 +384,7 @@ class ProductionController extends Controller
 
     function packaging_dashboard(Request $request)
     {
-        $pending = packaging::select("packaging.*", 'customers.customer_name', "packaging_machine.machine_name", "product.product_name", "product.product_image")
+        $pending = packaging::select("packaging.*", 'customers.customer_name', "packaging_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("packaging_machine", "packaging_machine.id", "packaging.machine")
             ->leftJoin("product", "product.id", "packaging.finish_product")
             ->leftJoin("customers", "customers.id", "packaging.customer")
@@ -392,7 +392,7 @@ class ProductionController extends Controller
             ->orderBy("packaging.id", "desc")
             ->count();
 
-        $complete = packaging::select("packaging.*", 'customers.customer_name', "packaging_machine.machine_name", "product.product_name", "product.product_image")
+        $complete = packaging::select("packaging.*", 'customers.customer_name', "packaging_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("packaging_machine", "packaging_machine.id", "packaging.machine")
             ->leftJoin("product", "product.id", "packaging.finish_product")
             ->leftJoin("customers", "customers.id", "packaging.customer")
@@ -405,7 +405,7 @@ class ProductionController extends Controller
 
     function pressing_dashboard(Request $request)
     {
-        $pending = pressing::select("pressing.*", 'customers.customer_name', "pressing_machine.machine_name", "product.product_name", "product.product_image")
+        $pending = pressing::select("pressing.*", 'customers.customer_name', "pressing_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("pressing_machine", "pressing_machine.id", "pressing.machine")
             ->leftJoin("product", "product.id", "pressing.finish_product")
             ->leftJoin("customers", "customers.id", "pressing.customer")
@@ -413,7 +413,7 @@ class ProductionController extends Controller
             ->orderBy("pressing.id", "desc")
             ->count();
 
-        $complete = pressing::select("pressing.*", 'customers.customer_name', "pressing_machine.machine_name", "product.product_name", "product.product_image")
+        $complete = pressing::select("pressing.*", 'customers.customer_name', "pressing_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("pressing_machine", "pressing_machine.id", "pressing.machine")
             ->leftJoin("product", "product.id", "pressing.finish_product")
             ->leftJoin("customers", "customers.id", "pressing.customer")
@@ -426,7 +426,7 @@ class ProductionController extends Controller
 
     function stitching_dashboard(Request $request)
     {
-        $pending = stitching::select("stitching.*", 'customers.customer_name', "stitching_machine.machine_name", "product.product_name", "product.product_image")
+        $pending = stitching::select("stitching.*", 'customers.customer_name', "stitching_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("stitching_machine", "stitching_machine.id", "stitching.machine")
             ->leftJoin("product", "product.id", "stitching.finish_product")
             ->leftJoin("customers", "customers.id", "stitching.customer")
@@ -434,7 +434,7 @@ class ProductionController extends Controller
             ->orderBy("stitching.id", "desc")
             ->count();
 
-        $complete = stitching::select("stitching.*", 'customers.customer_name', "stitching_machine.machine_name", "product.product_name", "product.product_image")
+        $complete = stitching::select("stitching.*", 'customers.customer_name', "stitching_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("stitching_machine", "stitching_machine.id", "stitching.machine")
             ->leftJoin("product", "product.id", "stitching.finish_product")
             ->leftJoin("customers", "customers.id", "stitching.customer")
@@ -779,7 +779,7 @@ class ProductionController extends Controller
 
     function move_to_washing(Request $request)
     {
-        $production = washing::select("washing.*",'customers.customer_name', "washing_machine.machine_name", "product.product_name", "product.product_image")
+        $production = washing::select("washing.*",'customers.customer_name', "washing_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("washing_machine", "washing_machine.id", "washing.machine")
             ->leftJoin("product", "product.id", "washing.finish_product")
             ->leftJoin("customers", "customers.id", "washing.customer")
@@ -787,7 +787,7 @@ class ProductionController extends Controller
             ->where("washing.batch_no", $request->batch_no)
             ->first();
 
-        $production_material = production_material::select("production_material.*", "product.product_name", "uom.uom_name")
+        $production_material = production_material::select("production_material.*", "product.product_name", "product.value1", "product.value2", "uom.uom_name")
             ->leftJoin("product", "product.id", "production_material.required_material")
             ->leftJoin("uom", "uom.id", "product.uom")
             ->where("production_material.batch_no", $production->batch_no)
@@ -823,7 +823,7 @@ class ProductionController extends Controller
 
     function move_to_pressing(Request $request)
     {
-        $production = pressing::select("pressing.*","stitching.total_stitching_material_used as actualMaterialUsed", 'customers.customer_name', "pressing_machine.machine_name", "product.product_name", "product.product_image")
+        $production = pressing::select("pressing.*","stitching.total_stitching_material_used as actualMaterialUsed", 'customers.customer_name', "pressing_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("pressing_machine", "pressing_machine.id", "pressing.machine")
             ->leftJoin("product", "product.id", "pressing.finish_product")
             ->leftJoin("customers", "customers.id", "pressing.customer")
@@ -832,7 +832,7 @@ class ProductionController extends Controller
             ->where("pressing.batch_no", $request->batch_no)
             ->first();
 
-        $production_material = production_material::select("production_material.*", "product.product_name", "uom.uom_name")
+        $production_material = production_material::select("production_material.*", "product.product_name", "product.value1", "product.value2", "uom.uom_name")
             ->leftJoin("product", "product.id", "production_material.required_material")
             ->leftJoin("uom", "uom.id", "product.uom")
             ->where("production_material.batch_no", $production->batch_no)
@@ -867,7 +867,7 @@ class ProductionController extends Controller
 
     function move_to_packaging(Request $request)
     {
-        $production = packaging::select("packaging.*","production.total_material as actualMaterialUsed", 'customers.customer_name', "packaging_machine.machine_name", "product.product_name", "product.product_image")
+        $production = packaging::select("packaging.*","production.total_material as actualMaterialUsed", 'customers.customer_name', "packaging_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("packaging_machine", "packaging_machine.id", "packaging.machine")
             ->leftJoin("product", "product.id", "packaging.finish_product")
             ->leftJoin("customers", "customers.id", "packaging.customer")
@@ -876,7 +876,7 @@ class ProductionController extends Controller
             ->where("packaging.batch_no", $request->batch_no)
             ->first();
 
-        $production_material = production_material::select("production_material.*", "product.product_name", "uom.uom_name")
+        $production_material = production_material::select("production_material.*", "product.product_name", "product.value1", "product.value2", "uom.uom_name")
             ->leftJoin("product", "product.id", "production_material.required_material")
             ->leftJoin("uom", "uom.id", "product.uom")
             ->where("production_material.batch_no", $production->batch_no)
@@ -911,7 +911,7 @@ class ProductionController extends Controller
 
     function move_to_stitching(Request $request)
     {
-        $production = stitching::select("stitching.*","production.total_material as actualMaterialUsed", 'customers.customer_name', "stitching_machine.machine_name", "product.product_name", "product.product_image")
+        $production = stitching::select("stitching.*","production.total_material as actualMaterialUsed", 'customers.customer_name', "stitching_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("stitching_machine", "stitching_machine.id", "stitching.machine")
             ->leftJoin("product", "product.id", "stitching.finish_product")
             ->leftJoin("customers", "customers.id", "stitching.customer")
@@ -920,7 +920,7 @@ class ProductionController extends Controller
             ->where("stitching.batch_no", $request->batch_no)
             ->first();
 
-        $production_material = production_material::select("production_material.*", "product.product_name", "uom.uom_name")
+        $production_material = production_material::select("production_material.*", "product.product_name", "product.value1", "product.value2", "uom.uom_name")
             ->leftJoin("product", "product.id", "production_material.required_material")
             ->leftJoin("uom", "uom.id", "product.uom")
             ->where("production_material.production_id", $production->id)
@@ -964,75 +964,44 @@ class ProductionController extends Controller
     {
         $product = product::findorFail($request->product);
         $product_image = $product->product_image ?? "";
-        $product_image = $product->product_image ?? "";
         $size=$product->value2 ?? "";
         $colour=$product->value1 ?? "";
-        $str="";
-        $str .="<table class='table table-bordered'>";
-        $str .="<tr>";
-        if($product->cotton){
-            $cotton_product=product::select("product.id","product.product_name","uom.uom_name")
-            ->leftJoin("uom","uom.id","product.uom")
-            ->where("product.product_name",$product->cotton)
-            ->first();
-            $str .="<td><table class='table'><tr><th>Cotton</th></tr>";
-            $str .="<tr><td>";
-            $str .="<table class='table table-bordered'><tr><th>Material</th><th>Qty</th><th>UOM</th></tr>";
-            $str .="<tr><td>$cotton_product->product_name<input type='hidden' class='form-control' name='material[]' value='".$cotton_product->id."'></td><td><input required='' style='width:40px' oninput='cal(this)' class='required_qty_per' type='text' name='percentage[]'></td><td>".$cotton_product->uom_name."</td></tr></table></td></tr></table></td>";
-        }
-        if($product->spendex){
-            $spendex_product=product::select("product.id","product.product_name","uom.uom_name")
-            ->leftJoin("uom","uom.id","product.uom")
-            ->where("product.product_name",$product->spendex)
-            ->first();
-            $str .="<td><table class='table'><tr><th>Spendex</th></tr>";
-            $str .="<tr><td>";
-            $str .="<table class='table table-bordered'><tr><th>Material</th><th>Qty</th><th>UOM</th></tr>";
-            $str .="<tr><td>$spendex_product->product_name<input type='hidden' class='form-control' name='material[]' value='".$spendex_product->id."'></td><td><input required='' style='width:40px' type='text' oninput='cal(this)' class='required_qty_per' name='percentage[]'></td><td>".$spendex_product->uom_name."</td></tr></table></td></tr></table></td>";
-        }
-        if($product->elastics){
-            $elastics_product=product::select("product.id","product.product_name","uom.uom_name")
-            ->leftJoin("uom","uom.id","product.uom")
-            ->where("product.product_name",$product->elastics)
-            ->first();
-            $str .="<td><table class='table'><tr><th>Elastics</th></tr>";
-            $str .="<tr><td>";
-            $str .="<table class='table table-bordered'><tr><th>Material</th><th>Qty</th><th>UOM</th></tr>";
-            $str .="<tr><td>$elastics_product->product_name<input type='hidden' class='form-control' name='material[]' value='".$elastics_product->id."'></td><td><input required='' style='width:40px' type='text' oninput='cal(this)' class='required_qty_per' name='percentage[]'></td><td>".$elastics_product->uom_name."</td></tr></table></td></tr></table></td>";
-        }
-        if($product->nylon){
-            $nylon_product=product::select("product.id","product.product_name","uom.uom_name")
-            ->leftJoin("uom","uom.id","product.uom")
-            ->where("product.product_name",$product->nylon)
-            ->first();
-            $str .="<td><table class='table'><tr><th>Nylon</th></tr>";
-            $str .="<tr><td>";
-            $str .="<table class='table table-bordered'><th>Material</th><th>Qty</th><th>UOM</th></tr>";
-            $str .="<tr><td>$nylon_product->product_name<input type='hidden' class='form-control' name='material[]' value='".$nylon_product->id."'></td><td><input required='' style='width:40px' type='text' oninput='cal(this)' class='required_qty_per' name='percentage[]'></td><td>".$nylon_product->uom_name."</td></tr></table></td></tr></table></td>";
-        }
-        if($product->polyester){
-            $polyester_product=product::select("product.id","product.product_name","uom.uom_name")
-                ->leftJoin("uom","uom.id","product.uom")
-                ->where("product.product_name",$product->polyester)
-                ->first();
-            $str .="<td><table class='table'><tr><th>Polyester</th></tr>";
-            $str .="<tr><td>";
-            $str .="<table class='table table-bordered'><th>Material</th><th>Qty</th><th>UOM</th></tr>";
-            $str .="<tr><td>$polyester_product->product_name<input type='hidden' class='form-control' name='material[]' value='".$polyester_product->id."'></td><td><input required='' style='width:40px' type='text' oninput='cal(this)' class='required_qty_per' name='percentage[]'></td><td>".$polyester_product->uom_name."</td></tr></table></td></tr></table></td>";
-        }
-        if($product->p_p_yarn){
-            $p_p_yarn=product::select("product.id","product.product_name","uom.uom_name")
-                ->leftJoin("uom","uom.id","product.uom")
-                ->where("product.product_name",$product->p_p_yarn)
-                ->first();
-            $str .="<td><table class='table'><tr><th>P.P Yarn</th></tr>";
-            $str .="<tr><td>";
-            $str .="<table class='table table-bordered'><th>Material</th><th>Qty</th><th>UOM</th></tr>";
-            $str .="<tr><td>$p_p_yarn->product_name<input type='hidden' class='form-control' name='material[]' value='".$p_p_yarn->id."'></td><td><input required='' style='width:40px' type='text' oninput='cal(this)' class='required_qty_per' name='percentage[]'></td><td>".$p_p_yarn->uom_name."</td></tr></table></td></tr></table></td>";
-        }
 
-        $str .="</tr></table>";
+        // Raw material category is chosen here, at formula-creation time,
+        // instead of being fixed on the product record.
+        $categories=[
+            "Cotton"=>"Cotton",
+            "Spendex"=>"Spendex",
+            "Elastics"=>"Elastics",
+            "Nylon"=>"Nylon",
+            "Polyester"=>"Polyester",
+            "P_P_Yarn"=>"P.P Yarn",
+        ];
 
+        $str = "<table class='table table-bordered'>";
+        $str .= "<tr><th>Category</th><th>Raw Material</th><th>Qty (grams)</th></tr>";
+        foreach ($categories as $group=>$label) {
+            $materials = DB::table('product')
+                ->leftJoin('uom', 'uom.id', 'product.uom')
+                ->select('product.id', 'product.product_name', 'product.value1', 'product.value2', 'uom.uom_name')
+                ->where('product.raw_material_group', $group)
+                ->orderBy('product.product_name', 'asc')
+                ->get();
+
+            $str .= "<tr>";
+            $str .= "<td>" . $label . "</td>";
+            $str .= "<td><select class='form-control' name='material[]' onchange='updateUomHint(this)'>";
+            $str .= "<option value=''>Select " . $label . "</option>";
+            foreach ($materials as $material) {
+                $uom = strtoupper($material->uom_name ?? '');
+                $str .= "<option value='" . $material->id . "' data-uom='" . $uom . "'>" . \App\product::nameWithVariantInline($material->product_name, $material->value1 ?? null, $material->value2 ?? null) . "</option>";
+            }
+            $str .= "</select></td>";
+            $str .= "<td><input style='width:100px' oninput='cal(this)' class='form-control required_qty_per' type='text' name='qty[]'>";
+            $str .= "<small class='uom-hint text-muted'></small></td>";
+            $str .= "</tr>";
+        }
+        $str .= "</table>";
 
         return response()->json(["colour"=>$colour,'product_image' => $product_image,"size"=>$size,"str"=>$str]);
     }
@@ -1131,7 +1100,7 @@ class ProductionController extends Controller
     {
         $machine = pressing_machine::orderBy("machine_name", "asc")->get();
         $production=new pressing();
-        $production=$production->select("pressing.*", 'customers.customer_name', "pressing_machine.machine_name", "product.product_name", "product.product_image");
+        $production=$production->select("pressing.*", 'customers.customer_name', "pressing_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image");
         $production=$production->leftJoin("pressing_machine", "pressing_machine.id", "pressing.machine");
         $production=$production->leftJoin("product", "product.id", "pressing.finish_product");
         $production=$production->leftJoin("customers", "customers.id", "pressing.customer");
@@ -1169,7 +1138,7 @@ class ProductionController extends Controller
             $production=$production->where("pressing.pressing_status","like",'%'.$request->status.'%');
         }
         $production=$production->orderBy("pressing.id", "desc");
-        $production=$production->paginate(20);
+        $production=$production->paginate(session('records_per_page', 30));
 
         return view("admin.production.pressingAllMachineWiseBatch", compact("production", "machine"));
 
@@ -1178,7 +1147,7 @@ class ProductionController extends Controller
     {
         $machine = washing_machine::orderBy("machine_name", "asc")->get();
         $production=new washing();
-        $production=$production->select("washing.*", 'customers.customer_name', "washing_machine.machine_name", "product.product_name", "product.product_image");
+        $production=$production->select("washing.*", 'customers.customer_name', "washing_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image");
         $production=$production->leftJoin("washing_machine", "washing_machine.id", "washing.machine");
         $production=$production->leftJoin("product", "product.id", "washing.finish_product");
         $production=$production->leftJoin("customers", "customers.id", "washing.customer");
@@ -1216,7 +1185,7 @@ class ProductionController extends Controller
             $production=$production->where("washing.washing_status","like",'%'.$request->status.'%');
         }
         $production=$production->orderBy("washing.id", "desc");
-        $production=$production->paginate(20);
+        $production=$production->paginate(session('records_per_page', 30));
 
         return view("admin.production.washingAllMachineWiseBatch", compact("production", "machine"));
 
@@ -1226,7 +1195,7 @@ class ProductionController extends Controller
     {
         $machine = packaging_machine::orderBy("machine_name", "asc")->get();
         $production=new packaging();
-        $production=$production->select("packaging.*", 'customers.customer_name', "packaging_machine.machine_name", "product.product_name", "product.product_image");
+        $production=$production->select("packaging.*", 'customers.customer_name', "packaging_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image");
         $production=$production->leftJoin("packaging_machine", "packaging_machine.id", "packaging.machine");
         $production=$production->leftJoin("product", "product.id", "packaging.finish_product");
         $production=$production->leftJoin("customers", "customers.id", "packaging.customer");
@@ -1264,7 +1233,7 @@ class ProductionController extends Controller
             $production=$production->where("packaging.packaging_status","like",'%'.$request->status.'%');
         }
         $production=$production->orderBy("packaging.id", "desc");
-        $production=$production->paginate(20);
+        $production=$production->paginate(session('records_per_page', 30));
 
         return view("admin.production.packagingAllMachineWiseBatch", compact("production", "machine"));
 
@@ -1273,7 +1242,7 @@ class ProductionController extends Controller
     {
         $machine = stitching_machine::orderBy("machine_name", "asc")->get();
         $production=new stitching();
-        $production=$production->select("stitching.*", 'customers.customer_name', "stitching_machine.machine_name", "product.product_name", "product.product_image");
+        $production=$production->select("stitching.*", 'customers.customer_name', "stitching_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image");
         $production=$production->leftJoin("stitching_machine", "stitching_machine.id", "stitching.machine");
         $production=$production->leftJoin("product", "product.id", "stitching.finish_product");
         $production=$production->leftJoin("customers", "customers.id", "stitching.customer");
@@ -1312,7 +1281,7 @@ class ProductionController extends Controller
             $production=$production->where("stitching.stitching_status","like",'%'.$request->status.'%');
         }
         $production=$production->orderBy("stitching.id", "desc");
-        $production=$production->paginate(20);
+        $production=$production->paginate(session('records_per_page', 30));
 
         return view("admin.production.stitchingAllMachineWiseBatch", compact("production", "machine"));
 
@@ -1323,7 +1292,7 @@ class ProductionController extends Controller
         $machine = stitching_machine::find($request->id);
 
         $list =new stitching();
-        $list=$list->select("stitching.*", 'customers.customer_name', "stitching_machine.machine_name", "product.product_name", "product.product_image");
+        $list=$list->select("stitching.*", 'customers.customer_name', "stitching_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image");
         $list=$list->leftJoin("stitching_machine", "stitching_machine.id", "stitching.machine");
         $list=$list->leftJoin("product", "product.id", "stitching.finish_product");
         $list=$list->leftJoin("customers", "customers.id", "stitching.customer");
@@ -1354,7 +1323,7 @@ class ProductionController extends Controller
         }
         $list=$list->where("stitching.machine",$request->id);
         $list=$list->orderBy("washing.id", "desc");
-        $list=$list->paginate(20);
+        $list=$list->paginate(session('records_per_page', 30));
 
         return view("admin.production.stitchingAllMachineWiseBatch", compact("list", "machine"));
 
@@ -1365,7 +1334,7 @@ class ProductionController extends Controller
         $machine = washing_machine::find($request->id);
 
         $list =new washing();
-        $list=$list->select("washing.*", 'customers.customer_name', "washing_machine.machine_name", "product.product_name", "product.product_image");
+        $list=$list->select("washing.*", 'customers.customer_name', "washing_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image");
         $list=$list->leftJoin("washing_machine", "washing_machine.id", "washing.machine");
         $list=$list->leftJoin("product", "product.id", "washing.finish_product");
         $list=$list->leftJoin("customers", "customers.id", "washing.customer");
@@ -1401,7 +1370,7 @@ class ProductionController extends Controller
         $list=$list->where("washing.machine",$request->id);
         $list=$list->where("washing.washing_status","Y");
         $list=$list->orderBy("washing.id", "desc");
-        $list=$list->paginate(20);
+        $list=$list->paginate(session('records_per_page', 30));
 
         return view("admin.production.washingCompleteMachineWiseBatch", compact("list", "machine"));
 
@@ -1412,7 +1381,7 @@ class ProductionController extends Controller
         $machine = pressing_machine::find($request->id);
 
         $list =new pressing();
-        $list=$list->select("pressing.*", 'customers.customer_name', "pressing_machine.machine_name", "product.product_name", "product.product_image");
+        $list=$list->select("pressing.*", 'customers.customer_name', "pressing_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image");
         $list=$list->leftJoin("pressing_machine", "pressing_machine.id", "pressing.machine");
         $list=$list->leftJoin("product", "product.id", "pressing.finish_product");
         $list=$list->leftJoin("customers", "customers.id", "pressing.customer");
@@ -1448,7 +1417,7 @@ class ProductionController extends Controller
         $list=$list->where("pressing.machine",$request->id);
         $list=$list->where("pressing.pressing_status","Y");
         $list=$list->orderBy("pressing.id", "desc");
-        $list=$list->paginate(20);
+        $list=$list->paginate(session('records_per_page', 30));
 
         return view("admin.production.pressingCompleteMachineWiseBatch", compact("list", "machine"));
 
@@ -1459,7 +1428,7 @@ class ProductionController extends Controller
         $machine = packaging_machine::find($request->id);
 
         $list =new packaging();
-        $list=$list->select("packaging.*", 'customers.customer_name', "packaging_machine.machine_name", "product.product_name", "product.product_image");
+        $list=$list->select("packaging.*", 'customers.customer_name', "packaging_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image");
         $list=$list->leftJoin("packaging_machine", "packaging_machine.id", "packaging.machine");
         $list=$list->leftJoin("product", "product.id", "packaging.finish_product");
         $list=$list->leftJoin("customers", "customers.id", "packaging.customer");
@@ -1495,7 +1464,7 @@ class ProductionController extends Controller
         $list=$list->where("packaging.machine",$request->id);
         $list=$list->where("packaging.packaging_status","Y");
         $list=$list->orderBy("packaging.id", "desc");
-        $list=$list->paginate(20);
+        $list=$list->paginate(session('records_per_page', 30));
 
         return view("admin.production.packagingCompleteMachineWiseBatch", compact("list", "machine"));
 
@@ -1506,7 +1475,7 @@ class ProductionController extends Controller
         $machine = stitching_machine::find($request->id);
 
         $list =new stitching();
-        $list=$list->select("stitching.*", 'customers.customer_name', "stitching_machine.machine_name", "product.product_name", "product.product_image");
+        $list=$list->select("stitching.*", 'customers.customer_name', "stitching_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image");
         $list=$list->leftJoin("stitching_machine", "stitching_machine.id", "stitching.machine");
         $list=$list->leftJoin("product", "product.id", "stitching.finish_product");
         $list=$list->leftJoin("customers", "customers.id", "stitching.customer");
@@ -1542,7 +1511,7 @@ class ProductionController extends Controller
         $list=$list->where("stitching.machine",$request->id);
         $list=$list->where("stitching.stitching_status","Y");
         $list=$list->orderBy("stitching.id", "desc");
-        $list=$list->paginate(20);
+        $list=$list->paginate(session('records_per_page', 30));
 
         return view("admin.production.stitchingCompleteMachineWiseBatch", compact("list", "machine"));
 
@@ -1554,7 +1523,7 @@ class ProductionController extends Controller
         $machine = packaging_machine::find($request->id);
 
         $list =new packaging();
-        $list=$list->select("packaging.*", 'customers.customer_name', "packaging_machine.machine_name", "product.product_name", "product.product_image");
+        $list=$list->select("packaging.*", 'customers.customer_name', "packaging_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image");
         $list=$list->leftJoin("packaging_machine", "packaging_machine.id", "packaging.machine");
         $list=$list->leftJoin("product", "product.id", "packaging.finish_product");
         $list=$list->leftJoin("customers", "customers.id", "packaging.customer");
@@ -1586,7 +1555,7 @@ class ProductionController extends Controller
         $list=$list->where("packaging.machine",$request->id);
         $list=$list->where("packaging.packaging_status","N");
         $list=$list->orderBy("packaging.id", "desc");
-        $list=$list->paginate(20);
+        $list=$list->paginate(session('records_per_page', 30));
 
         return view("admin.production.packagingPendingMachineWiseBatch", compact("list", "machine"));
 
@@ -1598,7 +1567,7 @@ class ProductionController extends Controller
         $machine = washing_machine::find($request->id);
 
         $list =new washing();
-        $list=$list->select("washing.*", 'customers.customer_name', "washing_machine.machine_name", "product.product_name", "product.product_image");
+        $list=$list->select("washing.*", 'customers.customer_name', "washing_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image");
         $list=$list->leftJoin("washing_machine", "washing_machine.id", "washing.machine");
         $list=$list->leftJoin("product", "product.id", "washing.finish_product");
         $list=$list->leftJoin("customers", "customers.id", "washing.customer");
@@ -1630,7 +1599,7 @@ class ProductionController extends Controller
         $list=$list->where("washing.machine",$request->id);
         $list=$list->where("washing.washing_status","N");
         $list=$list->orderBy("washing.id", "desc");
-        $list=$list->paginate(20);
+        $list=$list->paginate(session('records_per_page', 30));
 
         return view("admin.production.washingPendingMachineWiseBatch", compact("list", "machine"));
 
@@ -1642,7 +1611,7 @@ class ProductionController extends Controller
         $machine = pressing_machine::find($request->id);
 
         $list =new pressing();
-        $list=$list->select("pressing.*", 'customers.customer_name', "pressing_machine.machine_name", "product.product_name", "product.product_image");
+        $list=$list->select("pressing.*", 'customers.customer_name', "pressing_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image");
         $list=$list->leftJoin("pressing_machine", "pressing_machine.id", "pressing.machine");
         $list=$list->leftJoin("product", "product.id", "pressing.finish_product");
         $list=$list->leftJoin("customers", "customers.id", "pressing.customer");
@@ -1674,7 +1643,7 @@ class ProductionController extends Controller
         $list=$list->where("pressing.machine",$request->id);
         $list=$list->where("pressing.pressing_status","N");
         $list=$list->orderBy("pressing.id", "desc");
-        $list=$list->paginate(20);
+        $list=$list->paginate(session('records_per_page', 30));
 
         return view("admin.production.pressingPendingMachineWiseBatch", compact("list", "machine"));
 
@@ -1686,7 +1655,7 @@ class ProductionController extends Controller
         $machine = stitching_machine::find($request->id);
 
         $list =new stitching();
-        $list=$list->select("stitching.*", 'customers.customer_name', "stitching_machine.machine_name", "product.product_name", "product.product_image");
+        $list=$list->select("stitching.*", 'customers.customer_name', "stitching_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image");
         $list=$list->leftJoin("stitching_machine", "stitching_machine.id", "stitching.machine");
         $list=$list->leftJoin("product", "product.id", "stitching.finish_product");
         $list=$list->leftJoin("customers", "customers.id", "stitching.customer");
@@ -1718,7 +1687,7 @@ class ProductionController extends Controller
         $list=$list->where("stitching.machine",$request->id);
         $list=$list->where("stitching.stitching_status","N");
         $list=$list->orderBy("stitching.id", "desc");
-        $list=$list->paginate(20);
+        $list=$list->paginate(session('records_per_page', 30));
 
         return view("admin.production.stitchingPendingMachineWiseBatch", compact("list", "machine"));
 
@@ -1729,7 +1698,7 @@ class ProductionController extends Controller
         $machine = machine::find($request->id);
 
         $list =new production();
-        $list=$list->select("production.*", 'customers.customer_name', "machine.machine_name", "product.product_name", "product.product_image");
+        $list=$list->select("production.*", 'customers.customer_name', "machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image");
         $list=$list->leftJoin("machine", "machine.id", "production.machine");
         $list=$list->leftJoin("product", "product.id", "production.finish_product");
         $list=$list->leftJoin("customers", "customers.id", "production.customer");
@@ -1761,7 +1730,7 @@ class ProductionController extends Controller
         $list=$list->where("production.machine",$request->id);
         $list=$list->where("production.production_status","N");
         $list=$list->orderBy("production.id", "desc");
-        $list=$list->paginate(20);
+        $list=$list->paginate(session('records_per_page', 30));
 
         return view("admin.production.machineWiseBatch", compact("list", "machine"));
 
@@ -1779,7 +1748,7 @@ class ProductionController extends Controller
 
         $machine = machine::orderBy("machine_name", "asc")->get();
         $production=new production();
-        $production=$production->select("production.*", 'customers.customer_name', "machine.machine_name", "product.product_name", "product.product_image");
+        $production=$production->select("production.*", 'customers.customer_name', "machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image");
         $production=$production->leftJoin("machine", "machine.id", "production.machine");
         $production=$production->leftJoin("product", "product.id", "production.finish_product");
         $production=$production->leftJoin("customers", "customers.id", "production.customer");
@@ -1813,13 +1782,13 @@ class ProductionController extends Controller
             $production=$production->where("production.production_status","like",'%'.$request->status.'%');
         }
         $production=$production->orderBy("production.id", "desc");
-        $production=$production->paginate(20);
+        $production=$production->paginate(session('records_per_page', 30));
         return view("admin.production.allProduction", compact("production", "machine"));
     }
 
     function production_details(Request $request)
     {
-        $production = production::select("production.*", 'customers.customer_name', "machine.machine_name", "product.product_name", "product.product_image")
+        $production = production::select("production.*", 'customers.customer_name', "machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("machine", "machine.id", "production.machine")
             ->leftJoin("product", "product.id", "production.finish_product")
             ->leftJoin("customers", "customers.id", "production.customer")
@@ -1827,7 +1796,7 @@ class ProductionController extends Controller
             ->where("production.batch_no", $request->batch_no)
             ->first();
         //dd($production);
-        $production_material = production_material::select("production_material.*", "product.product_name", "uom.uom_name")
+        $production_material = production_material::select("production_material.*", "product.product_name", "product.value1", "product.value2", "uom.uom_name")
             ->leftJoin("product", "product.id", "production_material.required_material")
             ->leftJoin("uom", "uom.id", "product.uom")
             ->where("production_material.production_id", $production->id)
@@ -1861,7 +1830,7 @@ class ProductionController extends Controller
     {
         $machine = machine::orderBy("machine_name", "asc")->get();
 
-        $production = production::select("production.*", 'customers.customer_name', "machine.machine_name", "product.product_name", "product.product_image")
+        $production = production::select("production.*", 'customers.customer_name', "machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("machine", "machine.id", "production.machine")
             ->leftJoin("product", "product.id", "production.finish_product")
             ->leftJoin("customers", "customers.id", "production.customer")
@@ -1897,13 +1866,15 @@ class ProductionController extends Controller
             $purchase_requirement->timestamp = date('d-m-Y h:i:s a');
             $purchase_requirement->order_no = $order;
             $purchase_requirement->user_id = Session::get("user_id");
+            $purchase_requirement->finish_product = $request->finish_product;
+            $purchase_requirement->customer = $request->customer;
             if ($purchase_requirement->save()) {
                 $totproduct = count($request->purchase_required_mat);
                 for ($i = 0; $i < $totproduct; $i++) {
                         $requirement = new purchase_required_material();
                         $requirement->order_id = $purchase_requirement->id;
                         $requirement->raw_material = $request->purchase_required_mat[$i];
-                        $requirement->qty = $request->purchase_required_stock_qty[$i]/1000; //conver in GRAM to KG
+                        $requirement->qty = $request->purchase_required_stock_qty[$i] / $this->materialConversionFactor($request->purchase_required_mat[$i]);
                         $requirement->timestamp = date('d-m-Y h:i:s a');
                         $requirement->user_id = Session::get("user_id");
                         $requirement->save();
@@ -1964,7 +1935,7 @@ class ProductionController extends Controller
 
                     $stock_status = stock_status::where("product", $request->required_mat[$i])->first();
                     $stockqty = $stock_status->qty ?? 0;
-                    $materialqty = $request->required_qty[$i]/1000;  //conver in GRAM to KG
+                    $materialqty = $request->required_qty[$i] / $this->materialConversionFactor($request->required_mat[$i]);
                     $actualqty = $stockqty - $materialqty;
                     $stock_status->qty = $actualqty;
                     $stock_status->save();
@@ -1973,7 +1944,7 @@ class ProductionController extends Controller
 
                     $book->product = $request->required_mat[$i];
                     $book->inward_date = date('Y-m-d');
-                    $book->outward_qty = $request->required_qty[$i]/1000; //conver in GRAM to KG
+                    $book->outward_qty = $materialqty;
                     $book->remaining_qty = $actualqty;
                     $book->particular = "This Material use in Production";
                     $book->created_time = date('d-m-Y h:i:s a');
@@ -1995,18 +1966,36 @@ class ProductionController extends Controller
         return response()->json(['stockqty'=>$stock->qty ?? 0]);
     }
 
+    /**
+     * Formula quantities for KG-tracked raw material (thread) are entered in
+     * grams, so stock (kept in KG) needs a x1000 conversion to compare on the
+     * same footing. Piece/length-tracked material (buckle, slider, strap)
+     * has no such gram convention - formula qty and stock are already in the
+     * same unit - so no conversion applies there.
+     */
+    private function materialConversionFactor($materialId)
+    {
+        $uomName = DB::table('product')
+            ->join('uom', 'uom.id', 'product.uom')
+            ->where('product.id', $materialId)
+            ->value('uom.uom_name');
+
+        return strtoupper($uomName) === 'KG' ? 1000 : 1;
+    }
+
     function getproduction_mat(Request $request)
     {
         $formula_mast = formula_mst::where("product", $request->finish_product)
             ->first();
 
-        $formula_mst_item=formula_mst_item::select("formula_mst_item.*","stock_status.qty as stockqty","product.product_name","uom.uom_name")
-        ->where("formula_mst_item.product",$request->finish_product)
-        ->where("formula_mst_item.size", $request->size)
-        ->leftJoin("stock_status","stock_status.product","formula_mst_item.material")
-        ->leftJoin("product","product.id","formula_mst_item.material")
-        ->leftJoin("uom","uom.id","product.uom")
-        ->get();
+        // Belt/buckle products have their own formula in Buckle Formula
+        // Master (buckle_formula_mst) rather than the sock Formula Master, so
+        // fall back to that when the product has no sock formula.
+        $isBuckleFormula = false;
+        if (empty($formula_mast)) {
+            $formula_mast = \App\BuckleFormulaMst::where("product", $request->finish_product)->first();
+            $isBuckleFormula = true;
+        }
 
         // dd($row);
         $rawmaterial = product::orderBy("product_name", "asc")
@@ -2017,14 +2006,23 @@ class ProductionController extends Controller
             $required_qty = 0;
             $row = "Formula not found";
         } else {
-            $required_qty = $formula_mast->required_qty * $request->nos;
+            $required_qty = ($formula_mast->required_qty ?? 1) * $request->nos;
 
-            $item = formula_mst_item::select("formula_mst_item.*", "product.product_name", "stock_status.qty as stockqty","uom.uom_name")
-                ->leftJoin("product", "product.id", "formula_mst_item.material")
-                ->leftJoin("stock_status", "stock_status.product", "formula_mst_item.material")
-                ->leftJoin("uom", "uom.id", "product.uom")
-                ->where("formula_mst_item.formula_id", $formula_mast->id)
-                ->get();
+            if ($isBuckleFormula) {
+                $item = \App\BuckleFormulaMstItem::select("buckle_formula_mst_item.*", "product.product_name", "product.value1", "product.value2", "stock_status.qty as stockqty", "uom.uom_name")
+                    ->leftJoin("product", "product.id", "buckle_formula_mst_item.material")
+                    ->leftJoin("stock_status", "stock_status.product", "buckle_formula_mst_item.material")
+                    ->leftJoin("uom", "uom.id", "product.uom")
+                    ->where("buckle_formula_mst_item.formula_id", $formula_mast->id)
+                    ->get();
+            } else {
+                $item = formula_mst_item::select("formula_mst_item.*", "product.product_name", "product.value1", "product.value2", "stock_status.qty as stockqty","uom.uom_name")
+                    ->leftJoin("product", "product.id", "formula_mst_item.material")
+                    ->leftJoin("stock_status", "stock_status.product", "formula_mst_item.material")
+                    ->leftJoin("uom", "uom.id", "product.uom")
+                    ->where("formula_mst_item.formula_id", $formula_mast->id)
+                    ->get();
+            }
 
             $row = '<table class="table"><tr><th>Required Material</th><th colspan="2">Required Qty</th><th colspan="2">Avalible Stock</th><th colspan="2">Need to Order Stock</th></tr>';
 
@@ -2035,45 +2033,47 @@ class ProductionController extends Controller
                 $reqqty = $request->nos * $required_qty;
                 $ectual =$request->nos * $item->qty;
                 $roundqty = round($ectual, 2);
-                $stockqty=$item->stockqty*1000 ?? 0;
+                $factor = strtoupper($item->uom_name) === 'KG' ? 1000 : 1;
+                $unitLabel = $factor == 1000 ? 'Gram' : $item->uom_name;
+                $stockqty=($item->stockqty ?? 0)*$factor;
 //                $row .="<tr><td>per $percentage</td><td>required $required_qty</td>";
 
-                if ($roundqty > $item->stockqty*1000) {
+                if ($roundqty > $stockqty) {
                     $stockstatus = "low";
-                    $purchaseqty = $roundqty - $item->stockqty*1000;
+                    $purchaseqty = $roundqty - $stockqty;
                     $row .= "<tr style='border: 1px solid red'>
                         <td style='text-align: center'>
                         <select onchange='getrawmaterial(this)' name='purchase_required_mat[]' class='required_mat form-control'>
-                        <option value='$item->material'>$item->product_name</option>
+                        <option value='$item->material'>" . \App\product::nameWithVariantInline($item->product_name, $item->value1 ?? null, $item->value2 ?? null) . "</option>
                         ";
                     foreach ($rawmaterial as $mat) {
-                        $row .="<option value='$mat->id'>$mat->product_name</option>";
+                        $row .="<option value='$mat->id'>" . \App\product::nameWithVariantInline($mat->product_name, $mat->value1 ?? null, $mat->value2 ?? null) . "</option>";
                         }
                     $row .= "</select>
                         </td>
                         <td style='text-align: center'><input type='text' class='required_qty form-control' name='purchase_required_qty[]' value='$roundqty'></td>
-                        <td style='text-align: center'>Gram</td>
+                        <td style='text-align: center'>$unitLabel</td>
                         <td style='text-align: center'><input type='text' class='stock_qty form-control' name='stock_qty[]' value='$stockqty'> </td>
                         <td style='text-align: center'>$item->uom_name</td>
                         <td><input type='text' class='required_stock_qty form-control' name='purchase_required_stock_qty[]' value='$purchaseqty'></td>
-                        <td style='text-align: center'>Gram</td>
+                        <td style='text-align: center'>$unitLabel</td>
                     </tr>";
                 } else {
                     $row .= "<tr style='border: 1px solid #000'>
                         <td style='text-align: center'>
                         <select onchange='getrawmaterial(this)' name='required_mat[]' class='required_mat form-control'>
-                        <option value='$item->material'>$item->product_name</option>";
+                        <option value='$item->material'>" . \App\product::nameWithVariantInline($item->product_name, $item->value1 ?? null, $item->value2 ?? null) . "</option>";
                     foreach ($rawmaterial as $mat) {
-                        $row .="<option value='$mat->id'>$mat->product_name</option>";
+                        $row .="<option value='$mat->id'>" . \App\product::nameWithVariantInline($mat->product_name, $mat->value1 ?? null, $mat->value2 ?? null) . "</option>";
                     }
                     $row .= "</select>
                         </td>
                         <td style='text-align: center'><input type='text' class='required_qty form-control' name='required_qty[]' value='$roundqty'> </td>
-                        <td style='text-align: center'>Gram</td>
+                        <td style='text-align: center'>$unitLabel</td>
                         <td style='text-align: center'><input type='text' class='stock_qty form-control' name='stock_qty[]' value='$item->stockqty'> </td>
                         <td style='text-align: center'>$item->uom_name</td>
                         <td><input type='text' class='required_stock_qty form-control' name='required_stock_qty[]' value='0'></td>
-                        <td style='text-align: center'>Gram</td>
+                        <td style='text-align: center'>$unitLabel</td>
                     </tr>";
                 }
 

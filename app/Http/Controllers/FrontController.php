@@ -161,7 +161,7 @@ class FrontController extends Controller
         if (isset($request->subcategory)) {
             $product = $product->where("subcategory.subcategory_name", $request->subcategory);
         }
-        $product = $product->paginate(30);
+        $product = $product->paginate(session('records_per_page', 30));
 
         //dd($product);
         $subcategory = subcategory::orderBy("subcategory_name", "asc")->get();
@@ -447,9 +447,9 @@ class FrontController extends Controller
 
 
 
-            $industry = ['' => 'select industry'] + industry::where('website_id', Session::get('website_id'))
+            $industry = ['' => 'select industry'] + industry::query()
                     ->orderBy('industry_name')->get()->pluck('industry_name', 'id')->toArray();
-            $type = ['' => 'select type'] + type::where('website_id', Session::get('website_id'))
+            $type = ['' => 'select type'] + type::query()
                     ->orderBy('type_name')->get()->pluck('type_name', 'id')->toArray();
 
             $country = ['' => 'select country'] + country::orderBy('country_name', 'asc')
@@ -730,7 +730,7 @@ class FrontController extends Controller
         }
         Session::forget('inquiry');
         $order=customer_order::where("order_number",$n2)->first();
-        $orderitem=customer_order_item::select("customer_order_item.*","product.product_name","product.product_image","category.category_name","subcategory.subcategory_name")
+        $orderitem=customer_order_item::select("customer_order_item.*","product.product_name", "product.value1", "product.value2","product.product_image","category.category_name","subcategory.subcategory_name")
             ->leftJoin("product","product.id","customer_order_item.product")
             ->leftJoin("category","category.id","product.category")
             ->leftJoin("subcategory","subcategory.id","product.subcategory")
@@ -1001,7 +1001,7 @@ class FrontController extends Controller
         }
         Session::forget('cart');
         $order=customer_order::where("order_number",$n2)->first();
-        $orderitem=customer_order_item::select("customer_order_item.*","product.product_name","product.product_image","category.category_name","subcategory.subcategory_name")
+        $orderitem=customer_order_item::select("customer_order_item.*","product.product_name", "product.value1", "product.value2","product.product_image","category.category_name","subcategory.subcategory_name")
             ->leftJoin("product","product.id","customer_order_item.product")
             ->leftJoin("category","category.id","product.category")
             ->leftJoin("subcategory","subcategory.id","product.subcategory")
@@ -1076,7 +1076,7 @@ class FrontController extends Controller
         $variation = variation::get();
 
         $product = item_group::where("subcategory", $request->subid)
-            ->paginate(30);
+            ->paginate(session('records_per_page', 30));
 
         return view("front.subcategory_product", compact('subcate', 'categories', 'subcategories', 'product_attribute', 'variation', 'product'));
     }

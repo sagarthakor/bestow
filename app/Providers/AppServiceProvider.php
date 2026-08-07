@@ -26,7 +26,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        Paginator::useBootstrap();
+        Paginator::defaultView('vendor.pagination.bootstrap-3');
+        Paginator::defaultSimpleView('vendor.pagination.bootstrap-3');
         view()->composer('*', function ($view) {
             $view->with('categories', Category::with('subcategories')->get());
         });

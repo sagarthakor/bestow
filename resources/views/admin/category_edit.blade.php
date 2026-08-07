@@ -1,4 +1,4 @@
-@extends('admin.layout.master')
+@extends('admin.layout.master_material')
 
 @section('title', 'Add Category')
 
@@ -128,7 +128,7 @@
 
 
 
-            @extends("admin.form_fotter")
+            @include("admin.form_fotter")
                 <script type="text/javascript">
                     function image_show() {
         // body...

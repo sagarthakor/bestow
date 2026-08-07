@@ -1,4 +1,4 @@
-@extends('admin.layout.table_master')
+@extends('admin.layout.table_master_material')
 
 @section('title', 'List of Purchase')
 
@@ -151,7 +151,7 @@
                         {{--                                        </td>--}}
 
                         {{--                                        <td  style="vertical-align: top;text-align: center">{{$data->customer_name}}</td>--}}
-                        {{--                                        <td  style="vertical-align: top;text-align: center">{{$data->product_name}}</td>--}}
+                        {{--                                        <td  style="vertical-align: top;text-align: center"><x-product-name :row="$data" /></td>--}}
                         {{--                                        <td  style="vertical-align: top;text-align: center">{{$data->nos}}</td>--}}
                         {{--                                        <td  style="vertical-align: top;text-align: center;width: 10%">{{$data->size}}</td>--}}
                         {{--                                        <td  style="vertical-align: top;text-align: center;width: 10%">@if($data->production_status=="Y") Complete @else <i class="mdi mdi-close-box" style="color: green"></i> Pending @endif</td>--}}

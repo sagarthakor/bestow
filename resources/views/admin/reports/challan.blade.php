@@ -1,195 +1,170 @@
-@extends('admin.layout.master')
+@extends('admin.layout.master_material')
 
-@section('title', 'List | Challan')
+@section('title', 'Report | Challan')
 
 @section('sidebar')
     @parent
-
 @endsection
 
 @section('content')
 
-    <!-- DataTables -->
-
     <style type="text/css">
-
-        nav{
-            float: right;
+        nav { float: right; }
+        .rpt-panel-heading {
+            background: #188ae2;
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 10px 16px;
+            border-radius: 3px 3px 0 0;
         }
+        .rpt-panel-body { padding: 18px 16px 6px; }
+        .rpt-panel-body label { font-weight: 600; color: #555; font-size: 12.5px; margin-bottom: 4px; }
+        .rpt-actions { padding: 0 16px 16px; text-align: right; border-top: 1px solid #eceff5; margin-top: 12px; padding-top: 14px; }
+        table.rpt-table thead th { background: #f4f6fa; font-weight: 600; color: #444; border-bottom: 2px solid #e3e6ee; vertical-align: middle; }
+        table.rpt-table { border: 1px solid #e3e6ee; border-collapse: collapse; box-shadow: 0 1px 3px rgba(20,30,60,.04); }
+        table.rpt-table th, table.rpt-table td { border: 1px solid #eceff5; padding: 10px 12px; vertical-align: middle; }
+        table.rpt-table tbody tr:hover { background-color: #f5f8fc; }
     </style>
 
     <div class="content-page">
-        <!-- Start content -->
         <div class="content">
             <div class="container">
-
 
                 <div class="row">
                     <div class="col-xs-12">
                         <div class="page-title-box">
-                            <h4 class="page-title">Challan List </h4>
+                            <h4 class="page-title">Challan Report</h4>
                             <ol class="breadcrumb p-0 m-0">
-                                <li>
-                                    <a href="{{ url('admin') }}">{{Session::get('software_title')}}</a>
-                                </li>
-                                <li>
-                                    Sales
-                                </li>
-                                <li class="active">
-                                    List
-                                </li>
+                                <li><a href="{{ url('admin') }}">{{Session::get('software_title')}}</a></li>
+                                <li>Reports</li>
+                                <li class="active">Challan</li>
                             </ol>
                             <div class="clearfix"></div>
                         </div>
                     </div>
                 </div>
 
-                {{Form::model(request(),['method'=>'get'])}}
-
-                <div class="row">
-                    <div class="col-sm-4">
-                    </div>
-                    <div class="col-sm-4">
-
-                </div>
-                <div class="row">
-                    @if(session()->has('message'))
+                @if(session()->has('message'))
+                    <div class="row">
                         <div class="col-sm-12">
                             <div class="alert alert-info" style="background-color: #188ae2 !important">
                                 <strong style="color: #fff">{{session()->get('message')}}</strong>
                             </div>
                         </div>
-                    @endif
+                    </div>
+                @endif
 
+                {{ Form::model(request(), ['method' => 'get']) }}
+
+                <div class="row">
                     <div class="col-sm-12">
-
-                        <?php
-                        if(isset($_GET['msg']))
-                        {
-                        ?>
-                        <div class="alert alert-success">
-                            <strong style="color:#000">Stage Change Successfully</strong>
+                        <div class="panel panel-default">
+                            <div class="rpt-panel-heading">Filter</div>
+                            <div class="rpt-panel-body">
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <label>Challan No</label>
+                                        <input type="text" name="invoice_no" value="{{ request('invoice_no') }}" class="form-control" placeholder="Challan no">
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <label>Customer</label>
+                                        <input type="text" name="client_name" value="{{ request('client_name') }}" class="form-control" placeholder="Customer name">
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <label>Status</label>
+                                        <input type="text" name="status" value="{{ request('status') }}" class="form-control" placeholder="Status">
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <label>Amount</label>
+                                        <input type="text" name="amount" value="{{ request('amount') }}" class="form-control" placeholder="Amount">
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-top:12px;">
+                                    <div class="col-sm-3">
+                                        <label>Subject</label>
+                                        <input type="text" name="subject" value="{{ request('subject') }}" class="form-control" placeholder="Subject">
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <label>From Date</label>
+                                        <input type="date" name="from_date" value="{{ request('from_date') }}" class="form-control">
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <label>To Date</label>
+                                        <input type="date" name="end_date" value="{{ request('end_date') }}" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="rpt-actions">
+                                <a href="{{ url()->current() }}" class="btn btn-default">Reset</a>
+                                <button type="submit" class="btn btn-primary">Search</button>
+                                <button type="submit" name="export_excel" value="export_excel" class="btn btn-success">Export Excel</button>
+                            </div>
                         </div>
-                        <?php
+                    </div>
+                </div>
 
-                        }
-                        ?>
-                        <div class="card-box table-responsive">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="card-box" style="padding:0;">
 
+                            @include('admin.reports.partials.stat_cards', ['stats' => [
+                                ['label' => 'Challans', 'value' => number_format($totalRecords), 'icon' => 'mdi-truck-delivery', 'color' => 'blue'],
+                                ['label' => 'Total Amount', 'value' => number_format($totalAmount, 2), 'icon' => 'mdi-cash-multiple', 'color' => 'green'],
+                            ]])
 
-
-                            <table class="table table-striped table-bordered">
-                                <thead>
-                                      <tr>
-                                        <td colspan="6" class="text-right"><button class='btn btn-primary' type="submit" name="export_excel" value="export_excel">Export Excel</button>&nbsp;<button class='mr-5 btn btn-info'>Search</button></td>
-                                      </tr>
-                                <tr>
-                                    <th>#</th>
-                                    <th> Challan No
-                                    </th>
-
-                                    <th>
-                                        Challan Date
-                                    </th>
-
-                                    <th>
-                                        Client Name
-                                    </th>
-
-                                    <th>
-                                        Subject
-                                    </th>
-
-                                    <th>
-                                        Amount
-
-                                    </th>
-
-
-                                </tr>
-
-                                <tr>
-                                    <td>
-
-
-                                    </td>
-                                    <td>
-                                        <input type="text" value="<?php if(isset($_GET['quot_no'])){echo $_GET['quot_no'];} ?>" name="quot_no"  class="listSearchContributor inputElement">
-                                    </td>
-                                    <td>
-                                        <input type="date" value="<?php if(isset($_GET['from_date'])){echo $_GET['from_date'];} ?>" name="from_date" class="listSearchContributor inputElement" id="start_date" autocomplete="off">
-
-                                        <input type="date" value="<?php if(isset($_GET['end_date'])){echo $_GET['end_date'];} ?>" name="end_date" class="listSearchContributor inputElement" id="end_date" autocomplete="off">
-                                    </td>
-                                    <td>
-                                        <input type="text" value="<?php if(isset($_GET['client_name'])){echo $_GET['client_name'];} ?>" name="client_name" class="listSearchContributor inputElement">
-                                    </td>
-                                    <td>
-                                        <input type="text" name="subject" class="listSearchContributor inputElement" value="<?php if(isset($_GET['subject'])){echo $_GET['subject'];} ?>">
-                                    </td>
-                                    <td>
-                                        <input type="text" name="amount" class="listSearchContributor inputElement" value="<?php if(isset($_GET['amount'])){echo $_GET['amount'];} ?>">
-                                    </td>
-
-
-                                </tr>
-
-                                </thead>
-
-
-                                <tbody>
-
-
-                                <?php $srno=0; ?>
-                                <?php
-                                $stage = array('Created' => 'Created', 'Sent' => 'Sent', 'Reviewing' => 'Reviewing', 'QuoteRivision' => 'QuoteRivision', 'Accepted' => 'Accepted', 'Invoiced' => 'Invoiced', 'Canceled' => 'Canceled');
-                                ?>
-                                @foreach($list as $data)
-                                    <?php $srno++; ?>
+                            <div class="table-responsive">
+                                <table class="table table-striped rpt-table">
+                                    <thead>
                                     <tr>
-                                        <td style="width: 2%;vertical-align: top;text-align: center;">
-                                            {{($list->currentPage() - 1) * $list->perPage() + $loop->iteration}}
-                                        </td>
-                                        <td   style="vertical-align: top;">
-                                            @can('delivery_challan_view')
-                                                {{$data->challan_number}}
-                                            @endcan
-                                        </td>
-
-                                        <td   style="vertical-align: top;width: 5%">
-                                            {{date('d-m-Y',strtotime($data->invoice_date))}}
-                                        </td>
-
-                                        <!--      <td  style="vertical-align: top;"></td>
-                                         <td  style="vertical-align: top;"></td> -->
-                                        <td  style="vertical-align: top;width: 25%">{{$data->customer_name}}</td>
-                                        <td  style="vertical-align: top;">{{$data->subject}}</td>
-                                        <td  style="vertical-align: top;width:2%;text-align: left;">{{number_format($data->grand_total)}}
-                                        </td>
-
-
-
+                                        <th>#</th>
+                                        <th>Challan No</th>
+                                        <th>Challan Date</th>
+                                        <th>Customer</th>
+                                        <th>Subject</th>
+                                        <th>Amount</th>
                                     </tr>
-                                @endforeach
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                    @forelse($list as $data)
+                                        <tr>
+                                            <td style="width:2%;text-align:center;">
+                                                {{ ($list->currentPage() - 1) * $list->perPage() + $loop->iteration }}
+                                            </td>
+                                            <td>
+                                                @can('delivery_challan_view')
+                                                    {{ $data->challan_number }}
+                                                @endcan
+                                            </td>
+                                            <td style="white-space:nowrap;">{{ $data->invoice_date ? date('d-m-Y', strtotime($data->invoice_date)) : '-' }}</td>
+                                            <td>{{ $data->customer_name ?? '-' }}</td>
+                                            <td>{{ $data->subject ?? '-' }}</td>
+                                            <td style="text-align:right;">{{ number_format($data->grand_total, 2) }}</td>
+                                        </tr>
+                                        @include('admin.reports.partials.doc_items', ['items' => $items[$data->id] ?? null, 'colspan' => 6])
+                                    @empty
+                                        <tr>
+                                            <td colspan="6" class="text-center" style="padding:30px;color:#999;">No challans found</td>
+                                        </tr>
+                                    @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
 
-                            {{$list->appends(request()->input())->links()}}
+                            <div style="padding: 10px 16px;">
+                                {{ $list->appends(request()->input())->links() }}
+                            </div>
 
                         </div>
                     </div>
                 </div>
 
-                <!-- end row -->
+                {{ Form::close() }}
 
+            </div>
+        </div>
+    </div>
 
-
-            </div> <!-- container -->
-
-        </div> <!-- content -->
-
-     <script src="{{asset('/admin/assets/js/jquery.min.js')}}"></script>
-
-
+    <script src="{{asset('/admin/assets/js/jquery.min.js')}}"></script>
 
 @endsection

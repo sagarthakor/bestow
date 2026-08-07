@@ -24,7 +24,7 @@ class ExportController extends Controller
         $product=$product->leftJoin('category','category.id','product.category');
         $product=$product->leftJoin('material','material.id','product.material');
         $product=$product->where('product.status','product');
-        $product=$product->where('product.website_id',Session::get('website_id'));
+        $product=$product;
 
 
         if(isset($request->product_name))

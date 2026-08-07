@@ -73,7 +73,7 @@
                                 ?>
                                     <tr>
                                         <td>{{$totitem}}</td>
-                                        <td>{{$recvitem->product_name}}</td>
+                                        <td><x-product-name :row="$recvitem" /></td>
                                         <td style="text-align:center">{{$recvitem->order_qty}}</td>
                                         <td style="text-align:center">{{$recvitem->qty_received}}</td>
                                         <td style="text-align:center">{{$recvitem->rem_qty}}</td>

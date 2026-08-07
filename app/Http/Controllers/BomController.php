@@ -53,11 +53,10 @@ class BomController extends Controller
             ->leftJoin("stock_status","stock_status.product","product.id")
             ->orderBy('product_name','asc')
             ->where('product.id',$request->product)
-            ->where('product.website_id',Session::get('website_id'))
             ->first();
        // dd($data);
 
-        $sub_product=bom_sub_product::select('product.product_name',"stock_status.qty")
+        $sub_product=bom_sub_product::select('product.product_name', 'product.value1', 'product.value2',"stock_status.qty")
             ->leftJoin('product','product.id','bom_sub_product.product')
             ->leftJoin("stock_status","stock_status.product","product.id")
             ->where('bom_sub_product.bom_id',$data->id)
@@ -230,15 +229,17 @@ class BomController extends Controller
     {
     	$bom=product::find($request->id);
 
-    	$bom_item=bom_sub_product::select('bom_sub_product.*','product.product_name','stock_status.qty as stockqty')
+    	$bom_item=bom_sub_product::select('bom_sub_product.*','product.product_name', 'product.value1', 'product.value2','stock_status.qty as stockqty')
     	->Join('product','product.id','bom_sub_product.product')
         ->join("stock_status","stock_status.product","bom_sub_product.product")
     	->where('bom_id',$request->id)
     	->get();
 
-    	$product=product::orderBy('product_name','asc')->get();
-        
-        $category=[''=>'select category']+category::where('website_id',Session::get('website_id'))
+        // Product picking on this page uses the select2 AJAX search endpoint
+        // (product_search_options) now, so the full product-table dump that
+        // used to be passed to the view is gone.
+
+        $category=[''=>'select category']+category::query()
                 ->orderBy('category_name','asc')
                 ->get()
                 ->pluck('category_name','id')
@@ -249,44 +250,37 @@ class BomController extends Controller
                 ->pluck('subcategory_name','id')
                 ->toArray();
 
-        $material=[''=>'select material']+material::where('website_id',Session::get('website_id'))
+        $material=[''=>'select material']+material::query()
                 ->orderBy('material_name','asc')
                 ->get()
                 ->pluck('material_name','id')
                 ->toArray();
 
-        $gst=[''=>'select gst']+gst::where('website_id',Session::get('website_id'))
+        $gst=[''=>'select gst']+gst::query()
                 ->orderBy('gst_per','asc')
                 ->get()->pluck('gst_per','id')->toArray();
 
 
-        $uom=[''=>'select uom']+uom::where('website_id',Session::get('website_id'))
+        $uom=[''=>'select uom']+uom::query()
                 ->orderBy('uom_name','asc')
                 ->get()
                 ->pluck('uom_name','id')
                 ->toArray();
 
-        $vendor=[''=>'select vendor']+vendor::where('website_id',Session::get('website_id'))
-                ->orderBy('vendor_name','asc')
-                ->get()
-                ->pluck('vendor_name','id')
-                ->toArray();
-
-        $product=product::select("product.id","product.product_name","stock_status.qty as stockqty")
-            ->orderBy('product.product_name','asc')
-            ->leftJoin("stock_status","stock_status.product","product.id")
-            ->get();
+        // Vendor is not used by this view (no vendor picker on this page);
+        // the full vendor-table dump that used to be passed to the view is
+        // gone.
 
         $manufacturer=[''=>'select Manufacturer']+manufacturer::orderBy('manufacturer_name','asc')
                 ->get()->pluck('manufacturer_name','id')->toArray();
 
         $brand=[''=>'select Brand']+brand::orderBy('brand_name','asc')
                 ->get()->pluck('brand_name','id')->toArray();
-        
+
          $attribute=attribute::orderBy('attribute_name', 'asc')->get();
-         
+
     	return view("admin/bom/bom_edit")
-            ->with(["attribute"=>$attribute,'subcategory'=>$subcategory,'brand'=>$brand,'manufacturer'=>$manufacturer,'bom'=>$bom,'item'=>$bom_item,'product'=>$product,'category'=>$category,'material'=>$material,'gst'=>$gst,'uom'=>$uom,'vendor'=>$vendor]);
+            ->with(["attribute"=>$attribute,'subcategory'=>$subcategory,'brand'=>$brand,'manufacturer'=>$manufacturer,'bom'=>$bom,'item'=>$bom_item,'category'=>$category,'material'=>$material,'gst'=>$gst,'uom'=>$uom]);
 
     }
 
@@ -301,37 +295,37 @@ class BomController extends Controller
             ->where('product.id',$request->id)
             ->first();
 
-        $bom_item=bom_sub_product::select('bom_sub_product.*','product.product_name',"product.hsn","product.product_image")
+        $bom_item=bom_sub_product::select('bom_sub_product.*','product.product_name','product.value1','product.value2',"product.hsn","product.product_image")
             ->leftJoin('product','product.id','bom_sub_product.product')
             ->where('bom_id',$request->id)
             ->get();
 
 
 
-        $category=[''=>'select category']+category::where('website_id',Session::get('website_id'))
+        $category=[''=>'select category']+category::query()
                 ->orderBy('category_name','asc')
                 ->get()
                 ->pluck('category_name','id')
                 ->toArray();
 
-        $material=[''=>'select material']+material::where('website_id',Session::get('website_id'))
+        $material=[''=>'select material']+material::query()
                 ->orderBy('material_name','asc')
                 ->get()
                 ->pluck('material_name','id')
                 ->toArray();
 
-        $gst=[''=>'select gst']+gst::where('website_id',Session::get('website_id'))
+        $gst=[''=>'select gst']+gst::query()
                 ->orderBy('gst_per','asc')
                 ->get()->pluck('gst_per','id')->toArray();
 
 
-        $uom=[''=>'select uom']+uom::where('website_id',Session::get('website_id'))
+        $uom=[''=>'select uom']+uom::query()
                 ->orderBy('uom_name','asc')
                 ->get()
                 ->pluck('uom_name','id')
                 ->toArray();
 
-        $vendor=[''=>'select vendor']+vendor::where('website_id',Session::get('website_id'))
+        $vendor=[''=>'select vendor']+vendor::query()
                 ->orderBy('vendor_name','asc')
                 ->get()
                 ->pluck('vendor_name','id')
@@ -356,7 +350,7 @@ class BomController extends Controller
     	}
     	$bom=$bom->where('status','bom');
     	$bom=$bom->orderBy('id','desc');
-    	$bom=$bom->paginate(10);
+    	$bom=$bom->paginate(session('records_per_page', 30));
 
     	return view("admin/bom/bom_list",compact('bom'));
     }
@@ -463,49 +457,42 @@ class BomController extends Controller
 
     function bom_add()
     {
-        $category=[''=>'select category']+category::where('website_id',Session::get('website_id'))
+        $category=[''=>'select category']+category::query()
                 ->orderBy('category_name','asc')
                 ->get()
                 ->pluck('category_name','id')
                 ->toArray();
 
-        $material=[''=>'select material']+material::where('website_id',Session::get('website_id'))
+        $material=[''=>'select material']+material::query()
                 ->orderBy('material_name','asc')
                 ->get()
                 ->pluck('material_name','id')
                 ->toArray();
 
-        $gst=[''=>'select gst']+gst::where('website_id',Session::get('website_id'))
+        $gst=[''=>'select gst']+gst::query()
                 ->orderBy('gst_per','asc')
                 ->get()->pluck('gst_per','id')->toArray();
 
 
-        $uom=[''=>'select uom']+uom::where('website_id',Session::get('website_id'))
+        $uom=[''=>'select uom']+uom::query()
                 ->orderBy('uom_name','asc')
                 ->get()
                 ->pluck('uom_name','id')
                 ->toArray();
 
-        $vendor=[''=>'select vendor']+vendor::where('website_id',Session::get('website_id'))
-                ->orderBy('vendor_name','asc')
-                ->get()
-                ->pluck('vendor_name','id')
-                ->toArray();
-                
-    	$product=product::select("product.id","product.product_name","stock_status.qty as stockqty")
-            ->orderBy('product.product_name','asc')
-            ->where("product.status","product")
-            ->leftJoin("stock_status","stock_status.product","product.id")
-            ->get();
+        // Product picking on this page uses the select2 AJAX search endpoint
+        // (product_search_options) now, and vendor is not used by this view
+        // (no vendor picker on this page), so the full table dumps that used
+        // to be passed to the view are gone.
 
         $manufacturer=[''=>'select Manufacturer']+manufacturer::orderBy('manufacturer_name','asc')
                 ->get()->pluck('manufacturer_name','id')->toArray();
 
         $brand=[''=>'select Brand']+brand::orderBy('brand_name','asc')
                 ->get()->pluck('brand_name','id')->toArray();
-                
+
         $attribute=attribute::orderBy('attribute_name', 'asc')->get();
-        
-    	return view("admin/bom/bom_add",compact('manufacturer','brand','product','category','material','gst','uom','vendor',"attribute"));
+
+    	return view("admin/bom/bom_add",compact('manufacturer','brand','category','material','gst','uom',"attribute"));
     }
 }

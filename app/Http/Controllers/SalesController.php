@@ -50,7 +50,7 @@ class SalesController extends Controller
 
         $product=$product->select('salesorder.*','customers.customer_name','customers.primary_email','customers.secondary_email');
         $product=$product->leftJoin('customers','customers.id','salesorder.customer');
-        $product=$product->where('salesorder.website_id',Session::get('website_id'));
+        $product=$product;
         $product=$product->where('salesorder.finacial_year',Session::get('finacial_year_id'));
 
         if($request->salaesorder_no != '')
@@ -88,7 +88,7 @@ class SalesController extends Controller
         $product = $product->Where('salesorder.customer',$request->id);
         $product=$product->orderBy("id",'desc');
         $product=$product->whereNull("delete_status");
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
 
         $company_name=company::select('company_name')->first();
 
@@ -112,16 +112,15 @@ class SalesController extends Controller
     function sales_view(Request $request)
     {
         $so=salesorder::where('id',$request->id)
-            ->where('website_id',Session::get('website_id'))
             ->first();
 
-        $soitem=salesorder_item::select('salesorder_item.*','product.product_name','product.make','product.model')
+        $soitem=salesorder_item::select('salesorder_item.*','product.product_name','product.make','product.model','product.value1','product.value2')
             ->leftJoin('product','product.id','salesorder_item.product')
             ->where('salesorder_item.sono',$so->salaesorder_no)
             ->get();
 
 
-        $customer=customers::where('website_id',Session::get('website_id'))
+        $customer=customers::query()
             ->where('id',$so->customer)
             ->first();
 
@@ -130,7 +129,6 @@ class SalesController extends Controller
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
             ->where('product.status','product')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
@@ -138,13 +136,12 @@ class SalesController extends Controller
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
             ->where('product.status','service')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $module=terms::where("website_id",Session::get('website_id'))
+        $module=terms::query()
             ->get()
             ->pluck('module','id')
             ->toArray();
@@ -158,13 +155,13 @@ class SalesController extends Controller
         $so=customer_order::where('id',$request->id)
             ->first();
 
-        $soitem=customer_order_item::select('customer_order_item.*','product.product_name','product.make','product.model',"product.product_image")
+        $soitem=customer_order_item::select('customer_order_item.*','product.product_name', 'product.value1', 'product.value2','product.make','product.model',"product.product_image")
             ->leftJoin('product','product.id','customer_order_item.product')
             ->where('customer_order_item.order_no',$so->order_number)
             ->get();
 
 
-        $customer=customers::where('website_id',Session::get('website_id'))
+        $customer=customers::query()
             ->where('id',$so->customer)
             ->first();
 
@@ -173,7 +170,6 @@ class SalesController extends Controller
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
             ->where('product.status','product')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
@@ -181,13 +177,12 @@ class SalesController extends Controller
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
             ->where('product.status','service')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $module=terms::where("website_id",Session::get('website_id'))
+        $module=terms::query()
             ->get()
             ->pluck('module','id')
             ->toArray();
@@ -205,7 +200,7 @@ class SalesController extends Controller
             ->first();
 
 
-        $soitem=salesorder_item::select('salesorder_item.*',"uom.uom_name","stock_status.qty as stockqty","product.product_image",'product.product_name','product.make','product.model')
+        $soitem=salesorder_item::select('salesorder_item.*',"uom.uom_name","stock_status.qty as stockqty","product.product_image",'product.product_name','product.make','product.model','product.value1','product.value2')
             ->leftJoin('product','product.id','salesorder_item.product')
             ->leftJoin('stock_status','stock_status.product','product.id')
             ->leftJoin('uom','uom.id','product.uom')
@@ -213,7 +208,7 @@ class SalesController extends Controller
             ->get();
 
 
-        $customer=customers::where('website_id',Session::get('website_id'))
+        $customer=customers::query()
             ->where('id',$so->customer)
             ->first();
 
@@ -222,7 +217,6 @@ class SalesController extends Controller
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
             ->where('product.status','product')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
@@ -230,13 +224,12 @@ class SalesController extends Controller
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
             ->where('product.status','service')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $module=terms::where("website_id",Session::get('website_id'))
+        $module=terms::query()
             ->get()
             ->pluck('module','id')
             ->toArray();
@@ -248,22 +241,21 @@ class SalesController extends Controller
     function so_mail(Request $request)
     {
         $data=salesorder::where('id',$request->salesid)
-            ->where('website_id',Session::get('website_id'))
             ->first();
 
-        $quotitem=salesorder_item::select('salesorder_item.*','product.product_name','product.make','product.model')
+        $quotitem=salesorder_item::select('salesorder_item.*','product.product_name', 'product.value1', 'product.value2','product.make','product.model')
             ->leftJoin('product','product.id','salesorder_item.product')
             ->where('salesorder_item.sono',$data->id)
             ->get();
 
-        $discsum=salesorder_item::select('salesorder_item.*','product.product_name','product.make','product.model')
+        $discsum=salesorder_item::select('salesorder_item.*','product.product_name', 'product.value1', 'product.value2','product.make','product.model')
             ->leftJoin('product','product.id','salesorder_item.product')
             ->where('salesorder_item.sono',$data->id)
             ->sum('salesorder_item.discount_amount');
 
 
 
-        $customer=customers::where('website_id',Session::get('website_id'))
+        $customer=customers::query()
             ->where('id',$data->customer)
             ->first();
 
@@ -272,7 +264,6 @@ class SalesController extends Controller
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
             ->where('product.status','product')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
@@ -280,18 +271,17 @@ class SalesController extends Controller
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
             ->where('product.status','service')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $module=terms::where("website_id",Session::get('website_id'))
+        $module=terms::query()
             ->get()
             ->pluck('module','id')
             ->toArray();
 
-        $company=company::where('website_id',Session::get('website_id'))->first();
+        $company=company::query()->first();
 
         $filename="ds";
         $filename .='.pdf';
@@ -346,7 +336,7 @@ class SalesController extends Controller
             ->first();
            // dd($so);
 
-        $soitem=salesorder_item::select('salesorder_item.*','product.product_name',"product.item_code",'product.make','product.model','uom.uom_name','product.product_image','product.material_name','category.category_image','uom.uom_name')
+        $soitem=salesorder_item::select('salesorder_item.*','product.product_name',"product.item_code",'product.make','product.model','uom.uom_name','product.product_image','product.material_name','category.category_image','uom.uom_name','product.value1','product.value2')
             ->leftJoin('product','product.id','salesorder_item.product')
             ->leftJoin('category','category.id','product.category')
             ->leftJoin("uom","uom.id","product.uom")
@@ -355,7 +345,7 @@ class SalesController extends Controller
 
        // dd($soitem);
 
-        $discsum=salesorder_item::select('salesorder_item.*','product.product_name','product.make','product.model')
+        $discsum=salesorder_item::select('salesorder_item.*','product.product_name', 'product.value1', 'product.value2','product.make','product.model')
             ->leftJoin('product','product.id','salesorder_item.product')
             ->where('salesorder_item.sono',$so->salaesorder_no)
             ->sum('salesorder_item.discount_amount');
@@ -372,7 +362,6 @@ class SalesController extends Controller
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
             ->where('product.status','product')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
@@ -380,13 +369,12 @@ class SalesController extends Controller
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
             ->where('product.status','service')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $module=terms::where("website_id",Session::get('website_id'))
+        $module=terms::query()
             ->get()
             ->pluck('module','id')
             ->toArray();
@@ -431,11 +419,10 @@ class SalesController extends Controller
             ->leftJoin('website_user','website_user.id','salesorder.user_id')
             ->leftJoin("customers","customers.id","salesorder.customer")
             ->where('salesorder.id',$request->id)
-            ->where('salesorder.website_id',Session::get('website_id'))
             ->first();
         //dd($so);
 
-        $soitem=salesorder_item::select('salesorder_item.*',"product.item_code",'product.product_name',"product.product_image",'product.make','product.model','uom.uom_name','product.product_image','product.material_name','category.category_image')
+        $soitem=salesorder_item::select('salesorder_item.*',"product.item_code",'product.product_name', 'product.value1', 'product.value2',"product.product_image",'product.make','product.model','uom.uom_name','product.product_image','product.material_name','category.category_image')
             ->leftJoin('product','product.id','salesorder_item.product')
             ->leftJoin('category','category.id','product.category')
             ->leftJoin("uom","uom.id","product.uom")
@@ -444,7 +431,7 @@ class SalesController extends Controller
 
         //dd($soitem);
 
-        $discsum=salesorder_item::select('salesorder_item.*',"product.item_code",'product.product_name','product.make','product.model')
+        $discsum=salesorder_item::select('salesorder_item.*',"product.item_code",'product.product_name', 'product.value1', 'product.value2','product.make','product.model')
             ->leftJoin('product','product.id','salesorder_item.product')
             ->where('salesorder_item.sono',$so->salaesorder_no)
             ->sum('salesorder_item.discount_amount');
@@ -460,7 +447,6 @@ class SalesController extends Controller
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
             ->where('product.status','product')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
@@ -468,13 +454,12 @@ class SalesController extends Controller
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
             ->where('product.status','service')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $module=terms::where("website_id",Session::get('website_id'))
+        $module=terms::query()
             ->get()
             ->pluck('module','id')
             ->toArray();
@@ -512,10 +497,9 @@ class SalesController extends Controller
     function so_edit(Request $request)
     {
         $so=salesorder::where('id',$request->id)
-            ->where('website_id',Session::get('website_id'))
             ->first();
 
-        $soitem=salesorder_item::select('salesorder_item.*',"uom.uom_name","stock_status.qty as stockqty",'product.product_name','product.make','product.model','product.product_image','product.bar_code')
+        $soitem=salesorder_item::select('salesorder_item.*',"uom.uom_name","stock_status.qty as stockqty",'product.product_name','product.make','product.model','product.product_image','product.bar_code','product.value1','product.value2')
             ->leftJoin('product','product.id','salesorder_item.product')
             ->leftJoin('uom','uom.id','product.uom')
             ->leftJoin('stock_status','stock_status.product','product.id')
@@ -535,7 +519,7 @@ class SalesController extends Controller
 
         if(empty($so->contact_name))
         {
-            $contact_name=[''=>'select contact']+contact::where('website_id',Session::get('website_id'))
+            $contact_name=[''=>'select contact']+contact::query()
                     ->where('customer',$so->customer)
                     ->orderBy('contact_name','asc')
                     ->get()
@@ -544,7 +528,7 @@ class SalesController extends Controller
         }else{
             $cname=contact::select('id','contact_name')->where('id',$so->contact_name)->first();
 
-            $contact_name=[$cname->id=>$cname->contact_name]+contact::where('website_id',Session::get('website_id'))
+            $contact_name=[$cname->id=>$cname->contact_name]+contact::query()
                     ->where('customer',$so->customer)
                     ->orderBy('contact_name','asc')
                     ->get()
@@ -605,37 +589,16 @@ class SalesController extends Controller
         //dd($pterms);
 
 
-        $product=product::select('product.*','gst.gst_per','uom.uom_name',"stock_status.qty as stockqty")
-            ->leftJoin('gst','gst.id','product.gst')
-            ->leftJoin('uom','uom.id','product.uom')
-            ->leftJoin('stock_status','stock_status.product','product.id')
-            ->where('product.status','product')
-            ->where('product.website_id',Session::get('website_id'))
-            ->orderBy('product.product_name','asc')
-            ->get();
-
-        $service=product::select('product.*','gst.gst_per','uom.uom_name')
-            ->leftJoin('gst','gst.id','product.gst')
-            ->leftJoin('uom','uom.id','product.uom')
-            ->where('product.status','service')
-            ->where('product.website_id',Session::get('website_id'))
-            ->orderBy('product.product_name','asc')
-            ->get();
+        // Product/service/BOM picking on this page uses the select2 AJAX
+        // search endpoint (product_search_options) now, so the full
+        // product-table dump that used to be passed to the view is gone.
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $module=terms::where("website_id",Session::get('website_id'))
+        $module=terms::query()
             ->get()
             ->pluck('module','id')
             ->toArray();
-
-        $bom=product::select('product.*','gst.gst_per','uom.uom_name')
-            ->leftJoin('gst','gst.id','product.gst')
-            ->leftJoin('uom','uom.id','product.uom')
-            ->where('product.website_id',Session::get('website_id'))
-            ->where('product.status','bom')
-            ->orderBy('product.product_name','asc')
-            ->get();
 
         $reason=sales_update_reason::select("sales_update_reason.*","website_user.first_name","website_user.last_name")
         ->leftJoin("website_user","website_user.id","sales_update_reason.user_id")
@@ -645,7 +608,7 @@ class SalesController extends Controller
 
         $salesMan = salesman::get()->pluck('salesman_name','id')->toArray();
 
-        return view("admin.sales/sales_order_edit")->with(["reason"=>$reason,'contact_name'=>$contact_name,'duedate' => $duedate, 'payment_terms' => $pterms,'bom'=>$bom,'data'=>$so,'quotitem'=>$soitem,'customer'=>$customer,'product'=>$product,'service'=>$service,'module'=>$module, 'salesMan' => $salesMan]);
+        return view("admin.sales/sales_order_edit")->with(["reason"=>$reason,'contact_name'=>$contact_name,'duedate' => $duedate, 'payment_terms' => $pterms,'data'=>$so,'quotitem'=>$soitem,'customer'=>$customer,'module'=>$module, 'salesMan' => $salesMan]);
     }
 
     public function salesorder_list(Request $request)
@@ -653,8 +616,9 @@ class SalesController extends Controller
         $query = salesorder::query()
             ->select('salesorder.*', 'customers.customer_name', 'customers.primary_email', 'customers.secondary_email')
             ->leftJoin('customers', 'customers.id', '=', 'salesorder.customer')
-            ->where('salesorder.website_id', Session::get('website_id'))
             ->whereNull('salesorder.delete_status');
+
+
 
         // 🔹 Filters
         if ($request->filled('salaesorder_no')) {
@@ -725,7 +689,7 @@ class SalesController extends Controller
         }
 
         // 🔹 Fetch and compute custom status
-        $result = $query->orderByDesc('salesorder.id')->paginate(30);
+        $result = $query->orderByDesc('salesorder.id')->paginate(session('records_per_page', 30));
 
         foreach ($result as $order) {
             $order->computed_status = 'done';
@@ -1220,22 +1184,21 @@ class SalesController extends Controller
     {
 
         $quot=quotation::where('id',$request->id)
-            ->where('website_id',Session::get('website_id'))
             ->first();
 
-        $quotitem=quotation_item::select('quot_item.*','product.product_name','product.make','product.model',"product.item_code")
+        $quotitem=quotation_item::select('quot_item.*','product.product_name', 'product.value1', 'product.value2','product.make','product.model',"product.item_code")
             ->leftJoin('product','product.id','quot_item.product')
             ->where('quot_item.quot_no',$quot->quot_no)
             ->get();
 
 
-        $customer=customers::where('website_id',Session::get('website_id'))
+        $customer=customers::query()
             ->where('id',$quot->customer)
             ->first();
 
         if(empty($quot->contact_name))
         {
-            $contact_name=[''=>'select contact']+contact::where('website_id',Session::get('website_id'))
+            $contact_name=[''=>'select contact']+contact::query()
                     ->where('customer',$quot->customer)
                     ->orderBy('contact_name','asc')
                     ->get()
@@ -1244,7 +1207,7 @@ class SalesController extends Controller
         }else{
             $cname=contact::select('id','contact_name')->where('id',$quot->contact_name)->first();
 
-            $contact_name=[$cname->id=>$cname->contact_name]+contact::where('website_id',Session::get('website_id'))
+            $contact_name=[$cname->id=>$cname->contact_name]+contact::query()
                     ->where('customer',$quot->customer)
                     ->orderBy('contact_name','asc')
                     ->get()
@@ -1258,7 +1221,6 @@ class SalesController extends Controller
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
             ->where('product.status','product')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
@@ -1266,21 +1228,19 @@ class SalesController extends Controller
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
             ->where('product.status','service')
-            ->where('product.website_id',Session::get('website_id'))
             ->orderBy('product.product_name','asc')
             ->get();
 
         $bom=product::select('product.*','gst.gst_per','uom.uom_name')
             ->leftJoin('gst','gst.id','product.gst')
             ->leftJoin('uom','uom.id','product.uom')
-            ->where('product.website_id',Session::get('website_id'))
             ->where('product.status','bom')
             ->orderBy('product.product_name','asc')
             ->get();
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $term=terms::where("website_id",Session::get('website_id'))
+        $term=terms::query()
             ->get();
 
         $pterms="";
@@ -1305,10 +1265,9 @@ class SalesController extends Controller
         if(isset($request->id))
         {
             $quot=quotation::where('id',$request->id)
-                ->where('website_id',Session::get('website_id'))
                 ->first();
 
-            $quotitem=quotation_item::select('quot_item.*',"uom.uom_name","stock_status.qty as stockqty","product.item_code",'product.product_name','product.make','product.model',"product.product_image")
+            $quotitem=quotation_item::select('quot_item.*',"uom.uom_name","stock_status.qty as stockqty","product.item_code",'product.product_name','product.make','product.model',"product.product_image",'product.value1','product.value2')
                 ->leftJoin('product','product.id','quot_item.product')
                 ->leftJoin("stock_status","stock_status.product","product.id")
                 ->leftJoin('uom','uom.id','product.uom')
@@ -1325,7 +1284,7 @@ class SalesController extends Controller
 
 
 
-        $contact_name=contact::where('website_id',Session::get('website_id'))
+        $contact_name=contact::query()
             ->orderBy('contact_name','asc')
             ->get()
             ->pluck('contact_name','id')
@@ -1375,42 +1334,21 @@ class SalesController extends Controller
 
         //dd($quotitem);
 
-        $product=product::select('product.*','gst.gst_per','uom.uom_name',"stock_status.qty as stockqty")
-            ->leftJoin('gst','gst.id','product.gst')
-            ->leftJoin('uom','uom.id','product.uom')
-            ->leftJoin('stock_status','stock_status.product','product.id')
-            ->where('product.status','product')
-            ->where('product.website_id',Session::get('website_id'))
-            ->orderBy('product.product_name','asc')
-            ->get();
-
-        $service=product::select('product.*','gst.gst_per','uom.uom_name')
-            ->leftJoin('gst','gst.id','product.gst')
-            ->leftJoin('uom','uom.id','product.uom')
-            ->where('product.status','service')
-            ->where('product.website_id',Session::get('website_id'))
-            ->orderBy('product.product_name','asc')
-            ->get();
-
-        $bom=product::select('product.*','gst.gst_per','uom.uom_name')
-            ->leftJoin('gst','gst.id','product.gst')
-            ->leftJoin('uom','uom.id','product.uom')
-            ->where('product.website_id',Session::get('website_id'))
-            ->where('product.status','bom')
-            ->orderBy('product.product_name','asc')
-            ->get();
+        // Product/service/BOM picking on this page uses the select2 AJAX
+        // search endpoint (product_search_options) now, so the full
+        // product-table dump that used to be passed to the view is gone.
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $term=terms::where("website_id",Session::get('website_id'))
+        $term=terms::query()
             ->get();
 
-         $module=terms::where("website_id",Session::get('website_id'))
+         $module=terms::query()
             ->get()
             ->pluck('module','id')
             ->toArray();
 
-        return view("admin.sales/sales_order_add")->with(["module"=>$module,'contact_name'=>$contact_name,'duedate' => $duedate, 'payment_terms' => $pterms,'bom'=>$bom,'data'=>$quot,'quotitem'=>$quotitem,'customer'=>$customer,'product'=>$product,'service'=>$service,'term'=>$term, 'salesMan' => $salesMan]);
+        return view("admin.sales/sales_order_add")->with(["module"=>$module,'contact_name'=>$contact_name,'duedate' => $duedate, 'payment_terms' => $pterms,'data'=>$quot,'quotitem'=>$quotitem,'customer'=>$customer,'term'=>$term, 'salesMan' => $salesMan]);
     }
 
 }

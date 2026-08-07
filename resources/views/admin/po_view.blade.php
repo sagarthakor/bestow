@@ -1,4 +1,4 @@
-@extends('admin.layout.master')
+@extends('admin.layout.master_material')
 
 @section('title', 'Purchase View')
 
@@ -188,7 +188,7 @@
                                                         <tr id="row{{$srno}}">
                                                             <td>{{$srno}}</td>
                                                             <td style="vertical-align: top !important;width: 20%">
-                                                                {{$item->product_name}}
+                                                                <x-product-name :row="$item" />
 
                                                             </td>
 {{--                                                            <td style="vertical-align: top !important;text-align: center;">--}}

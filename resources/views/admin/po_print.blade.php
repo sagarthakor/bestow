@@ -195,7 +195,7 @@
                 @foreach($quotitem as $item)
                     <tr>
                         <td class="text-center">{{$srno++}}</td>
-                        <td>{{$item->product_name}}<br>HSN: {{$item->hsn}}</td>
+                        <td><x-product-name :row="$item" print /><br>HSN: {{$item->hsn}}</td>
                         {{-- <td class="text-center">
                              @if($item->product_image)
                                  <img src="{{public_path('/product_image/'.$item->product_image)}}" height="40">

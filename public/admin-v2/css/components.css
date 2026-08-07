@@ -1,0 +1,507 @@
+/* ==========================================================================
+   COMPONENT LAYER
+   Built on top of Bootstrap 5.3 + tokens.css. Nothing here duplicates
+   Bootstrap's mechanics (grid, flex utilities, JS behavior) — this file only
+   re-skins the handful of components enterprise dashboards live in:
+   buttons, badges, forms, tables, cards, modals, alerts.
+
+   Load order required: bootstrap.min.css -> tokens.css -> components.css
+   (theme.css does this for you via @import).
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------- */
+/* 0. Base                                                                  */
+/* ---------------------------------------------------------------------- */
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-family-base);
+  font-size: var(--fs-base);
+  line-height: var(--lh-normal);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-body);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family-base);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+  color: var(--color-text-primary);
+}
+
+h1 { font-size: var(--fs-4xl); }
+h2 { font-size: var(--fs-3xl); }
+h3 { font-size: var(--fs-2xl); }
+h4 { font-size: var(--fs-xl); }
+h5 { font-size: var(--fs-lg); }
+h6 { font-size: var(--fs-md); }
+
+small, .text-sm { font-size: var(--fs-sm); }
+.text-xs { font-size: var(--fs-xs); }
+.text-muted { color: var(--color-text-muted) !important; }
+.text-secondary { color: var(--color-text-secondary) !important; }
+
+a {
+  color: var(--color-text-link);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+a:hover { color: var(--color-primary-hover); }
+
+::selection {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+/* Focus ring — consistent across every interactive element instead of
+   each browser's inconsistent default outline */
+.btn:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* 1. Buttons                                                               */
+/* ---------------------------------------------------------------------- */
+
+.btn {
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-base);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1rem;
+  line-height: var(--lh-normal);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast),
+              box-shadow var(--transition-fast), transform var(--transition-fast);
+  border-width: 1px;
+}
+
+.btn:active { transform: translateY(1px); }
+
+.btn-sm { font-size: var(--fs-sm); padding: 0.3125rem 0.75rem; border-radius: var(--radius-sm); }
+.btn-lg { font-size: var(--fs-md); padding: 0.6875rem 1.25rem; border-radius: var(--radius-lg); }
+
+/* Icon-only square button (table row actions, toolbar icons) */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border-radius: var(--radius-md);
+}
+.btn-icon.btn-sm { width: 1.875rem; height: 1.875rem; }
+
+.btn-primary {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  box-shadow: var(--shadow-xs);
+}
+.btn-primary:hover { background-color: var(--color-primary-hover); border-color: var(--color-primary-hover); color: var(--color-primary-contrast); }
+.btn-primary:active,
+.btn-primary:focus { background-color: var(--color-primary-active); border-color: var(--color-primary-active); }
+
+.btn-secondary {
+  background-color: var(--color-bg-surface);
+  border-color: var(--color-border-strong);
+  color: var(--color-text-primary);
+}
+.btn-secondary:hover { background-color: var(--color-bg-subtle); border-color: var(--color-border-strong); color: var(--color-text-primary); }
+
+.btn-success { background-color: var(--color-success); border-color: var(--color-success); color: #fff; }
+.btn-warning { background-color: var(--color-warning); border-color: var(--color-warning); color: #fff; }
+.btn-danger  { background-color: var(--color-danger);  border-color: var(--color-danger);  color: #fff; }
+.btn-info    { background-color: var(--color-info);    border-color: var(--color-info);    color: #fff; }
+
+/* Ghost — text-only button with no border/background until hovered
+   (toolbar actions, "Cancel" buttons) */
+.btn-ghost {
+  background-color: transparent;
+  border-color: transparent;
+  color: var(--color-text-secondary);
+}
+.btn-ghost:hover { background-color: var(--color-bg-subtle); color: var(--color-text-primary); }
+
+/* Soft — tinted background variant, one per semantic color (Metronic-style
+   "light" buttons, softer than solid, stronger than ghost) */
+.btn-soft-primary { background-color: var(--color-primary-soft); border-color: transparent; color: var(--color-primary); }
+.btn-soft-primary:hover { background-color: var(--color-primary); border-color: var(--color-primary); color: var(--color-primary-contrast); }
+
+.btn-soft-success { background-color: var(--color-success-soft); border-color: transparent; color: var(--color-success-text); }
+.btn-soft-warning { background-color: var(--color-warning-soft); border-color: transparent; color: var(--color-warning-text); }
+.btn-soft-danger  { background-color: var(--color-danger-soft);  border-color: transparent; color: var(--color-danger-text); }
+.btn-soft-info    { background-color: var(--color-info-soft);    border-color: transparent; color: var(--color-info-text); }
+
+.btn:disabled, .btn.disabled {
+  opacity: 0.55;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Loading state — usage: <button class="btn btn-primary is-loading"> */
+.btn.is-loading {
+  color: transparent !important;
+  pointer-events: none;
+  position: relative;
+}
+.btn.is-loading::after {
+  content: "";
+  position: absolute;
+  width: 1rem;
+  height: 1rem;
+  top: calc(50% - 0.5rem);
+  left: calc(50% - 0.5rem);
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  color: var(--color-primary-contrast);
+  animation: btn-spin 0.6s linear infinite;
+}
+.btn-secondary.is-loading::after,
+.btn-ghost.is-loading::after,
+.btn-soft-primary.is-loading::after { color: var(--color-text-primary); }
+
+@keyframes btn-spin { to { transform: rotate(360deg); } }
+
+.btn-group .btn { border-radius: 0; }
+.btn-group .btn:first-child { border-top-left-radius: var(--radius-md); border-bottom-left-radius: var(--radius-md); }
+.btn-group .btn:last-child { border-top-right-radius: var(--radius-md); border-bottom-right-radius: var(--radius-md); }
+
+/* ---------------------------------------------------------------------- */
+/* 2. Badges / status pills                                                 */
+/* ---------------------------------------------------------------------- */
+
+.badge {
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 0.3em 0.65em;
+  border-radius: var(--radius-full);
+  line-height: 1.4;
+}
+
+/* Solid */
+.badge-primary { background-color: var(--color-primary); color: var(--color-primary-contrast); }
+.badge-success { background-color: var(--color-success); color: #fff; }
+.badge-warning { background-color: var(--color-warning); color: #fff; }
+.badge-danger  { background-color: var(--color-danger);  color: #fff; }
+.badge-info    { background-color: var(--color-info);    color: #fff; }
+.badge-neutral { background-color: var(--gray-500); color: #fff; }
+
+/* Soft (default recommendation for status pills — Created/Approved/etc,
+   less visually loud than solid, reads well in dense tables) */
+.badge-soft-primary { background-color: var(--color-primary-soft); color: var(--color-primary); }
+.badge-soft-success { background-color: var(--color-success-soft); color: var(--color-success-text); }
+.badge-soft-warning { background-color: var(--color-warning-soft); color: var(--color-warning-text); }
+.badge-soft-danger  { background-color: var(--color-danger-soft);  color: var(--color-danger-text); }
+.badge-soft-info    { background-color: var(--color-info-soft);    color: var(--color-info-text); }
+.badge-soft-neutral { background-color: var(--color-bg-subtle); color: var(--color-text-secondary); }
+
+/* Dot variant — small colored dot + label, no pill background
+   (used in compact lists / "at a glance" widgets) */
+.badge-dot { display: inline-flex; align-items: center; gap: 0.4em; font-weight: var(--fw-medium); text-transform: none; letter-spacing: normal; padding: 0; background: none; color: var(--color-text-secondary); font-size: var(--fs-sm); }
+.badge-dot::before { content: ""; width: 0.5em; height: 0.5em; border-radius: 50%; background: currentColor; }
+.badge-dot.text-primary::before,
+.badge-dot.text-success::before,
+.badge-dot.text-warning::before,
+.badge-dot.text-danger::before,
+.badge-dot.text-info::before { background: currentColor; }
+
+/* ---------------------------------------------------------------------- */
+/* 3. Forms                                                                 */
+/* ---------------------------------------------------------------------- */
+
+.form-label {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-2);
+}
+.form-label .required::after { content: " *"; color: var(--color-danger); }
+
+.form-control, .form-select {
+  font-size: var(--fs-base);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.75rem;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.form-control::placeholder { color: var(--color-text-muted); }
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+
+.form-control:disabled, .form-select:disabled {
+  background-color: var(--color-bg-subtle);
+  color: var(--color-text-muted);
+}
+
+.form-control.is-invalid, .form-select.is-invalid { border-color: var(--color-danger); }
+.form-control.is-invalid:focus, .form-select.is-invalid:focus { box-shadow: 0 0 0 3px var(--color-danger-soft); }
+.form-control.is-valid, .form-select.is-valid { border-color: var(--color-success); }
+
+.invalid-feedback { font-size: var(--fs-sm); color: var(--color-danger); margin-top: var(--space-1); }
+.valid-feedback   { font-size: var(--fs-sm); color: var(--color-success); margin-top: var(--space-1); }
+.form-text { font-size: var(--fs-sm); color: var(--color-text-muted); margin-top: var(--space-1); }
+
+/* Floating labels — Bootstrap 5 ships this mechanism natively; we only
+   retheme the color/border to match tokens */
+.form-floating > label { color: var(--color-text-muted); }
+.form-floating > .form-control:focus ~ label,
+.form-floating > .form-control:not(:placeholder-shown) ~ label { color: var(--color-text-secondary); }
+
+.form-check-input {
+  border-color: var(--color-border-strong);
+  width: 1.1em;
+  height: 1.1em;
+}
+.form-check-input:checked {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.form-check-input:focus {
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+  border-color: var(--color-border-focus);
+}
+.form-check-label { font-size: var(--fs-base); color: var(--color-text-primary); }
+
+/* Switch (Bootstrap 5 form-switch), sized up slightly for touch targets */
+.form-switch .form-check-input { width: 2.25em; height: 1.25em; }
+
+.input-group-text {
+  background-color: var(--color-bg-subtle);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+fieldset legend {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-4);
+  width: 100%;
+}
+
+/* ---------------------------------------------------------------------- */
+/* 4. Tables                                                                */
+/* ---------------------------------------------------------------------- */
+
+.table {
+  --bs-table-bg: var(--color-bg-surface);
+  --bs-table-color: var(--color-text-primary);
+  --bs-table-border-color: var(--color-border);
+  --bs-table-striped-bg: var(--color-bg-subtle);
+  --bs-table-hover-bg: var(--color-primary-soft);
+  font-size: var(--fs-base);
+  margin-bottom: 0;
+}
+
+.table > thead > tr > th {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  background-color: var(--color-bg-subtle);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-3) var(--space-4);
+  white-space: nowrap;
+}
+
+.table > tbody > tr > td {
+  padding: var(--space-3) var(--space-4);
+  vertical-align: middle;
+  border-bottom-color: var(--color-border);
+}
+
+.table > tbody > tr:last-child > td { border-bottom: 0; }
+
+/* Density variants: default = comfortable. Add .table-compact for dense
+   master-data lists, .table-relaxed for documents with fewer, taller rows */
+.table-compact > thead > tr > th,
+.table-compact > tbody > tr > td { padding: var(--space-2) var(--space-3); }
+
+.table-relaxed > tbody > tr > td { padding: var(--space-4) var(--space-4); }
+
+/* Sticky header — pair with a .table-responsive wrapper that has a
+   constrained max-height */
+.table-sticky-header thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* Row action icons (edit/delete/view) — replaces bare <i class="fa-..."> */
+.table-actions { display: inline-flex; gap: var(--space-1); white-space: nowrap; }
+
+.table-responsive {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+}
+.table-responsive .table { border: 0; }
+
+/* Empty state — usage: a single <tr><td colspan="N"><div class="table-empty">...</div></td></tr> */
+.table-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-12) var(--space-4);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+.table-empty i, .table-empty svg { font-size: var(--fs-4xl); opacity: 0.4; }
+
+/* ---------------------------------------------------------------------- */
+/* 5. Cards                                                                 */
+/* ---------------------------------------------------------------------- */
+
+.card {
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.card-header {
+  background-color: transparent;
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-4) var(--space-5);
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-md);
+  color: var(--color-text-primary);
+}
+
+.card-body { padding: var(--space-5); }
+
+.card-footer {
+  background-color: transparent;
+  border-top: 1px solid var(--color-border);
+  padding: var(--space-4) var(--space-5);
+}
+
+/* Elevation variants */
+.card-flat { box-shadow: none; }
+.card-elevated { box-shadow: var(--shadow-md); border-color: transparent; }
+
+/* Interactive/hoverable card (dashboard KPI links, clickable list cards) */
+.card-hover { transition: transform var(--transition-base), box-shadow var(--transition-base); }
+.card-hover:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+
+/* Stat / KPI card — icon + value + label, the pattern proven on the dashboard */
+.stat-card { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-5); }
+.stat-card .stat-icon {
+  flex: 0 0 auto;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-xl);
+  color: var(--color-primary-contrast);
+  background-color: var(--color-primary);
+}
+.stat-card .stat-value { font-size: var(--fs-2xl); font-weight: var(--fw-bold); color: var(--color-text-primary); line-height: var(--lh-tight); }
+.stat-card .stat-label { font-size: var(--fs-sm); color: var(--color-text-secondary); }
+.stat-card .stat-delta { font-size: var(--fs-xs); font-weight: var(--fw-semibold); }
+.stat-card .stat-delta.up { color: var(--color-success); }
+.stat-card .stat-delta.down { color: var(--color-danger); }
+
+/* ---------------------------------------------------------------------- */
+/* 6. Modals                                                                */
+/* ---------------------------------------------------------------------- */
+
+.modal-content {
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+}
+
+.modal-header {
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-5);
+}
+.modal-title { font-size: var(--fs-lg); font-weight: var(--fw-semibold); }
+
+.modal-body { padding: var(--space-5); color: var(--color-text-primary); }
+
+.modal-footer {
+  border-top: 1px solid var(--color-border);
+  padding: var(--space-4) var(--space-5);
+}
+
+.modal-backdrop { background-color: var(--overlay-scrim); }
+.modal-backdrop.show { opacity: 1; }
+
+/* Confirm/danger variant — usage: add .modal-confirm-danger on .modal-content
+   (via a wrapper class on .modal, e.g. <div class="modal modal-confirm-danger">) */
+.modal-confirm-danger .modal-header { border-bottom-color: var(--color-danger-soft); }
+.modal-confirm-danger .modal-icon {
+  width: 3rem; height: 3rem; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background-color: var(--color-danger-soft); color: var(--color-danger);
+  font-size: var(--fs-xl); margin-bottom: var(--space-3);
+}
+
+/* ---------------------------------------------------------------------- */
+/* 7. Alerts                                                                */
+/* ---------------------------------------------------------------------- */
+
+.alert {
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  font-size: var(--fs-base);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.alert .alert-icon { font-size: var(--fs-lg); line-height: 1; margin-top: 0.1em; }
+.alert .alert-title { font-weight: var(--fw-semibold); margin-bottom: var(--space-1); }
+
+.alert-primary { background-color: var(--color-primary-soft); color: var(--color-primary); border-color: transparent; }
+.alert-success { background-color: var(--color-success-soft); color: var(--color-success-text); }
+.alert-warning { background-color: var(--color-warning-soft); color: var(--color-warning-text); }
+.alert-danger  { background-color: var(--color-danger-soft);  color: var(--color-danger-text); }
+.alert-info    { background-color: var(--color-info-soft);    color: var(--color-info-text); }
+
+/* Solid banner variant — full-width, page-level notices */
+.alert-solid.alert-primary { background-color: var(--color-primary); color: var(--color-primary-contrast); }
+.alert-solid.alert-success { background-color: var(--color-success); color: #fff; }
+.alert-solid.alert-warning { background-color: var(--color-warning); color: #fff; }
+.alert-solid.alert-danger  { background-color: var(--color-danger);  color: #fff; }
+.alert-solid.alert-info    { background-color: var(--color-info);    color: #fff; }
+
+.alert .btn-close { margin-left: auto; }
+
+/* ---------------------------------------------------------------------- */
+/* 8. Utilities used across components                                     */
+/* ---------------------------------------------------------------------- */
+
+.bg-surface  { background-color: var(--color-bg-surface) !important; }
+.bg-subtle   { background-color: var(--color-bg-subtle) !important; }
+.border-token { border-color: var(--color-border) !important; }
+.rounded-token-lg { border-radius: var(--radius-lg) !important; }
+.shadow-token-sm { box-shadow: var(--shadow-sm) !important; }
+.shadow-token-md { box-shadow: var(--shadow-md) !important; }

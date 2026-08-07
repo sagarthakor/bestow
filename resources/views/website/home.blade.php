@@ -51,7 +51,7 @@
     }
     .cat-strip .cat-item:hover { transform: translateY(-4px); }
     .cat-strip .cat-img-wrap {
-        width: 80px; height: 80px; border-radius: 50%;
+        width: 110px; height: 110px; border-radius: 50%;
         background: #fff; border: 2px solid var(--border);
         display: flex; align-items: center; justify-content: center;
         overflow: hidden; box-shadow: var(--shadow);
@@ -60,8 +60,8 @@
     .cat-strip .cat-item:hover .cat-img-wrap {
         border-color: var(--brand); box-shadow: 0 4px 16px rgba(232,62,16,.2);
     }
-    .cat-strip .cat-img-wrap img { width: 58px; height: 58px; object-fit: contain; }
-    .cat-strip .cat-name { font-size: 12px; font-weight: 600; color: var(--text); text-align: center; }
+    .cat-strip .cat-img-wrap img { width: 82px; height: 82px; object-fit: contain; }
+    .cat-strip .cat-name { font-size: 13px; font-weight: 600; color: var(--text); text-align: center; }
 
     /* ─── PROMO BOXES ──────────────────────── */
     .promo-box {

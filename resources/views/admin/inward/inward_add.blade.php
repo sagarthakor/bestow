@@ -1,4 +1,4 @@
-@extends('admin.layout.master')
+@extends('admin.layout.master_material')
 
 @section('title', 'Add Inward')
 
@@ -149,7 +149,7 @@
                                                 <select class="form-control js-example-basic-single product" name="product[]">
                                                     <option value="">select product</option>
                                                     @foreach($product1 as $prod)
-                                                        <option value="{{$prod->id}}">{{$prod->item_code}} - {{$prod->product_name}}</option>
+                                                        <option value="{{$prod->id}}">{{$prod->item_code}} - {{ \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) }}</option>
                                                     @endforeach
                                                 </select>
 
@@ -440,7 +440,7 @@
                 e.preventDefault();
                 var i = $("#totrow").val();
                 i++;
-                var data = "<tr id='row" + i + "'><td style='vertical-align: top !important;text-align: center;width:10%'><input type='text'  onfocusout='search_product(this)' class='itemname form-control'></td><td><select class='product form-control js-example-basic-single' onchange='get_product(this.value," + i + ")' name='product[]' id='product" + i + "'> <option value=''>select</option>@foreach($product1 as $prod)<option value='{{$prod->id}}'>{{$prod->item_code}} - {{$prod->product_name}}</option>@endforeach</select></td><td><input type='text' name='received[]' class='form-control' autocomplete='off'></td>";
+                var data = "<tr id='row" + i + "'><td style='vertical-align: top !important;text-align: center;width:10%'><input type='text'  onfocusout='search_product(this)' class='itemname form-control'></td><td><select class='product form-control js-example-basic-single' onchange='get_product(this.value," + i + ")' name='product[]' id='product" + i + "'> <option value=''>select</option>@foreach($product1 as $prod)<option value='{{$prod->id}}'>{{$prod->item_code}} - {{ \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) }}</option>@endforeach</select></td><td><input type='text' name='received[]' class='form-control' autocomplete='off'></td>";
                 data += '<td class="actions" style="vertical-align: top !important;text-align:center"><a style="customer:pointer" onclick="remove_row(this)" class="rowremove"><i class="fa fa-trash" style="font-size: 22px"></i></a></td></tr>';
                 $("#caltable").append(data);
                 $(document).ready(function () {
@@ -453,7 +453,7 @@
                 e.preventDefault();
                 var i = $("#totrow").val();
                 i++;
-                var data = "<tr id='row" + i + "'><td style='vertical-align: top !important;text-align: center;width:10%'><input type='text'  onfocusout='search_product(this)' class='itemname form-control'></td><td><select class='product form-control js-example-basic-single bom'  name='bom[]' id='product" + i + "'> <option value=''>select bom</option>@foreach($bom as $bomprod)<option value='{{$bomprod->id}}'>{{$bomprod->product_name}}</option>@endforeach</select></td><td><input oninput='checkstock(this)' type='text' name='bom_qty[]' class='form-control bom_qty' autocomplete='off'></td>";
+                var data = "<tr id='row" + i + "'><td style='vertical-align: top !important;text-align: center;width:10%'><input type='text'  onfocusout='search_product(this)' class='itemname form-control'></td><td><select class='product form-control js-example-basic-single bom'  name='bom[]' id='product" + i + "'> <option value=''>select bom</option>@foreach($bom as $bomprod)<option value='{{$bomprod->id}}'>{{ \App\product::nameWithVariantInline($bomprod->product_name, $bomprod->value1 ?? null, $bomprod->value2 ?? null) }}</option>@endforeach</select></td><td><input oninput='checkstock(this)' type='text' name='bom_qty[]' class='form-control bom_qty' autocomplete='off'></td>";
                 data += '<td class="actions" style="vertical-align: top !important;text-align:center"><a style="customer:pointer" onclick="remove_row(this)" class="rowremove"><i class="fa fa-trash" style="font-size: 22px"></i></a></td></tr>';
                 $("#caltable").append(data);
                 $(document).ready(function () {

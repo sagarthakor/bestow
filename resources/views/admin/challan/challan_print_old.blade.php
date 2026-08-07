@@ -199,7 +199,7 @@ if ($discsum == 0) {
                         <?php $srno++; ?>
                     <tr>
                         <td style="text-align: center;">{{$srno}}</td>
-                        <td>{{$item->product_name}}<br>HSN: {{$item->product_name}}</td>
+                        <td><x-product-name :row="$item" print /><br>HSN: {{$item->hsn}}</td>
                         <td style="text-align: center;">{{$item->qty}} {{$item->uom_name}}</td>
                         <td style="text-align: center;">{{number_format($item->price,2,'.',',')}}</td>
                         @if($discsum != 0)

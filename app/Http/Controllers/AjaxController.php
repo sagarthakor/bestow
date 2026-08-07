@@ -130,7 +130,7 @@ class AjaxController extends Controller
 
     function get_quot_item(Request $request)
     {
-        $soitem=quotation_item::select('quot_item.*','product.product_name','material.material_name','product.outer_diameter','product.inner_diameter','product.thikness')
+        $soitem=quotation_item::select('quot_item.*','product.product_name', 'product.value1', 'product.value2','material.material_name','product.outer_diameter','product.inner_diameter','product.thikness')
             ->leftJoin('product','product.id','quot_item.product')
             ->leftJoin('material','material.id','product.material')
             ->where('quot_item.quotation_no',$request->quot)
@@ -190,7 +190,7 @@ class AjaxController extends Controller
                     $str .= "</tr>";
                 }
             }else{
-                $bomproduct=bom_sub_product::select('bom_sub_product.*','product.product_name','material.material_name','product.outer_diameter','product.inner_diameter','product.thikness')
+                $bomproduct=bom_sub_product::select('bom_sub_product.*','product.product_name', 'product.value1', 'product.value2','material.material_name','product.outer_diameter','product.inner_diameter','product.thikness')
                     ->leftJoin('product','product.id','bom_sub_product.product')
                     ->leftJoin('material','material.id','product.material')
                     ->where('bom_sub_product.bom_id',$prod->id)
@@ -245,7 +245,7 @@ class AjaxController extends Controller
 
     function get_sales_item(Request $request)
     {
-        $soitem=salesorder_item::select('salesorder_item.*','product.product_name','material.material_name','product.outer_diameter','product.inner_diameter','product.thikness')
+        $soitem=salesorder_item::select('salesorder_item.*','product.product_name', 'product.value1', 'product.value2','material.material_name','product.outer_diameter','product.inner_diameter','product.thikness')
             ->leftJoin('product','product.id','salesorder_item.product')
             ->leftJoin('material','material.id','product.material')
             ->where('salesorder_item.sono',$request->sono)
@@ -305,7 +305,7 @@ class AjaxController extends Controller
                     $str .= "</tr>";
                 }
             }else{
-                $bomproduct=bom_sub_product::select('bom_sub_product.*','product.product_name','material.material_name','product.outer_diameter','product.inner_diameter','product.thikness')
+                $bomproduct=bom_sub_product::select('bom_sub_product.*','product.product_name', 'product.value1', 'product.value2','material.material_name','product.outer_diameter','product.inner_diameter','product.thikness')
                     ->leftJoin('product','product.id','bom_sub_product.product')
                     ->leftJoin('material','material.id','product.material')
                     ->where('bom_sub_product.bom_id',$prod->id)
@@ -475,7 +475,7 @@ class AjaxController extends Controller
       <td style="vertical-align: top !important;width: 20%">
       <div class="form-group">
       <select class="form-control product js-example-basic-single" onchange="get_product(this)" name="product[]" id="product'.$srno.'">
-      <option value="'.$item->id.'">'.$item->product_name.'</option>';
+      <option value="'.$item->id.'">'.\App\product::nameWithVariantInline($item->product_name, $item->value1 ?? null, $item->value2 ?? null).'</option>';
       $str .='</select>
       </div>
       <div class="form-group">
@@ -627,7 +627,6 @@ class AjaxController extends Controller
     ->leftJoin('gst','gst.id','product.gst')
     ->leftJoin('uom','uom.id','product.uom')
     ->leftJoin('category','category.id','product.category')
-    ->where('product.website_id',Session::get('website_id'))
     ->where('product.status','service')
     ->orderBy('product.product_name','asc')
     ->get();
@@ -636,7 +635,6 @@ class AjaxController extends Controller
     ->leftJoin('gst','gst.id','product.gst')
     ->leftJoin('uom','uom.id','product.uom')
     ->leftJoin('category','category.id','product.category')
-    ->where('product.website_id',Session::get('website_id'))
     ->where('product.status','product')
     ->orderBy('product.product_name','asc')
     ->get();
@@ -645,17 +643,16 @@ class AjaxController extends Controller
     ->leftJoin('gst','gst.id','product.gst')
     ->leftJoin('uom','uom.id','product.uom')
     ->leftJoin('category','category.id','product.category')
-    ->where('product.website_id',Session::get('website_id'))
     ->where('product.status','bom')
     ->orderBy('product.product_name','asc')
     ->get();
 
 
 
-    $term=[''=>'select terms']+terms::where("website_id",Session::get('website_id'))
+    $term=[''=>'select terms']+terms::query()
     ->get()->pluck('module','id')->toArray();
 
-      $module=[''=>'select terms']+terms::where("website_id",Session::get('website_id'))
+      $module=[''=>'select terms']+terms::query()
               ->get()->pluck('module','id')->toArray();
 
 
@@ -752,14 +749,14 @@ if($request->thik != '')
 
 // }
 
-$product=$product->where('product.website_id',Session::get('website_id'));
+$product=$product;
 $product=$product->where('product.status','product');
         //echo print_r($request->all());
 $product = $product->get();
 //dd($product);
 
 $quotation_item=new quotation_item();
-$quotation_item=$quotation_item->select('product.product_name','quot_item.price as qprice','customers.customer_name','category.category_name as catname','material.material_name as matname','product.inner_diameter as pinner','product.outer_diameter as pouter','product.thikness as pthik','product.id as pid','quot_item.description as qdesc','quot_item.quotation_no');
+$quotation_item=$quotation_item->select('product.product_name', 'product.value1', 'product.value2','quot_item.price as qprice','customers.customer_name','category.category_name as catname','material.material_name as matname','product.inner_diameter as pinner','product.outer_diameter as pouter','product.thikness as pthik','product.id as pid','quot_item.description as qdesc','quot_item.quotation_no');
 $quotation_item=$quotation_item->leftJoin('customers','customers.id','quot_item.customer');
 $quotation_item=$quotation_item->leftJoin('product','product.id','quot_item.product');
 $quotation_item=$quotation_item->leftJoin('category','category.id','product.category');
@@ -939,14 +936,14 @@ if($request->thik != '')
 
 // }
 
-$product=$product->where('product.website_id',Session::get('website_id'));
+$product=$product;
 $product=$product->where('product.status','service');
         //echo print_r($request->all());
 $product = $product->get();
 //dd($product);
 
 $quotation_item=new quotation_item();
-$quotation_item=$quotation_item->select('product.product_name','quot_item.price as qprice','customers.customer_name','category.category_name as catname','material.material_name as matname','product.inner_diameter as pinner','product.outer_diameter as pouter','product.thikness as pthik','product.id as pid','quot_item.description as qdesc','quot_item.quotation_no');
+$quotation_item=$quotation_item->select('product.product_name', 'product.value1', 'product.value2','quot_item.price as qprice','customers.customer_name','category.category_name as catname','material.material_name as matname','product.inner_diameter as pinner','product.outer_diameter as pouter','product.thikness as pthik','product.id as pid','quot_item.description as qdesc','quot_item.quotation_no');
 $quotation_item=$quotation_item->leftJoin('customers','customers.id','quot_item.customer');
 $quotation_item=$quotation_item->leftJoin('product','product.id','quot_item.product');
 $quotation_item=$quotation_item->leftJoin('category','category.id','product.category');
@@ -1049,7 +1046,7 @@ function get_state(Request $request)
 
 function get_terms(Request $request)
 {
-  $data=terms::where('id',$request->module)->where('website_id',Session::get('website_id'))->first();
+  $data=terms::where('id',$request->module)->first();
   if(empty($data))
   {
     $str='<div class="form-group"> <label>Terms & Conditions</label><textarea id="term_condition" class="form-control" name="term_condition">Not Found</textarea></div>';
@@ -1074,7 +1071,7 @@ function ajax_service_save(Request $request)
     {
      if($service->id==$list->id)
      {
-      $str .='<option value="'.$list->id.'">'.$list->product_name.'</option>';
+      $str .='<option value="'.$list->id.'">'.\App\product::nameWithVariantInline($list->product_name, $list->value1 ?? null, $list->value2 ?? null).'</option>';
     }
   }
 
@@ -1151,30 +1148,35 @@ function ajax_vendor_save(Request $request)
 function ajax_getproduct(Request $request)
 {
  $product=product::find($request->product);
- $str='<option value="'.$product->id.'">'.$product->product_name.'</option>';
+ $str='<option value="'.$product->id.'">'.$this->product_option_label($product).'</option>';
  $product_list=product::orderBy('product_name','asc')->where('status','product')->get();
 
  foreach($product_list as $list)
  {
   if($product->id==$list->id)
    {}else{
-     $str .='<option value="'.$list->id.'">'.$list->product_name.'</option>';
+     $str .='<option value="'.$list->id.'">'.$this->product_option_label($list).'</option>';
    }
  }
  return $str;
 }
 
+function product_option_label($product)
+{
+ return product::nameWithVariantInline($product->item_code.' - '.$product->product_name, $product->value1 ?? null, $product->value2 ?? null);
+}
+
 function ajax_getservice(Request $request)
 {
  $product=product::find($request->product);
- $str='<option value="'.$product->id.'">'.$product->product_name.'</option>';
+ $str='<option value="'.$product->id.'">'.\App\product::nameWithVariantInline($product->product_name, $product->value1 ?? null, $product->value2 ?? null).'</option>';
  $product_list=product::orderBy('product_name','asc')->where('status','service')->get();
 
  foreach($product_list as $list)
  {
   if($product->id==$list->id)
    {}else{
-     $str .='<option value="'.$list->id.'">'.$list->product_name.'</option>';
+     $str .='<option value="'.$list->id.'">'.\App\product::nameWithVariantInline($list->product_name, $list->value1 ?? null, $list->value2 ?? null).'</option>';
    }
  }
  return $str;
@@ -1183,7 +1185,7 @@ function ajax_getservice(Request $request)
     function ajax_getbom(Request $request)
     {
         $product=product::find($request->product);
-        $str='<option value="'.$product->id.'">'.$product->product_name.'</option>';
+        $str='<option value="'.$product->id.'">'.\App\product::nameWithVariantInline($product->product_name, $product->value1 ?? null, $product->value2 ?? null).'</option>';
         $product_list=product::orderBy('product_name','asc')
             ->where('status','bom')->get();
 
@@ -1191,7 +1193,7 @@ function ajax_getservice(Request $request)
         {
             if($product->id==$list->id)
             {}else{
-                $str .='<option value="'.$list->id.'">'.$list->product_name.'</option>';
+                $str .='<option value="'.$list->id.'">'.\App\product::nameWithVariantInline($list->product_name, $list->value1 ?? null, $list->value2 ?? null).'</option>';
             }
         }
         return $str;

@@ -62,12 +62,74 @@ use App\Imports\ProductImport;
 
 class AdminController extends Controller
 {
+    // Shared select2 remote-search source for product/service/BOM pickers on
+    // Quotation, Sales Order, Delivery Challan, Invoice and Purchase Order add
+    // forms. Replaces dumping every row of the product table (7000+) into the
+    // page on every load - only the top 30 matches for the typed term are sent.
+    function product_search_options(Request $request)
+    {
+        $term = trim((string) $request->get('term', ''));
+        $status = $request->get('status', 'product');
+        if (!in_array($status, ['product', 'service', 'bom', 'po_product'], true)) {
+            $status = 'product';
+        }
+
+        // Purchase Order line items can also be raw materials, unlike every
+        // other module which only picks status='product'.
+        if ($status === 'po_product') {
+            $query = product::whereIn('status', ['product', 'raw material']);
+        } else {
+            $query = product::where('status', $status);
+        }
+        if ($term !== '') {
+            $query->where(function ($q) use ($term) {
+                $q->where('product_name', 'like', '%' . $term . '%')
+                    ->orWhere('item_code', 'like', '%' . $term . '%');
+            });
+        }
+
+        $results = $query->orderBy('product_name', 'asc')
+            ->limit(30)
+            ->get(['id', 'item_code', 'product_name', 'value1', 'value2'])
+            ->map(function ($p) use ($status) {
+                $name = (in_array($status, ['product', 'po_product'], true) && $p->item_code)
+                    ? ($p->item_code . ' - ' . $p->product_name)
+                    : $p->product_name;
+                $label = product::nameWithVariantInline($name, $p->value1, $p->value2);
+                return ['id' => $p->id, 'text' => $label];
+            });
+
+        return response()->json(['results' => $results]);
+    }
+
+    // Shared select2 remote-search source for the vendor picker on the
+    // Purchase Order add form (mirrors product_search_options above).
+    function vendor_search_options(Request $request)
+    {
+        $term = trim((string) $request->get('term', ''));
+
+        $query = vendor::query();
+        if ($term !== '') {
+            $query->where('vendor_name', 'like', '%' . $term . '%');
+        }
+
+        $results = $query->orderBy('vendor_name', 'asc')
+            ->limit(30)
+            ->get(['id', 'vendor_name'])
+            ->map(function ($v) {
+                return ['id' => $v->id, 'text' => $v->vendor_name];
+            });
+
+        return response()->json(['results' => $results]);
+    }
+
     function ajax_search_product(Request $request)
     {
         $product = product::where("bar_code", "=", $request->itemname)->get();
         //$option="<option value=''>select product</option>";
         foreach ($product as $product) {
-            $option[] = "<option value='$product->id'>$product->product_name</option>";
+            $label = product::nameWithVariantInline($product->item_code.' - '.$product->product_name, $product->value1 ?? null, $product->value2 ?? null);
+            $option[] = "<option value='$product->id'>$label</option>";
         }
         return $option;
     }
@@ -169,12 +231,44 @@ class AdminController extends Controller
         return view("admin.subcategory_add", compact("category"));
     }
 
+    /** v2 sample migration only — identical to subcategory_add() above, different view. */
+    function subcategory_add_v2()
+    {
+        $category = ['' => "select category"] + category::orderBy("category_name", "asc")->get()->pluck("category_name", "id")->toArray();
+        return view("admin.subcategory_add_v2", compact("category"));
+    }
+
+    /** v2 sample migration only — identical to subcategory_edit() above, different view. */
+    function subcategory_edit_v2(Request $request)
+    {
+        $subcategory = subcategory::find($request->id);
+        $category = ['' => "select category"] + category::orderBy("category_name", "asc")->get()->pluck("category_name", "id")->toArray();
+        return view("admin.subcategory_edit_v2", compact("category", "subcategory"));
+    }
+
+    /** v2 sample migration only — identical query to subcategory_list() below, different view. */
+    function subcategory_list_v2(Request $request)
+    {
+        $subcategory = new subcategory();
+        $subcategory = $subcategory->select('subcategory.*', 'category.category_name');
+        $subcategory = $subcategory->leftJoin('category', 'category.id', 'subcategory.category');
+        if (isset($request->subcategory_name)) {
+            $subcategory = $subcategory->where('subcategory_name', 'like', '%' . $request->subcategory_name . '%');
+        }
+        if (isset($request->category)) {
+            $subcategory = $subcategory->where('subcategory.category_name', 'like', '%' . $request->category_name . '%');
+        }
+        $result = $subcategory->paginate(session('records_per_page', 30));
+
+        return view("admin.subcategory.index_v2")->with(['subcategory' => $result]);
+    }
+
     function quotation_followup_list(Request $request)
     {
         $data = new quot_followup();
         $data = $data->select("quot_followup.*");
         $data = $data->orderBy("id", "desc");
-        $data = $data->paginate(10);
+        $data = $data->paginate(session('records_per_page', 30));
 
         $company_name = company::select('company_name')->first();
 
@@ -229,7 +323,7 @@ class AdminController extends Controller
 
     function payment_terms(Request $request)
     {
-        $data = payment_terms::orderBy("id", "desc")->paginate(10);
+        $data = payment_terms::orderBy("id", "desc")->paginate(session('records_per_page', 30));
 
         return view("admin.terms.payment.index", compact("data"));
     }
@@ -257,7 +351,7 @@ class AdminController extends Controller
 
     function product_quot_list(Request $request)
     {
-        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'customers.customer_name')
+        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'customers.customer_name')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin('customers', 'customers.id', 'quot_item.customer')
             ->where('quot_item.product', $request->product)
@@ -270,10 +364,9 @@ class AdminController extends Controller
     function quot_normal_view(Request $request)
     {
         $quot = quotation::where('id', $request->id)
-            ->where('website_id', Session::get('website_id'))
             ->first();
 
-        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model')
+        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->where('quot_item.quot_no', $quot->quot_no)
             ->get();
@@ -283,7 +376,6 @@ class AdminController extends Controller
             ->leftJoin('gst', 'gst.id', 'product.gst')
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->where('product.status', 'product')
-            ->where('product.website_id', Session::get('website_id'))
             ->orderBy('product.product_name', 'asc')
             ->get();
 
@@ -291,13 +383,12 @@ class AdminController extends Controller
             ->leftJoin('gst', 'gst.id', 'product.gst')
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->where('product.status', 'service')
-            ->where('product.website_id', Session::get('website_id'))
             ->orderBy('product.product_name', 'asc')
             ->get();
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $module = terms::where("website_id", Session::get('website_id'))
+        $module = terms::query()
             ->get()
             ->pluck('module', 'id')
             ->toArray();
@@ -311,10 +402,9 @@ class AdminController extends Controller
         $quot = quotation::select("quotation.*", "contact.contact_name as contactname")
             ->where('quotation.id', $request->id)
             ->leftJoin("contact", "contact.id", "quotation.contact_name")
-            ->where('quotation.website_id', Session::get('website_id'))
             ->first();
 
-        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', "product.product_image", "uom.uom_name")
+        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', "product.product_image", "uom.uom_name", "product.value1", "product.value2")
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->where('quot_item.quot_no', $quot->quot_no)
@@ -325,7 +415,6 @@ class AdminController extends Controller
             ->leftJoin('gst', 'gst.id', 'product.gst')
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->where('product.status', 'product')
-            ->where('product.website_id', Session::get('website_id'))
             ->orderBy('product.product_name', 'asc')
             ->get();
 
@@ -333,13 +422,12 @@ class AdminController extends Controller
             ->leftJoin('gst', 'gst.id', 'product.gst')
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->where('product.status', 'service')
-            ->where('product.website_id', Session::get('website_id'))
             ->orderBy('product.product_name', 'asc')
             ->get();
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $module = terms::where("website_id", Session::get('website_id'))
+        $module = terms::query()
             ->get()
             ->pluck('module', 'id')
             ->toArray();
@@ -397,7 +485,7 @@ class AdminController extends Controller
     function material_list(Request $request)
     {
         $mat = new material();
-        $mat = $mat->where('website_id', Session::get('website_id'));
+        $mat = $mat;
         if (isset($request->material_name)) {
             $mat = $mat->where('material_name', 'like', '%' . $request->material_name . '%');
 
@@ -407,7 +495,7 @@ class AdminController extends Controller
 
         }
         $mat = $mat->orderBy("material_name", "asc");
-        $result = $mat->paginate(10);
+        $result = $mat->paginate(session('records_per_page', 30));
 
         return view("admin/material_list")->with(['data' => $result]);
     }
@@ -538,7 +626,7 @@ class AdminController extends Controller
         $city = ['' => 'select city'] + city::orderBy('city_name', 'asc')
                 ->get()->pluck('city_name', 'id')->toArray();
 
-        $customer = ['' => 'select customer'] + customers::where('website_id', Session::get('website_id'))
+        $customer = ['' => 'select customer'] + customers::query()
                 ->orderBy('customer_name', 'asc')
                 ->get()
                 ->pluck('customer_name', 'id')
@@ -551,7 +639,7 @@ class AdminController extends Controller
     {
         $save = vendor_contact::find($request->id);
 
-        $vendor = ['' => 'select vendor'] + vendor::where('website_id', Session::get('website_id'))
+        $vendor = ['' => 'select vendor'] + vendor::query()
                 ->orderBy('vendor_name', 'asc')
                 ->get()
                 ->pluck('vendor_name', 'id')
@@ -576,7 +664,7 @@ class AdminController extends Controller
         $city = ['' => 'select city'] + city::orderBy('city_name', 'asc')
                 ->get()->pluck('city_name', 'id')->toArray();
 
-        $customer = ['' => 'select customer'] + customers::where('website_id', Session::get('website_id'))
+        $customer = ['' => 'select customer'] + customers::query()
                 ->orderBy('customer_name', 'asc')
                 ->get()
                 ->pluck('customer_name', 'id')
@@ -724,7 +812,7 @@ class AdminController extends Controller
         $city = ['' => 'select city'] + city::orderBy('city_name', 'asc')
                 ->get()->pluck('city_name', 'id')->toArray();
 
-        $customer = ['' => 'select customer'] + customers::where('website_id', Session::get('website_id'))
+        $customer = ['' => 'select customer'] + customers::query()
                 ->orderBy('customer_name', 'asc')
                 ->get()
                 ->pluck('customer_name', 'id')
@@ -746,7 +834,7 @@ class AdminController extends Controller
 
         $custom = customers::where('id', $request->cust_id)->first();
 
-        $customer = [$custom->id => $custom->customer_name] + customers::where('website_id', Session::get('website_id'))
+        $customer = [$custom->id => $custom->customer_name] + customers::query()
                 ->orderBy('customer_name', 'asc')
                 ->get()
                 ->pluck('customer_name', 'id')
@@ -759,7 +847,7 @@ class AdminController extends Controller
     {
 
 
-        $vendor = ['' => 'select vendor'] + vendor::where('website_id', Session::get('website_id'))
+        $vendor = ['' => 'select vendor'] + vendor::query()
                 ->orderBy('vendor_name', 'asc')
                 ->get()
                 ->pluck('vendor_name', 'id')
@@ -771,7 +859,7 @@ class AdminController extends Controller
     function vendor_contact_add1(Request $request)
     {
         $vn = vendor::where('id', $request->vendor_id)->first();
-        $vendor = [$vn->id => $vn->vendor_name] + vendor::where('website_id', Session::get('website_id'))
+        $vendor = [$vn->id => $vn->vendor_name] + vendor::query()
                 ->orderBy('vendor_name', 'asc')
                 ->get()
                 ->pluck('vendor_name', 'id')
@@ -807,7 +895,7 @@ class AdminController extends Controller
         if (isset($request->designation)) {
             $contact = $contact->where('contact.designation', 'like', '%' . $request->designation . '%');
         }
-        $result = $contact->paginate(10);
+        $result = $contact->paginate(session('records_per_page', 30));
 
         return view("admin/contact_list")->with(['cdata' => $result]);
     }
@@ -830,7 +918,7 @@ class AdminController extends Controller
         if (isset($request->designation)) {
             $contact = $contact->where('vendor_contact.designation', 'like', '%' . $request->designation . '%');
         }
-        $result = $contact->paginate(10);
+        $result = $contact->paginate(session('records_per_page', 30));
 
         return view("admin/vendor_contact_list")->with(['cdata' => $result]);
     }
@@ -862,7 +950,7 @@ class AdminController extends Controller
             $contact = $contact->where('contact.designation', 'like', '%' . $request->designation . '%');
         }
         $contact = $contact->where('contact.customer', $request->id);
-        $result = $contact->paginate(10);
+        $result = $contact->paginate(session('records_per_page', 30));
 
         return view("admin/contact_list_preview")->with(['cdata' => $result]);
     }
@@ -897,7 +985,7 @@ class AdminController extends Controller
 
         $contact = $contact->where('vendor_contact.vendor', $request->id);
 
-        $result = $contact->paginate(10);
+        $result = $contact->paginate(session('records_per_page', 30));
 
         return view("admin/vendor_list_preview")->with(['cdata' => $result]);
     }
@@ -906,7 +994,7 @@ class AdminController extends Controller
     {
 
         if ($request->quotation == "quotation") {
-            $customer = ['' => 'select customer'] + customers::where('website_id', Session::get('website_id'))
+            $customer = ['' => 'select customer'] + customers::query()
                     ->orderBy('customer_name', 'asc')
                     ->get()
                     ->pluck('customer_name', 'id')
@@ -921,7 +1009,6 @@ class AdminController extends Controller
                 ->leftJoin('gst', 'gst.id', 'product.gst')
                 ->leftJoin('uom', 'uom.id', 'product.uom')
                 ->where('product.status', 'product')
-                ->where('product.website_id', Session::get('website_id'))
                 ->get();
 
             for ($i = 0; $i < $count; $i++) {
@@ -937,11 +1024,11 @@ class AdminController extends Controller
                                                 <td style="width: 30%">
                                                     <div class="input-group">';
                 $str .= '<select class="form-control" onchange="get_product(this.value,' . $srno . ')" name="product[]" id="product' . $srno . '">
-                                                        <option value="' . $p->id . '">' . $p->product_name . '</option>';
+                                                        <option value="' . $p->id . '">' . \App\product::nameWithVariantInline($p->product_name, $p->value1 ?? null, $p->value2 ?? null) . '</option>';
                 foreach ($product1 as $prod) {
                     if ($p->id == $prod->id) {
                     } else {
-                        $str .= '<option value="' . $prod->id . '">' . $prod->product_name . '</option>';
+                        $str .= '<option value="' . $prod->id . '">' . \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) . '</option>';
                     }
                 }
                 $str .= '</select>';
@@ -1014,7 +1101,6 @@ class AdminController extends Controller
             $service = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
                 ->leftJoin('gst', 'gst.id', 'product.gst')
                 ->leftJoin('uom', 'uom.id', 'product.uom')
-                ->where('product.website_id', Session::get('website_id'))
                 ->where('product.status', 'service')
                 ->orderBy('product.product_name', 'asc')
                 ->get();
@@ -1084,10 +1170,10 @@ class AdminController extends Controller
             $thikness = $request->thik;
             $product = $product->Where('thikness', 'like', '%' . $request->thik . '%');
         }
-        $product = $product->where('website_id', Session::get('website_id'));
+        $product = $product;
         $product = $product->where('status', 'product');
         //echo print_r($request->all());
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
         //dd($result);
 
         return view("admin/search_product")
@@ -1098,7 +1184,7 @@ class AdminController extends Controller
     {
         // $pagesize = $request->pagesize;
         $data = new product();
-        $data = $data->select("product.id", "product.product_name", "product.hsn", "product.price", "gst.gst_per", "product.product_image", "product.item_code");
+        $data = $data->select("product.id", "product.product_name", "product.value1", "product.value2", "product.hsn", "product.price", "gst.gst_per", "product.product_image", "product.item_code");
         $data = $data->leftJoin("gst", "gst.id", "product.gst");
         if (isset($request->product_name)) {
 
@@ -1118,7 +1204,7 @@ class AdminController extends Controller
             $data = $data->orwhere("gst.gst_per", "LIKE", '%' . $request->gst . '%');
         }
         $data = $data->where("product.status", "product");
-        $data = $data->paginate(25);
+        $data = $data->paginate(session('records_per_page', 30));
         // $data=$data->paginate(is_null($pagesize) ? 1 : $pagesize);
         //dd($data);
 
@@ -1128,7 +1214,6 @@ class AdminController extends Controller
             ->leftJoin('material', 'material.id', 'product.material')
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->where('product.status', 'service')
-            ->where('product.website_id', Session::get('website_id'))
             ->orderBy('product.product_name', 'asc')
             ->get();
 
@@ -1177,7 +1262,7 @@ class AdminController extends Controller
 
     function type_list()
     {
-        $list = type::orderBy("type_name", "asc")->get();
+        $list = type::orderBy("type_name", "asc")->paginate(session('records_per_page', 30));
         return view("admin/type_list")->with(['data' => $list]);
     }
 
@@ -1249,7 +1334,7 @@ class AdminController extends Controller
 
     function industry_list()
     {
-        $list = industry::orderBy("industry_name", "asc")->paginate(10);
+        $list = industry::orderBy("industry_name", "asc")->paginate(session('records_per_page', 30));
         return view("admin/industry_list")->with(['data_list' => $list]);
     }
 
@@ -1264,25 +1349,24 @@ class AdminController extends Controller
             ->leftJoin('contact', 'contact.id', 'quotation.contact_name')
             ->leftJoin('website_user', 'website_user.id', 'quotation.user_id')
             ->where('quotation.id', $request->qid)
-            ->where('quotation.website_id', Session::get('website_id'))
             ->first();
 
-        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
+        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->where('quot_item.quot_no', $quot->quot_no)
             ->get();
 
-        $discsum = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
+        $discsum = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->where('quot_item.quot_no', $quot->quot_no)
             ->sum('quot_item.discount_amount');
 
         //dd($quotitem);
-        $company = company::where('website_id', Session::get('website_id'))->first();
+        $company = company::query()->first();
 
-        $terms = terms::where('website_id', Session::get('website_id'))->first();
+        $terms = terms::query()->first();
 
         $filename = $quot->customer_name;
 
@@ -1332,25 +1416,24 @@ class AdminController extends Controller
             ->leftJoin('contact', 'contact.id', 'quotation.contact_name')
             ->leftJoin('website_user', 'website_user.id', 'quotation.user_id')
             ->where('quotation.id', $request->qid)
-            ->where('quotation.website_id', Session::get('website_id'))
             ->first();
 
-        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
+        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->where('quot_item.quot_no', $quot->quot_no)
             ->get();
 
-        $discsum = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
+        $discsum = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->where('quot_item.quot_no', $quot->quot_no)
             ->sum('quot_item.discount_amount');
 
         //dd($quotitem);
-        $company = company::where('website_id', Session::get('website_id'))->first();
+        $company = company::query()->first();
 
-        $terms = terms::where('website_id', Session::get('website_id'))->first();
+        $terms = terms::query()->first();
 
         $filename = $quot->customer_name;
 
@@ -1454,20 +1537,20 @@ class AdminController extends Controller
     {
         $data = service_renewal::find($request->id);
 
-        $customer = ['' => 'select customer'] + customers::where('website_id', Session::get('website_id'))
+        $customer = ['' => 'select customer'] + customers::query()
                 ->orderBy('customer_name', 'asc')
                 ->get()->pluck('customer_name', 'id')->toArray();
 
-        $service = ['' => 'select service'] + product::where('website_id', Session::get('website_id'))
+        $service = ['' => 'select service'] + product::query()
                 ->where('status', 'service')
                 ->orderBy('product_name', 'asc')
                 ->get()->pluck('product_name', 'id')->toArray();
 
-        $category = ['' => 'select category'] + category::where('website_id', Session::get('website_id'))
+        $category = ['' => 'select category'] + category::query()
                 ->orderBy('category_name', 'asc')
                 ->get()->pluck('category_name', 'id')->toArray();
 
-        $usage_unit = ['' => 'select uom'] + uom::where('website_id', Session::get('website_id'))
+        $usage_unit = ['' => 'select uom'] + uom::query()
                 ->orderBy('uom_name', 'asc')
                 ->get()->pluck('uom_name', 'id')->toArray();
 
@@ -1512,20 +1595,20 @@ class AdminController extends Controller
 
     function renew_add(Request $request)
     {
-        $customer = ['' => 'select customer'] + customers::where('website_id', Session::get('website_id'))
+        $customer = ['' => 'select customer'] + customers::query()
                 ->orderBy('customer_name', 'asc')
                 ->get()->pluck('customer_name', 'id')->toArray();
 
-        $service = ['' => 'select service'] + product::where('website_id', Session::get('website_id'))
+        $service = ['' => 'select service'] + product::query()
                 ->where('status', 'service')
                 ->orderBy('product_name', 'asc')
                 ->get()->pluck('product_name', 'id')->toArray();
 
-        $category = ['' => 'select category'] + category::where('website_id', Session::get('website_id'))
+        $category = ['' => 'select category'] + category::query()
                 ->orderBy('category_name', 'asc')
                 ->get()->pluck('category_name', 'id')->toArray();
 
-        $usage_unit = ['' => 'select uom'] + uom::where('website_id', Session::get('website_id'))
+        $usage_unit = ['' => 'select uom'] + uom::query()
                 ->orderBy('uom_name', 'asc')
                 ->get()->pluck('uom_name', 'id')->toArray();
 
@@ -1534,12 +1617,11 @@ class AdminController extends Controller
 
     function service_renew()
     {
-        $data = service_renewal::select('service_renewal.*', 'customers.customer_name', 'uom.uom_name', 'category.category_name', 'product.product_name')
+        $data = service_renewal::select('service_renewal.*', 'customers.customer_name', 'uom.uom_name', 'category.category_name', 'product.product_name', 'product.value1', 'product.value2')
             ->leftJoin('customers', 'customers.id', 'service_renewal.customer')
             ->leftJoin('uom', 'uom.id', 'service_renewal.usage_unit')
             ->leftJoin('category', 'category.id', 'service_renewal.category')
             ->leftJoin('product', 'product.id', 'service_renewal.service')
-            ->where('service_renewal.website_id', Session::get('website_id'))
             ->orderBy('service_renewal.support_expiry_date', 'desc')
             ->get();
         //dd($data);
@@ -2334,9 +2416,9 @@ class AdminController extends Controller
     {
         $data = vendor::find($request->id);
 
-        $industry = ['' => 'select industry'] + industry::where('website_id', Session::get('website_id'))
+        $industry = ['' => 'select industry'] + industry::query()
                 ->orderBy('industry_name')->get()->pluck('industry_name', 'id')->toArray();
-        $type = ['' => 'select type'] + type::where('website_id', Session::get('website_id'))
+        $type = ['' => 'select type'] + type::query()
                 ->orderBy('type_name')->get()->pluck('type_name', 'id')->toArray();
 
         $country = ['' => 'select country'] + country::orderBy('country_name', 'asc')
@@ -2477,9 +2559,9 @@ class AdminController extends Controller
 
     function vendor_add(Request $request)
     {
-        $industry = ['' => 'select industry'] + industry::where('website_id', Session::get('website_id'))
+        $industry = ['' => 'select industry'] + industry::query()
                 ->orderBy('industry_name')->get()->pluck('industry_name', 'id')->toArray();
-        $type = ['' => 'select type'] + type::where('website_id', Session::get('website_id'))
+        $type = ['' => 'select type'] + type::query()
                 ->orderBy('type_name')->get()->pluck('type_name', 'id')->toArray();
 
         $country = ['' => 'select country'] + country::orderBy('country_name', 'asc')
@@ -2504,7 +2586,7 @@ class AdminController extends Controller
         $data = new vendor();
         $data = $data->select('vendor.*', 'city.city_name');
         $data = $data->leftJoin('city', 'city.id', 'vendor.billing_city');
-        $data = $data->where('vendor.website_id', Session::get('website_id'));
+        $data = $data;
 
         if ($request->vendor_name != '') {
             $data = $data->Where('vendor.vendor_name', 'like', '%' . $request->vendor_name . '%');
@@ -2555,22 +2637,22 @@ class AdminController extends Controller
 
         $data = $data->orderBy("vendor.vendor_name", 'asc');
         //echo print_r($request->all());
-        $result = $data->paginate(10);
+        $result = $data->paginate(session('records_per_page', 30));
 
         return view("admin/vendor_list")->with(['cdata' => $result]);
     }
 
     function service_add(Request $request)
     {
-        $category = ['' => 'select category'] + category::where('website_id', Session::get('website_id'))
+        $category = ['' => 'select category'] + category::query()
                 ->orderBy('category_name', 'asc')->get()->pluck('category_name', 'id')->toArray();
 
-        $gst = ['' => 'select gst'] + gst::where('website_id', Session::get('website_id'))->orderBy('gst_per', 'asc')->get()->pluck('gst_per', 'id')->toArray();
+        $gst = ['' => 'select gst'] + gst::query()->orderBy('gst_per', 'asc')->get()->pluck('gst_per', 'id')->toArray();
 
 
-        $uom = ['' => 'select uom'] + uom::where('website_id', Session::get('website_id'))->orderBy('uom_name', 'asc')->get()->pluck('uom_name', 'id')->toArray();
+        $uom = ['' => 'select uom'] + uom::query()->orderBy('uom_name', 'asc')->get()->pluck('uom_name', 'id')->toArray();
 
-        $vendor = ['' => 'select vendor'] + vendor::where('website_id', Session::get('website_id'))->orderBy('vendor_name', 'asc')->get()->pluck('vendor_name', 'id')->toArray();
+        $vendor = ['' => 'select vendor'] + vendor::query()->orderBy('vendor_name', 'asc')->get()->pluck('vendor_name', 'id')->toArray();
 
         return view("admin/service_add")->with(['category' => $category, 'uom' => $uom, 'gst' => $gst, 'vendor' => $vendor]);
 
@@ -2644,7 +2726,7 @@ class AdminController extends Controller
             $gst = $gst->paginate($gst1);
         } else {
 
-            $gst = $gst->paginate(10);
+            $gst = $gst->paginate(session('records_per_page', 30));
         }
 
         return view("admin/gst_list")->with(['cdata' => $gst]);
@@ -2695,13 +2777,13 @@ class AdminController extends Controller
     function uom_list(Request $request)
     {
         $uom = new uom();
-        $uom = $uom->where('website_id', Session::get('website_id'));
+        $uom = $uom;
         if (isset($request->usage_unit)) {
             $uom = $uom->where('uom_name', 'like', '%' . $request->usage_unit . '%');
 
         }
 
-        $data = $uom->paginate(10);
+        $data = $uom->paginate(session('records_per_page', 30));
 
         return view("admin/uom_list")->with(['data' => $data]);
 
@@ -2709,30 +2791,30 @@ class AdminController extends Controller
 
     function product_add(Request $request)
     {
-        $category = ['' => 'select category'] + category::where('website_id', Session::get('website_id'))
+        $category = ['' => 'select category'] + category::query()
                 ->orderBy('category_name', 'asc')
                 ->get()
                 ->pluck('category_name', 'id')
                 ->toArray();
 
-        $material = ['' => 'select material'] + material::where('website_id', Session::get('website_id'))
+        $material = ['' => 'select material'] + material::query()
                 ->orderBy('material_name', 'asc')
                 ->get()
                 ->pluck('material_name', 'id')
                 ->toArray();
 
-        $gst = ['' => 'select gst'] + gst::where('website_id', Session::get('website_id'))
+        $gst = ['' => 'select gst'] + gst::query()
                 ->orderBy('gst_per', 'asc')
                 ->get()->pluck('gst_per', 'id')->toArray();
 
 
-        $uom = ['' => 'select uom'] + uom::where('website_id', Session::get('website_id'))
+        $uom = ['' => 'select uom'] + uom::query()
                 ->orderBy('uom_name', 'asc')
                 ->get()
                 ->pluck('uom_name', 'id')
                 ->toArray();
 
-        $vendor = ['' => 'select vendor'] + vendor::where('website_id', Session::get('website_id'))
+        $vendor = ['' => 'select vendor'] + vendor::query()
                 ->orderBy('vendor_name', 'asc')
                 ->get()
                 ->pluck('vendor_name', 'id')
@@ -2753,30 +2835,30 @@ class AdminController extends Controller
 
     function product_normal_add(Request $request)
     {
-        $category = ['' => 'select category'] + category::where('website_id', Session::get('website_id'))
+        $category = ['' => 'select category'] + category::query()
                 ->orderBy('category_name', 'asc')
                 ->get()
                 ->pluck('category_name', 'id')
                 ->toArray();
 
-        $material = ['' => 'select material'] + material::where('website_id', Session::get('website_id'))
+        $material = ['' => 'select material'] + material::query()
                 ->orderBy('material_name', 'asc')
                 ->get()
                 ->pluck('material_name', 'id')
                 ->toArray();
 
-        $gst = ['' => 'select gst'] + gst::where('website_id', Session::get('website_id'))
+        $gst = ['' => 'select gst'] + gst::query()
                 ->orderBy('gst_per', 'asc')
                 ->get()->pluck('gst_per', 'id')->toArray();
 
 
-        $uom = ['' => 'select uom'] + uom::where('website_id', Session::get('website_id'))
+        $uom = ['' => 'select uom'] + uom::query()
                 ->orderBy('uom_name', 'asc')
                 ->get()
                 ->pluck('uom_name', 'id')
                 ->toArray();
 
-        $vendor = ['' => 'select vendor'] + vendor::where('website_id', Session::get('website_id'))
+        $vendor = ['' => 'select vendor'] + vendor::query()
                 ->orderBy('vendor_name', 'asc')
                 ->get()
                 ->pluck('vendor_name', 'id')
@@ -2863,13 +2945,43 @@ class AdminController extends Controller
     {
         $category = new category();
         $category = $category->select('category.*');
-        $category = $category->where('website_id', Session::get('website_id'));
+        $category = $category;
         if (isset($request->category_name)) {
             $category = $category->where('category_name', 'like', '%' . $request->category_name . '%');
         }
-        $result = $category->paginate(10);
+        $result = $category->paginate(session('records_per_page', 30));
 
         return view("admin/category_list")->with(['data' => $result]);
+    }
+
+    /**
+     * v2 design-system sample migration only (see routes/admin.php).
+     * Identical query to category_list() above — only the view differs.
+     * category_list() itself is untouched.
+     */
+    function category_list_v2(Request $request)
+    {
+        $category = new category();
+        $category = $category->select('category.*');
+        if (isset($request->category_name)) {
+            $category = $category->where('category_name', 'like', '%' . $request->category_name . '%');
+        }
+        $result = $category->paginate(session('records_per_page', 30));
+
+        return view("admin.category_list_v2")->with(['data' => $result]);
+    }
+
+    /** v2 sample migration only — mirrors the 'admin.category.add' closure route. */
+    function category_add_v2()
+    {
+        return view('admin.category_add_v2');
+    }
+
+    /** v2 sample migration only — identical to category_edit() above, different view. */
+    function category_edit_v2(Request $request)
+    {
+        $data = category::find($request->id);
+        return view("admin.category_edit_v2")->with(['data' => $data]);
     }
 
     function subcategory_list(Request $request)
@@ -2884,7 +2996,7 @@ class AdminController extends Controller
         if (isset($request->category)) {
             $subcategory = $subcategory->where('subcategory.category_name', 'like', '%' . $request->category_name . '%');
         }
-        $result = $subcategory->paginate(10);
+        $result = $subcategory->paginate(session('records_per_page', 30));
 
         return view("admin/subcategory/index")->with(['subcategory' => $result]);
     }
@@ -2939,7 +3051,7 @@ class AdminController extends Controller
 
     function city_edit(Request $request)
     {
-        $state = ['' => 'select state'] + state::where('website_id', Session::get('website_id'))
+        $state = ['' => 'select state'] + state::query()
                 ->orderBy('state_name', 'asc')
                 ->get()
                 ->pluck('state_name', 'id')
@@ -3023,7 +3135,7 @@ class AdminController extends Controller
         if (isset($request->state)) {
             $state = $state->where('state.state_name', 'like', '%' . $request->state . '%');
         }
-        $data = $state->paginate(10);
+        $data = $state->paginate(session('records_per_page', 30));
 
         return view("admin/state_list")->with(['data' => $data]);
     }
@@ -3041,7 +3153,7 @@ class AdminController extends Controller
 
         }
 
-        $data = $city->paginate(10);
+        $data = $city->paginate(session('records_per_page', 30));
         // /dd($data);
         return view("admin/city_list")->with(['data' => $data]);
     }
@@ -3092,7 +3204,7 @@ class AdminController extends Controller
         if (isset($request->country)) {
             $country = $country->where('country_name', 'like', '%' . $request->country . '%');
         }
-        $data = $country->paginate(10);
+        $data = $country->paginate(session('records_per_page', 30));
         // $data=country::orderBy('country_name','asc')->get();
         return view('admin/country_list')->with(['data' => $data]);
     }
@@ -3160,14 +3272,14 @@ class AdminController extends Controller
         $data = product::find($request->id);
 
 
-        $category = ['' => 'select category'] + category::where('website_id', Session::get('website_id'))->orderBy('category_name', 'asc')->get()->pluck('category_name', 'id')->toArray();
+        $category = ['' => 'select category'] + category::query()->orderBy('category_name', 'asc')->get()->pluck('category_name', 'id')->toArray();
 
-        $gst = ['' => 'select gst'] + gst::where('website_id', Session::get('website_id'))->orderBy('gst_per', 'asc')->get()->pluck('gst_per', 'id')->toArray();
+        $gst = ['' => 'select gst'] + gst::query()->orderBy('gst_per', 'asc')->get()->pluck('gst_per', 'id')->toArray();
 
 
-        $uom = ['' => 'select uom'] + uom::where('website_id', Session::get('website_id'))->orderBy('uom_name', 'asc')->get()->pluck('uom_name', 'id')->toArray();
+        $uom = ['' => 'select uom'] + uom::query()->orderBy('uom_name', 'asc')->get()->pluck('uom_name', 'id')->toArray();
 
-        $vendor = ['' => 'select vendor'] + vendor::where('website_id', Session::get('website_id'))->orderBy('vendor_name', 'asc')->get()->pluck('vendor_name', 'id')->toArray();
+        $vendor = ['' => 'select vendor'] + vendor::query()->orderBy('vendor_name', 'asc')->get()->pluck('vendor_name', 'id')->toArray();
 
 
         return view("admin/services_edit")->with(['category' => $category, 'uom' => $uom, 'gst' => $gst, 'data' => $data, 'vendor' => $vendor]);
@@ -3230,7 +3342,7 @@ class AdminController extends Controller
         $product = $product->leftJoin('category', 'category.id', 'product.category');
         $product = $product->leftJoin('material', 'material.id', 'product.material');
         $product = $product->where('product.status', 'service');
-        $product = $product->where('product.website_id', Session::get('website_id'));
+        $product = $product;
 
 
         if (isset($request->product_name)) {
@@ -3261,33 +3373,55 @@ class AdminController extends Controller
 
         }
 
-        $product = $product->paginate(10);
+        $product = $product->paginate(session('records_per_page', 30));
 
         return view('admin/service_list')->with(['data' => $product]);
     }
 
     function quotation_delete(Request $request)
     {
-        $data = quotation::find($request->quot_no);
+        // Route is admin/quotation/delete/{id}, so the quotation is looked up by
+        // its primary key -- quot_no is only the (shared across revisions) number.
+        $data = quotation::find($request->id);
 
-
-        if ($data->delete()) {
-            quotation_item::where('quot_no', $data->quot_no)->delete();
-            return back()->with('message', 'quotation delete successfully');
-
+        if (empty($data)) {
+            return back()->with('error', 'quotation not found');
         }
 
+        // Once a sales order exists against the quotation it must stay on record.
+        if ($data->so_status == 'Y') {
+            return back()->with('error', 'sales order is already created for this quotation, it can not be deleted');
+        }
+
+        $quot_no = $data->quot_no;
+
+        if ($data->delete()) {
+            quotation_item::where('quot_no', $quot_no)->delete();
+            return back()->with('message', 'quotation delete successfully');
+        }
+
+        return back()->with('error', 'quotation could not be deleted');
     }
 
     function dashboard(Request $request)
     {
         Session::put('website_id', 1);
+
+        // Financial year must be in session before any query below filters by it —
+        // previously this was set at the end of the method, so a fresh session
+        // (no prior page load) computed every count against a null financial year.
+        $company = \App\company::first();
+        \Session::put('finacial_year_id', $company->finacial_year_id);
+        \Session::put('favicon', $company->favicon);
+
         $totcustomer = customers::all()->count();
         $pendingQuotation = quotation::where("finacial_year", Session::get('finacial_year_id'))
             ->whereNull('so_status')
             ->count();
         $totquotation = quotation::where("finacial_year", Session::get('finacial_year_id'))->count();
         $totproduct = product::all()->count();
+        $totcategory = category::all()->count();
+        $totbrand = brand::all()->count();
 
         $totsales = salesorder::where("finacial_year", Session::get('finacial_year_id'))
             ->count();
@@ -3301,7 +3435,60 @@ class AdminController extends Controller
         $totinvoice = invoice::where("finacial_year", Session::get('finacial_year_id'))
             ->count();
 
-        $service_renewal = service_renewal::select('service_renewal.*', 'customers.customer_name', 'uom.uom_name', 'category.category_name', 'product.product_name')
+        $today = date('Y-m-d');
+        $monthStart = date('Y-m-01');
+        $monthEnd = date('Y-m-t');
+
+        $todayQuotation = quotation::whereDate('quot_date', $today)->count();
+        $todaySales = salesorder::whereDate('salaesorder_date', $today)->count();
+        $todayPurchase = purchase::whereDate('po_date', $today)->count();
+        $todayDelivery = delivery_challan::whereDate('invoice_date', $today)->count();
+        $todayInvoice = invoice::whereDate('invoice_date', $today)->count();
+
+        $todayQuotationAmount = quotation::whereDate('quot_date', $today)->sum('grand_total');
+        $todaySalesAmount = salesorder::whereDate('salaesorder_date', $today)->sum('grand_total');
+        $todayPurchaseAmount = purchase::whereDate('po_date', $today)->sum('grand_total');
+        $todayDeliveryAmount = delivery_challan::whereDate('invoice_date', $today)->sum('grand_total');
+        $todayInvoiceAmount = invoice::whereDate('invoice_date', $today)->sum('grand_total');
+
+        $monthQuotation = quotation::whereBetween('quot_date', [$monthStart, $monthEnd])->count();
+        $monthSales = salesorder::whereBetween('salaesorder_date', [$monthStart, $monthEnd])->count();
+        $monthPurchase = purchase::whereBetween('po_date', [$monthStart, $monthEnd])->count();
+        $monthDelivery = delivery_challan::whereBetween('invoice_date', [$monthStart, $monthEnd])->count();
+        $monthInvoice = invoice::whereBetween('invoice_date', [$monthStart, $monthEnd])->count();
+
+        $monthSalesAmount = salesorder::whereBetween('salaesorder_date', [$monthStart, $monthEnd])->sum('grand_total');
+        $monthInvoiceAmount = invoice::whereBetween('invoice_date', [$monthStart, $monthEnd])->sum('grand_total');
+        $monthPurchaseAmount = purchase::whereBetween('po_date', [$monthStart, $monthEnd])->sum('grand_total');
+
+        $recentSalesOrders = salesorder::whereNull('delete_status')
+            ->orderBy('id', 'desc')
+            ->limit(8)
+            ->get();
+
+        $topCustomers = invoice::select('invoice.customer', 'customers.customer_name')
+            ->selectRaw('SUM(invoice.grand_total) as total_amount, COUNT(invoice.id) as total_orders')
+            ->leftJoin('customers', 'customers.id', 'invoice.customer')
+            ->whereNull('invoice.delete_status')
+            ->whereBetween('invoice.invoice_date', [$monthStart, $monthEnd])
+            ->groupBy('invoice.customer', 'customers.customer_name')
+            ->orderByDesc('total_amount')
+            ->limit(5)
+            ->get();
+
+        $topProducts = salesorder_item::select('product.id as product_id', 'product.product_name', 'product.value1', 'product.value2')
+            ->selectRaw('SUM(CAST(salesorder_item.qty AS DECIMAL(12,2))) as total_qty')
+            ->join('salesorder', 'salesorder.salaesorder_no', '=', 'salesorder_item.sono')
+            ->leftJoin('product', 'product.id', '=', 'salesorder_item.product')
+            ->whereNull('salesorder.delete_status')
+            ->whereBetween('salesorder.salaesorder_date', [$monthStart, $monthEnd])
+            ->whereNotNull('product.id')
+            ->groupBy('product.id', 'product.product_name', 'product.value1', 'product.value2')
+            ->orderByDesc('total_qty')
+            ->limit(5)
+            ->get();
+
+        $service_renewal = service_renewal::select('service_renewal.*', 'customers.customer_name', 'uom.uom_name', 'category.category_name', 'product.product_name', 'product.value1', 'product.value2')
             ->leftJoin('customers', 'customers.id', 'service_renewal.customer')
             ->leftJoin('uom', 'uom.id', 'service_renewal.usage_unit')
             ->leftJoin('category', 'category.id', 'service_renewal.category')
@@ -3309,23 +3496,166 @@ class AdminController extends Controller
             ->orderBy('service_renewal.support_expiry_date', 'desc')
             ->get();
 
-        $start = date('Y-m-d', strtotime('-10 days'));
-        $end = date('Y-m-d', strtotime('-5 days'));
+        // Sales trend for the last 14 days (single series, feeds the dashboard chart)
+        $trendDays = 13;
+        $trendStart = date('Y-m-d', strtotime("-{$trendDays} days"));
+        $salesTrendRaw = salesorder::selectRaw('DATE(salaesorder_date) as d, SUM(grand_total) as amt')
+            ->whereDate('salaesorder_date', '>=', $trendStart)
+            ->whereNull('delete_status')
+            ->groupBy('d')
+            ->pluck('amt', 'd');
 
-        $product = new quotation();
+        $salesTrendLabels = [];
+        $salesTrendData = [];
+        for ($i = $trendDays; $i >= 0; $i--) {
+            $d = date('Y-m-d', strtotime("-{$i} days"));
+            $salesTrendLabels[] = date('d M', strtotime($d));
+            $salesTrendData[] = round((float) ($salesTrendRaw[$d] ?? 0), 2);
+        }
 
+        // Yesterday counts, so Today's Performance can show a day-over-day trend
+        $yesterday = date('Y-m-d', strtotime('-1 day'));
+        $yesterdaySales = salesorder::whereDate('salaesorder_date', $yesterday)->count();
+        $yesterdayInvoice = invoice::whereDate('invoice_date', $yesterday)->count();
+        $yesterdayPurchase = purchase::whereDate('po_date', $yesterday)->count();
+        $yesterdayDelivery = delivery_challan::whereDate('invoice_date', $yesterday)->count();
+        $yesterdayQuotation = quotation::whereDate('quot_date', $yesterday)->count();
 
-        $product = $product->select('quotation.*', 'customers.customer_name', 'customers.primary_email', 'customers.secondary_email');
-        $product = $product->leftJoin('customers', 'customers.id', 'quotation.customer');
-        $product = $product->whereBetween('quotation.quot_date', [$start, $end]);
-        $product = $product->orderBy('id', 'desc');
-        $result = $product->get();
+        return view('admin/index')->with([
+            'totinvoice' => $totinvoice, 'totdelivery' => $totdelivery, 'totpurchase' => $totpurchase, 'totsales' => $totsales,
+            'totcustomer' => $totcustomer, 'totquotation' => $totquotation, 'totproduct' => $totproduct,
+            'totcategory' => $totcategory, 'totbrand' => $totbrand,
+            'service_renewal' => $service_renewal, 'pendingQuotation' => $pendingQuotation,
+            'todayQuotation' => $todayQuotation, 'todaySales' => $todaySales, 'todayPurchase' => $todayPurchase,
+            'todayDelivery' => $todayDelivery, 'todayInvoice' => $todayInvoice,
+            'todayQuotationAmount' => $todayQuotationAmount, 'todaySalesAmount' => $todaySalesAmount,
+            'todayPurchaseAmount' => $todayPurchaseAmount, 'todayDeliveryAmount' => $todayDeliveryAmount,
+            'todayInvoiceAmount' => $todayInvoiceAmount,
+            'monthQuotation' => $monthQuotation, 'monthSales' => $monthSales, 'monthPurchase' => $monthPurchase,
+            'monthDelivery' => $monthDelivery, 'monthInvoice' => $monthInvoice,
+            'monthSalesAmount' => $monthSalesAmount, 'monthInvoiceAmount' => $monthInvoiceAmount,
+            'monthPurchaseAmount' => $monthPurchaseAmount,
+            'recentSalesOrders' => $recentSalesOrders, 'topCustomers' => $topCustomers, 'topProducts' => $topProducts,
+            'salesTrendLabels' => $salesTrendLabels, 'salesTrendData' => $salesTrendData,
+            'yesterdaySales' => $yesterdaySales, 'yesterdayInvoice' => $yesterdayInvoice,
+            'yesterdayPurchase' => $yesterdayPurchase, 'yesterdayDelivery' => $yesterdayDelivery,
+            'yesterdayQuotation' => $yesterdayQuotation,
+        ]);
+    }
+
+    /**
+     * v2 dashboard preview only (see routes/admin.php '/v2-dashboard').
+     * Deliberately separate from dashboard() above so the live dashboard
+     * route/view/logic stays completely untouched. Duplicates the same
+     * read-only queries as dashboard() plus the chart-trend and latest-
+     * quotations data the v2 layout needs.
+     */
+    function dashboardV2(Request $request)
+    {
+        Session::put('website_id', 1);
+        $totcustomer = customers::all()->count();
+        $pendingQuotation = quotation::where("finacial_year", Session::get('finacial_year_id'))
+            ->whereNull('so_status')
+            ->count();
+        $totquotation = quotation::where("finacial_year", Session::get('finacial_year_id'))->count();
+        $totproduct = product::all()->count();
+        $totcategory = category::all()->count();
+        $totbrand = brand::all()->count();
+
+        $totsales = salesorder::where("finacial_year", Session::get('finacial_year_id'))->count();
+        $totpurchase = purchase::where("finacial_year", Session::get('finacial_year_id'))->count();
+        $totdelivery = delivery_challan::where("finacial_year", Session::get('finacial_year_id'))->count();
+        $totinvoice = invoice::where("finacial_year", Session::get('finacial_year_id'))->count();
+
+        $today = date('Y-m-d');
+        $monthStart = date('Y-m-01');
+        $monthEnd = date('Y-m-t');
+
+        $todayQuotation = quotation::whereDate('quot_date', $today)->count();
+        $todaySales = salesorder::whereDate('salaesorder_date', $today)->count();
+        $todayPurchase = purchase::whereDate('po_date', $today)->count();
+        $todayDelivery = delivery_challan::whereDate('invoice_date', $today)->count();
+        $todayInvoice = invoice::whereDate('invoice_date', $today)->count();
+
+        $todayQuotationAmount = quotation::whereDate('quot_date', $today)->sum('grand_total');
+        $todaySalesAmount = salesorder::whereDate('salaesorder_date', $today)->sum('grand_total');
+        $todayPurchaseAmount = purchase::whereDate('po_date', $today)->sum('grand_total');
+        $todayDeliveryAmount = delivery_challan::whereDate('invoice_date', $today)->sum('grand_total');
+        $todayInvoiceAmount = invoice::whereDate('invoice_date', $today)->sum('grand_total');
+
+        $monthQuotation = quotation::whereBetween('quot_date', [$monthStart, $monthEnd])->count();
+        $monthSales = salesorder::whereBetween('salaesorder_date', [$monthStart, $monthEnd])->count();
+        $monthPurchase = purchase::whereBetween('po_date', [$monthStart, $monthEnd])->count();
+        $monthDelivery = delivery_challan::whereBetween('invoice_date', [$monthStart, $monthEnd])->count();
+        $monthInvoice = invoice::whereBetween('invoice_date', [$monthStart, $monthEnd])->count();
+
+        $monthSalesAmount = salesorder::whereBetween('salaesorder_date', [$monthStart, $monthEnd])->sum('grand_total');
+        $monthInvoiceAmount = invoice::whereBetween('invoice_date', [$monthStart, $monthEnd])->sum('grand_total');
+        $monthPurchaseAmount = purchase::whereBetween('po_date', [$monthStart, $monthEnd])->sum('grand_total');
+
+        $recentSalesOrders = salesorder::whereNull('delete_status')
+            ->orderBy('id', 'desc')
+            ->limit(8)
+            ->get();
+
+        $topCustomers = invoice::select('invoice.customer', 'customers.customer_name')
+            ->selectRaw('SUM(invoice.grand_total) as total_amount, COUNT(invoice.id) as total_orders')
+            ->leftJoin('customers', 'customers.id', 'invoice.customer')
+            ->whereNull('invoice.delete_status')
+            ->whereBetween('invoice.invoice_date', [$monthStart, $monthEnd])
+            ->groupBy('invoice.customer', 'customers.customer_name')
+            ->orderByDesc('total_amount')
+            ->limit(5)
+            ->get();
+
+        $topProducts = salesorder_item::select('product.id as product_id', 'product.product_name', 'product.value1', 'product.value2')
+            ->selectRaw('SUM(CAST(salesorder_item.qty AS DECIMAL(12,2))) as total_qty')
+            ->join('salesorder', 'salesorder.salaesorder_no', '=', 'salesorder_item.sono')
+            ->leftJoin('product', 'product.id', '=', 'salesorder_item.product')
+            ->whereNull('salesorder.delete_status')
+            ->whereBetween('salesorder.salaesorder_date', [$monthStart, $monthEnd])
+            ->whereNotNull('product.id')
+            ->groupBy('product.id', 'product.product_name', 'product.value1', 'product.value2')
+            ->orderByDesc('total_qty')
+            ->limit(5)
+            ->get();
+
+        // Last 6 calendar months (oldest first), each entry always present
+        // even if a month has zero activity, so the chart never has gaps.
+        $monthlyTrend = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $rangeStart = date('Y-m-01', strtotime("-$i months"));
+            $rangeEnd = date('Y-m-t', strtotime("-$i months"));
+            $monthlyTrend[] = [
+                'label' => date('M Y', strtotime($rangeStart)),
+                'sales' => (float) salesorder::whereBetween('salaesorder_date', [$rangeStart, $rangeEnd])->sum('grand_total'),
+                'invoice' => (float) invoice::whereBetween('invoice_date', [$rangeStart, $rangeEnd])->sum('grand_total'),
+            ];
+        }
+
+        $latestQuotations = quotation::orderBy('id', 'desc')->limit(6)->get();
 
         $company = \App\company::first();
         \Session::put('finacial_year_id', $company->finacial_year_id);
         \Session::put('favicon', $company->favicon);
 
-        return view('admin/index')->with(['totinvoice' => $totinvoice, 'totdelivery' => $totdelivery, 'totpurchase' => $totpurchase, 'totsales' => $totsales, 'totcustomer' => $totcustomer, 'totquotation' => $totquotation, 'totproduct' => $totproduct, 'service_renewal' => $service_renewal, 'quot' => $result, 'pendingQuotation' => $pendingQuotation]);
+        return view('admin.index_v2')->with([
+            'totinvoice' => $totinvoice, 'totdelivery' => $totdelivery, 'totpurchase' => $totpurchase, 'totsales' => $totsales,
+            'totcustomer' => $totcustomer, 'totquotation' => $totquotation, 'totproduct' => $totproduct,
+            'totcategory' => $totcategory, 'totbrand' => $totbrand,
+            'pendingQuotation' => $pendingQuotation,
+            'todayQuotation' => $todayQuotation, 'todaySales' => $todaySales, 'todayPurchase' => $todayPurchase,
+            'todayDelivery' => $todayDelivery, 'todayInvoice' => $todayInvoice,
+            'todayQuotationAmount' => $todayQuotationAmount, 'todaySalesAmount' => $todaySalesAmount,
+            'todayPurchaseAmount' => $todayPurchaseAmount, 'todayDeliveryAmount' => $todayDeliveryAmount,
+            'todayInvoiceAmount' => $todayInvoiceAmount,
+            'monthQuotation' => $monthQuotation, 'monthSales' => $monthSales, 'monthPurchase' => $monthPurchase,
+            'monthDelivery' => $monthDelivery, 'monthInvoice' => $monthInvoice,
+            'monthSalesAmount' => $monthSalesAmount, 'monthInvoiceAmount' => $monthInvoiceAmount,
+            'monthPurchaseAmount' => $monthPurchaseAmount,
+            'recentSalesOrders' => $recentSalesOrders, 'topCustomers' => $topCustomers, 'topProducts' => $topProducts,
+            'monthlyTrend' => $monthlyTrend, 'latestQuotations' => $latestQuotations,
+        ]);
     }
 
     function terms_update(Request $request)
@@ -3362,7 +3692,7 @@ class AdminController extends Controller
 
     function terms_list(Request $request)
     {
-        $data = terms::where('website_id', Session::get('website_id'))
+        $data = terms::query()
             ->get();
         return view('admin.terms_list')->with(['data' => $data]);
     }
@@ -3371,6 +3701,9 @@ class AdminController extends Controller
     {
         $data = company::find($request->id);
 
+        $request->validate([
+            'records_per_page' => 'nullable|integer|min:1|max:500',
+        ]);
 
         if (isset($request->logo)) {
             $request->validate([
@@ -3422,7 +3755,9 @@ class AdminController extends Controller
         $data->city = $request->city;
         $data->pincode = $request->pincode;
         $data->pan_no = $request->pan_no;
+        $data->records_per_page = $request->records_per_page ?: 30;
         if ($data->save()) {
+            Session::put('records_per_page', $data->records_per_page);
             return redirect()->route('admin.company.list')->with('message', 'company details update successfully');
         } else {
             return back();
@@ -3447,7 +3782,7 @@ class AdminController extends Controller
 
     function company_list(Request $request)
     {
-        $data = company::where('website_id', Session::get('website_id'))
+        $data = company::query()
             ->orderBy('company_name', 'asc')->get();
 
         return view('admin.company_list')->with(['data' => $data]);
@@ -3490,7 +3825,9 @@ class AdminController extends Controller
             'category.category_name as catname',
             'category.category_image',
             'product.product_image',
-            'uom.uom_name'
+            'uom.uom_name',
+            'product.value1',
+            'product.value2'
         )
             ->leftJoin('product', 'product.id', '=', 'quot_item.product')
             ->leftJoin('category', 'category.id', '=', 'product.category')
@@ -3527,17 +3864,16 @@ class AdminController extends Controller
             ->leftJoin('contact', 'contact.id', 'quotation.contact_name')
             ->leftJoin('website_user', 'website_user.id', 'quotation.user_id')
             ->where('quotation.id', $request->quot_no)
-            ->where('quotation.website_id', Session::get('website_id'))
             ->first();
 
-        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', 'product.material_name', 'category.category_image', 'product.product_image', 'category.category_name as catname', 'uom.uom_name')
+        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model', 'product.material_name', 'category.category_image', 'product.product_image', 'category.category_name as catname', 'uom.uom_name')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->where('quot_item.quot_no', $quot->quot_no)
             ->get();
 
-        $discsum = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
+        $discsum = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->where('quot_item.quot_no', $quot->quot_no)
@@ -3549,7 +3885,7 @@ class AdminController extends Controller
             ->leftJoin("state", "state.id", "company.state")
             ->first();
 
-        $terms = terms::where('website_id', Session::get('website_id'))->first();
+        $terms = terms::query()->first();
 
         $filename = $quot->customer_name;
         $filename .= '.pdf';
@@ -3591,7 +3927,7 @@ class AdminController extends Controller
         $state = state::where('state_name', $quot->billing_state)->first();
         $stateId = $state->id ?? 0;
 
-        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', 'product.material_name', 'category.category_image', 'product.product_image', "product.hsn", "product.item_code", 'category.category_name as catname', 'uom.uom_name')
+        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', 'product.material_name', 'category.category_image', 'product.product_image', "product.hsn", "product.item_code", 'category.category_name as catname', 'uom.uom_name', 'product.value1', 'product.value2')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->leftJoin('uom', 'uom.id', 'product.uom')
@@ -3599,7 +3935,7 @@ class AdminController extends Controller
             ->get();
         //dd($quotitem);
 
-        $discsum = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
+        $discsum = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->where('quot_item.quotation_no', $quot->quotation_no)
@@ -3611,7 +3947,7 @@ class AdminController extends Controller
             ->leftJoin("state", "state.id", "company.state")
             ->first();
 
-        $terms = terms::where('website_id', Session::get('website_id'))->first();
+        $terms = terms::query()->first();
 
         $filename = Carbon::now()->format('ymdhis') . '_' . $quot->quotation_no;
 
@@ -3643,17 +3979,16 @@ class AdminController extends Controller
             ->leftJoin('contact', 'contact.id', 'quotation.contact_name')
             ->leftJoin('website_user', 'website_user.id', 'quotation.user_id')
             ->where('quotation.id', $request->quot_no)
-            ->where('quotation.website_id', Session::get('website_id'))
             ->first();
 
-        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', 'product.material_name', 'category.category_image', 'product.product_image', 'category.category_name as catname', 'uom.uom_name')
+        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model', 'product.material_name', 'category.category_image', 'product.product_image', 'category.category_name as catname', 'uom.uom_name')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->where('quot_item.quot_no', $quot->quot_no)
             ->get();
 
-        $discsum = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
+        $discsum = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model', 'product.product_image', 'product.material_name', 'category.category_image')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin('category', 'category.id', 'product.category')
             ->where('quot_item.quot_no', $quot->quot_no)
@@ -3665,7 +4000,7 @@ class AdminController extends Controller
             ->leftJoin("state", "state.id", "company.state")
             ->first();
 
-        $terms = terms::where('website_id', Session::get('website_id'))->first();
+        $terms = terms::query()->first();
 
         $filename = $quot->quotation_no . '_';
         $filename .= $quot->customer_name;
@@ -3682,23 +4017,22 @@ class AdminController extends Controller
     function quotation_duplicate(Request $request)
     {
         $quot = quotation::where('id', $request->id)
-            ->where('website_id', Session::get('website_id'))
             ->first();
         //dd($quot);
-        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model')
+        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->where('quot_item.quotation_no', $quot->quotation_no)
             ->get();
 
         //dd($quotitem);
 
-        $customer = ['' => 'select customer'] + customers::where('website_id', Session::get('website_id'))->orderBy('customer_name', 'asc')
+        $customer = ['' => 'select customer'] + customers::query()->orderBy('customer_name', 'asc')
                 ->get()
                 ->pluck('customer_name', 'id')
                 ->toArray();
 
         if (empty($quot->contact_name)) {
-            $contact_name = ['' => 'select contact'] + contact::where('website_id', Session::get('website_id'))
+            $contact_name = ['' => 'select contact'] + contact::query()
                     ->orderBy('contact_name', 'asc')
                     ->get()
                     ->pluck('contact_name', 'id')
@@ -3706,7 +4040,7 @@ class AdminController extends Controller
         } else {
             $cname = contact::select('id', 'contact_name')->where('id', $quot->contact_name)->first();
 
-            $contact_name = [$cname->id => $cname->contact_name] + contact::where('website_id', Session::get('website_id'))
+            $contact_name = [$cname->id => $cname->contact_name] + contact::query()
                     ->where('customer', $quot->customer)
                     ->orderBy('contact_name', 'asc')
                     ->get()
@@ -3765,7 +4099,6 @@ class AdminController extends Controller
             ->leftJoin('gst', 'gst.id', 'product.gst')
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->where('product.status', 'product')
-            ->where('product.website_id', Session::get('website_id'))
             ->orderBy('product.product_name', 'asc')
             ->get();
 
@@ -3773,21 +4106,19 @@ class AdminController extends Controller
             ->leftJoin('gst', 'gst.id', 'product.gst')
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->where('product.status', 'service')
-            ->where('product.website_id', Session::get('website_id'))
             ->orderBy('product.product_name', 'asc')
             ->get();
 
         $bom = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
             ->leftJoin('gst', 'gst.id', 'product.gst')
             ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.website_id', Session::get('website_id'))
             ->where('product.status', 'bom')
             ->orderBy('product.product_name', 'asc')
             ->get();
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $module = terms::where("website_id", Session::get('website_id'))
+        $module = terms::query()
             ->get()
             ->pluck('module', 'id')
             ->toArray();
@@ -3802,10 +4133,9 @@ class AdminController extends Controller
     function quotation_edit(Request $request)
     {
         $quot = quotation::where('id', $request->id)
-            ->where('website_id', Session::get('website_id'))
             ->first();
         //dd($quot);
-        $quotitem = quotation_item::select('quot_item.*', "uom.uom_name", "product.item_code", 'product.product_name', 'product.make', 'product.model', "product.product_image", "product.bar_code")
+        $quotitem = quotation_item::select('quot_item.*', "uom.uom_name", "product.item_code", 'product.product_name', 'product.make', 'product.model', "product.product_image", "product.bar_code", "product.value1", "product.value2")
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->leftJoin("uom", "uom.id", "product.uom")
             ->where('quot_item.quotation_no', $quot->quotation_no)
@@ -3813,13 +4143,13 @@ class AdminController extends Controller
 
         //dd($quotitem);
 
-        $customer = ['' => 'select customer'] + customers::where('website_id', Session::get('website_id'))->orderBy('customer_name', 'asc')
+        $customer = ['' => 'select customer'] + customers::query()->orderBy('customer_name', 'asc')
                 ->get()
                 ->pluck('customer_name', 'id')
                 ->toArray();
 
         if (empty($quot->contact_name)) {
-            $contact_name = ['' => 'select contact'] + contact::where('website_id', Session::get('website_id'))
+            $contact_name = ['' => 'select contact'] + contact::query()
                     ->orderBy('contact_name', 'asc')
                     ->get()
                     ->pluck('contact_name', 'id')
@@ -3827,7 +4157,7 @@ class AdminController extends Controller
         } else {
             $cname = contact::select('id', 'contact_name')->where('id', $quot->contact_name)->first();
 
-            $contact_name = [$cname->id => $cname->contact_name] + contact::where('website_id', Session::get('website_id'))
+            $contact_name = [$cname->id => $cname->contact_name] + contact::query()
                     ->where('customer', $quot->customer)
                     ->orderBy('contact_name', 'asc')
                     ->get()
@@ -3882,34 +4212,13 @@ class AdminController extends Controller
 
         }
 
-        $product = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'product')
-            ->where('product.website_id', Session::get('website_id'))
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-        //dd($product);
-
-        $service = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.status', 'service')
-            ->where('product.website_id', Session::get('website_id'))
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $bom = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.website_id', Session::get('website_id'))
-            ->where('product.status', 'bom')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
+        // Product/service/BOM picking on this page uses the select2 AJAX
+        // search endpoint (product_search_options) now, so the full
+        // product-table dump that used to be passed to the view is gone.
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $module = terms::where("website_id", Session::get('website_id'))
+        $module = terms::query()
             ->get()
             ->pluck('module', 'id')
             ->toArray();
@@ -3918,7 +4227,7 @@ class AdminController extends Controller
         $salesMan = salesman::get()->pluck('salesman_name', 'id')->toArray();
         // dd($pterms);
 
-        return view("admin.quotation_edit")->with(["payment_terms" => $pterms, 'duedate' => $duedate, 'data' => $quot, 'quotitem' => $quotitem, 'customer' => $customer, 'product' => $product, 'service' => $service, 'module' => $module, 'contact_name' => $contact_name, 'bom' => $bom, 'salesMan' => $salesMan]);
+        return view("admin.quotation_edit")->with(["payment_terms" => $pterms, 'duedate' => $duedate, 'data' => $quot, 'quotitem' => $quotitem, 'customer' => $customer, 'module' => $module, 'contact_name' => $contact_name, 'salesMan' => $salesMan]);
         //
 
     }
@@ -3926,22 +4235,21 @@ class AdminController extends Controller
     function quotation_normal_edit(Request $request)
     {
         $quot = quotation::where('id', $request->id)
-            ->where('website_id', Session::get('website_id'))
             ->first();
 
-        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model')
+        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->where('quot_item.quot_no', $quot->quot_no)
             ->get();
 
 
-        $customer = ['' => 'select customer'] + customers::where('website_id', Session::get('website_id'))->orderBy('customer_name', 'asc')
+        $customer = ['' => 'select customer'] + customers::query()->orderBy('customer_name', 'asc')
                 ->get()
                 ->pluck('customer_name', 'id')
                 ->toArray();
 
         if (empty($quot->contact_name)) {
-            $contact_name = ['' => 'select contact'] + contact::where('website_id', Session::get('website_id'))
+            $contact_name = ['' => 'select contact'] + contact::query()
                     ->orderBy('contact_name', 'asc')
                     ->get()
                     ->pluck('contact_name', 'id')
@@ -3949,7 +4257,7 @@ class AdminController extends Controller
         } else {
             $cname = contact::select('id', 'contact_name')->where('id', $quot->contact_name)->first();
 
-            $contact_name = [$cname->id => $cname->contact_name] + contact::where('website_id', Session::get('website_id'))
+            $contact_name = [$cname->id => $cname->contact_name] + contact::query()
                     ->orderBy('contact_name', 'asc')
                     ->get()
                     ->pluck('contact_name', 'id')
@@ -3961,7 +4269,6 @@ class AdminController extends Controller
             ->leftJoin('gst', 'gst.id', 'product.gst')
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->where('product.status', 'product')
-            ->where('product.website_id', Session::get('website_id'))
             ->orderBy('product.product_name', 'asc')
             ->get();
 
@@ -3969,13 +4276,12 @@ class AdminController extends Controller
             ->leftJoin('gst', 'gst.id', 'product.gst')
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->where('product.status', 'service')
-            ->where('product.website_id', Session::get('website_id'))
             ->orderBy('product.product_name', 'asc')
             ->get();
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $module = terms::where("website_id", Session::get('website_id'))
+        $module = terms::query()
             ->get()
             ->pluck('module', 'id')
             ->toArray();
@@ -4000,7 +4306,7 @@ class AdminController extends Controller
 
         $qitem->save();
 
-        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model')
+        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->where('quot_item.quot_no', $qitem->quot_no)
             ->get();
@@ -4031,10 +4337,10 @@ class AdminController extends Controller
             $str .= '<tr class="gradeX">
                                                 <td>
                                                     <select class="form-control" onchange="get_product(this.value,' . $srno . ')" name="product[]" id="product' . $srno . '">
-                                                        <option value="' . $qi->product . '">' . $qi->product_name . '</option>';
+                                                        <option value="' . $qi->product . '">' . \App\product::nameWithVariantInline($qi->product_name, $qi->value1 ?? null, $qi->value2 ?? null) . '</option>';
 
             foreach ($product as $prod) {
-                $str .= '<option value="' . $prod->id . '">' . $prod->product_name . '</option>';
+                $str .= '<option value="' . $prod->id . '">' . \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) . '</option>';
             }
 
             $str .= '</select>
@@ -4079,7 +4385,7 @@ class AdminController extends Controller
                                                         <option value="">select</option>';
 
         foreach ($product as $prod) {
-            $str .= '<option value="' . $prod->id . '">' . $prod->product_name . '</option>';
+            $str .= '<option value="' . $prod->id . '">' . \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) . '</option>';
         }
 
         $str .= '</select>
@@ -4172,7 +4478,7 @@ class AdminController extends Controller
         }
 
 
-        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.make', 'product.model')
+        $quotitem = quotation_item::select('quot_item.*', 'product.product_name', 'product.value1', 'product.value2', 'product.make', 'product.model')
             ->leftJoin('product', 'product.id', 'quot_item.product')
             ->where('quot_item.quot_no', $qno)
             ->get();
@@ -4203,10 +4509,10 @@ class AdminController extends Controller
             $str .= '<tr class="gradeX">
                                                 <td>
                                                     <select class="form-control" onchange="get_product(this.value,' . $srno . ')" name="product[]" id="product' . $srno . '">
-                                                        <option value="' . $qi->product . '">' . $qi->product_name . '</option>';
+                                                        <option value="' . $qi->product . '">' . \App\product::nameWithVariantInline($qi->product_name, $qi->value1 ?? null, $qi->value2 ?? null) . '</option>';
 
             foreach ($product as $prod) {
-                $str .= '<option value="' . $prod->id . '">' . $prod->product_name . '</option>';
+                $str .= '<option value="' . $prod->id . '">' . \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) . '</option>';
             }
 
             $str .= '</select>
@@ -4251,7 +4557,7 @@ class AdminController extends Controller
                                                         <option value="">select</option>';
 
         foreach ($product as $prod) {
-            $str .= '<option value="' . $prod->id . '">' . $prod->product_name . '</option>';
+            $str .= '<option value="' . $prod->id . '">' . \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) . '</option>';
         }
 
         $str .= '</select>
@@ -4309,7 +4615,6 @@ class AdminController extends Controller
             ->leftJoin('uom', 'uom.id', 'product.uom')
             ->orderBy('product_name', 'asc')
             ->where('product.id', $request->product)
-            ->where('product.website_id', Session::get('website_id'))
             ->first();
 
 
@@ -4345,10 +4650,9 @@ class AdminController extends Controller
             ->leftJoin('stock_status', 'stock_status.product', 'product.id')
             ->orderBy('product_name', 'asc')
             ->where('product.id', $request->product)
-            ->where('product.website_id', Session::get('website_id'))
             ->first();
 
-        $sub_product = bom_sub_product::select('product.product_name')
+        $sub_product = bom_sub_product::select('product.product_name', 'product.value1', 'product.value2')
             ->leftJoin('product', 'product.id', 'bom_sub_product.product')
             ->where('bom_sub_product.bom_id', $data->id)
             ->get();
@@ -4419,7 +4723,6 @@ class AdminController extends Controller
         $data = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
             ->leftJoin('gst', 'gst.id', 'product.gst')
             ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.website_id', Session::get('website_id'))
             ->where('product.id', $request->service)
             ->where('product.status', 'service')
             ->first();
@@ -4599,32 +4902,11 @@ class AdminController extends Controller
                 ->pluck('customer_name', 'id')
                 ->toArray();
 
+        // Product/service/BOM picking on this page uses the select2 AJAX
+        // search endpoint (product_search_options) now, so the full
+        // product-table dump that used to be passed to the view is gone.
 
-        $product = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.website_id', Session::get('website_id'))
-            ->where('product.status', 'product')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $service = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.website_id', Session::get('website_id'))
-            ->where('product.status', 'service')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $bom = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.website_id', Session::get('website_id'))
-            ->where('product.status', 'bom')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $term = ['' => 'select terms'] + terms::where("website_id", Session::get('website_id'))
+        $term = ['' => 'select terms'] + terms::query()
                 ->get()->pluck('module', 'id')->toArray();
 
         $pterms = "";
@@ -4643,7 +4925,7 @@ class AdminController extends Controller
                 ->toArray();
 
         return view("admin.quotation_add")
-            ->with(['payment_terms' => $pterms, 'due_date' => $duedate, 'customer' => $customer, 'salesMan' => $salesMan, 'product' => $product, 'service' => $service, 'bom' => $bom, 'module' => $term]);
+            ->with(['payment_terms' => $pterms, 'due_date' => $duedate, 'customer' => $customer, 'salesMan' => $salesMan, 'module' => $term]);
     }
 
     function quotation_add1(Request $request)
@@ -4655,39 +4937,17 @@ class AdminController extends Controller
                 ->pluck('customer_name', 'id')
                 ->toArray();
 
+        // Product/service/BOM picking on this page uses the select2 AJAX
+        // search endpoint (product_search_options) now, so the full
+        // product-table dump that used to be passed to the view is gone.
 
-        $product = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.website_id', Session::get('website_id'))
-            ->where('product.status', 'product')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $service = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.website_id', Session::get('website_id'))
-            ->where('product.status', 'service')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-
-        $bom = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
-            ->leftJoin('gst', 'gst.id', 'product.gst')
-            ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.website_id', Session::get('website_id'))
-            ->where('product.status', 'bom')
-            ->orderBy('product.product_name', 'asc')
-            ->get();
-
-        $term = ['' => 'select terms'] + terms::where("website_id", Session::get('website_id'))
+        $term = ['' => 'select terms'] + terms::query()
                 ->get()->pluck('module', 'id')->toArray();
 
-        $module = ['' => 'select terms'] + terms::where("website_id", Session::get('website_id'))
+        $module = ['' => 'select terms'] + terms::query()
                 ->get()->pluck('module', 'id')->toArray();
 
-        return view("admin.quotation_add")->with(['bom' => $bom, 'customer' => $customer, 'product' => $product, 'service' => $service, 'terms' => $term,
+        return view("admin.quotation_add")->with(['customer' => $customer, 'terms' => $term,
             "module" => $module]);
     }
 
@@ -4703,7 +4963,6 @@ class AdminController extends Controller
         $product = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
             ->leftJoin('gst', 'gst.id', 'product.gst')
             ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.website_id', Session::get('website_id'))
             ->where('product.status', 'product')
             ->orderBy('product.product_name', 'asc')
             ->get();
@@ -4711,12 +4970,11 @@ class AdminController extends Controller
         $service = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
             ->leftJoin('gst', 'gst.id', 'product.gst')
             ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.website_id', Session::get('website_id'))
             ->where('product.status', 'service')
             ->orderBy('product.product_name', 'asc')
             ->get();
 
-        $term = ['' => 'select terms'] + terms::where("website_id", Session::get('website_id'))
+        $term = ['' => 'select terms'] + terms::query()
                 ->get()->pluck('module', 'id')->toArray();
 
         return view("admin.quotation.create")->with(['customer' => $customer, 'product' => $product, 'service' => $service, 'terms' => $term]);
@@ -4734,7 +4992,6 @@ class AdminController extends Controller
         $product = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
             ->leftJoin('gst', 'gst.id', 'product.gst')
             ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.website_id', Session::get('website_id'))
             ->where('product.status', 'product')
             ->orderBy('product.product_name', 'asc')
             ->get();
@@ -4742,12 +4999,11 @@ class AdminController extends Controller
         $service = product::select('product.*', 'gst.gst_per', 'uom.uom_name')
             ->leftJoin('gst', 'gst.id', 'product.gst')
             ->leftJoin('uom', 'uom.id', 'product.uom')
-            ->where('product.website_id', Session::get('website_id'))
             ->where('product.status', 'service')
             ->orderBy('product.product_name', 'asc')
             ->get();
 
-        $term = ['' => 'select terms'] + terms::where("website_id", Session::get('website_id'))
+        $term = ['' => 'select terms'] + terms::query()
                 ->get()->pluck('module', 'id')->toArray();
 
         return view("admin.quotation_normal_add")->with(['customer' => $customer, 'product' => $product, 'service' => $service, 'terms' => $term]);
@@ -4836,7 +5092,7 @@ class AdminController extends Controller
         //echo print_r($request->all());
 
         $product = $product->orderBy('quotation.id', 'desc');
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
 
         $company_name = company::select('company_name')->first();
 
@@ -4866,7 +5122,7 @@ class AdminController extends Controller
 
         $product = $product->select('quotation.*', 'customers.customer_name', 'customers.primary_email', 'customers.secondary_email');
         $product = $product->leftJoin('customers', 'customers.id', 'quotation.customer');
-        $product = $product->where('quotation.website_id', Session::get('website_id'));
+        $product = $product;
 
         if ($request->quot_no != '') {
             $quot_no = $request->quot_no;
@@ -4935,7 +5191,7 @@ class AdminController extends Controller
         }
         //echo print_r($request->all());
         $product = $product->orderBy('quotation.id', 'desc');
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
 
         $company_name = company::select('company_name')->first();
 
@@ -4949,7 +5205,7 @@ class AdminController extends Controller
 
         $product = $product->select('quotation.*', 'customers.customer_name', 'customers.primary_email', 'customers.secondary_email');
         $product = $product->leftJoin('customers', 'customers.id', 'quotation.customer');
-        $product = $product->where('quotation.website_id', Session::get('website_id'));
+        $product = $product;
 
         if ($request->quot_no != '') {
             $quot_no = $request->quot_no;
@@ -4980,7 +5236,7 @@ class AdminController extends Controller
         $product = $product->orderBy('quotation.id', 'desc');
 
         //echo print_r($request->all());
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
 
         return view('admin.quot_list_preview')->with(['list' => $result]);
     }
@@ -4992,7 +5248,7 @@ class AdminController extends Controller
 
         $product = $product->select('quotation.*', 'customers.customer_name', 'customers.primary_email', 'customers.secondary_email');
         $product = $product->leftJoin('customers', 'customers.id', 'quotation.customer');
-        $product = $product->where('quotation.website_id', Session::get('website_id'));
+        $product = $product;
 
         if ($request->quot_no != '') {
             $quot_no = $request->quot_no;
@@ -5023,7 +5279,7 @@ class AdminController extends Controller
         $product = $product->orderBy('quotation.id', 'desc');
 
         //echo print_r($request->all());
-        $result = $product->paginate(10);
+        $result = $product->paginate(session('records_per_page', 30));
 
         $company_name = company::select('company_name')->first();
 
@@ -5114,9 +5370,9 @@ class AdminController extends Controller
 
     function customer_edit(Request $request)
     {
-        $industry = ['' => 'select industry'] + industry::where('website_id', Session::get('website_id'))
+        $industry = ['' => 'select industry'] + industry::query()
                 ->orderBy('industry_name')->get()->pluck('industry_name', 'id')->toArray();
-        $type = ['' => 'select type'] + type::where('website_id', Session::get('website_id'))
+        $type = ['' => 'select type'] + type::query()
                 ->orderBy('type_name')->get()->pluck('type_name', 'id')->toArray();
 
         $country = ['' => 'select country'] + country::orderBy('country_name', 'asc')
@@ -5137,9 +5393,9 @@ class AdminController extends Controller
 
     function customer_preview(Request $request)
     {
-        $industry = ['' => 'select industry'] + industry::where('website_id', Session::get('website_id'))
+        $industry = ['' => 'select industry'] + industry::query()
                 ->orderBy('industry_name')->get()->pluck('industry_name', 'id')->toArray();
-        $type = ['' => 'select type'] + type::where('website_id', Session::get('website_id'))
+        $type = ['' => 'select type'] + type::query()
                 ->orderBy('type_name')->get()->pluck('type_name', 'id')->toArray();
 
         $country = ['' => 'select country'] + country::orderBy('country_name', 'asc')
@@ -5283,9 +5539,9 @@ class AdminController extends Controller
 
     function customer_add()
     {
-        $industry = ['' => 'select industry'] + industry::where('website_id', Session::get('website_id'))
+        $industry = ['' => 'select industry'] + industry::query()
                 ->orderBy('industry_name')->get()->pluck('industry_name', 'id')->toArray();
-        $type = ['' => 'select type'] + type::where('website_id', Session::get('website_id'))
+        $type = ['' => 'select type'] + type::query()
                 ->orderBy('type_name')->get()->pluck('type_name', 'id')->toArray();
 
         $country = ['' => 'select country'] + country::orderBy('country_name', 'asc')
@@ -5367,9 +5623,65 @@ class AdminController extends Controller
         }
         //echo print_r($request->all());
         $data = $data->orderBy('customers.customer_name');
-        $result = $data->paginate(10);
+        $result = $data->paginate(session('records_per_page', 30));
 
         return view("admin/customer_list")->with(['cdata' => $result]);
+    }
+
+    /**
+     * v2 design-system sample migration only (see routes/admin.php).
+     * Same filters/query as customer_list() above — only the view differs.
+     * customer_list() itself is untouched.
+     */
+    function customer_list_v2(Request $request)
+    {
+        $data = new customers();
+        $data = $data->select('customers.*', 'city.city_name');
+        $data = $data->leftJoin('city', 'city.id', 'customers.billing_city');
+
+        if ($request->customer_name != '') {
+            $data = $data->where('customers.customer_name', 'like', '%' . $request->customer_name . '%');
+        }
+        if ($request->primary_phone != '') {
+            $data = $data->where('customers.primary_phone', 'like', '%' . $request->primary_phone . '%');
+        }
+        if ($request->primary_email != '') {
+            $data = $data->where('customers.primary_email', 'like', '%' . $request->primary_email . '%');
+        }
+        if ($request->owner_name != '') {
+            $data = $data->where('customers.owner_name', 'like', '%' . $request->owner_name . '%');
+        }
+        if ($request->owner_mobile != '') {
+            $data = $data->where('customers.owner_mobile', 'like', '%' . $request->owner_mobile . '%');
+        }
+
+        $data = $data->orderBy('customers.customer_name');
+        $result = $data->paginate(session('records_per_page', 30));
+
+        return view("admin.customer_list_v2")->with(['cdata' => $result]);
+    }
+
+    /** v2 sample migration only — identical dropdown data as customer_add() above, different view. */
+    function customer_add_v2()
+    {
+        $industry = ['' => 'select industry'] + industry::query()
+                ->orderBy('industry_name')->get()->pluck('industry_name', 'id')->toArray();
+        $type = ['' => 'select type'] + type::query()
+                ->orderBy('type_name')->get()->pluck('type_name', 'id')->toArray();
+
+        $country = ['' => 'select country'] + country::orderBy('country_name', 'asc')
+                ->get()->pluck('country_name', 'id')->toArray();
+
+        $state = ['' => 'select state'] + state::orderBy('state_name', 'asc')
+                ->get()->pluck('state_name', 'id')->toArray();
+
+        $city = ['' => 'select city'] + city::orderBy('city_name', 'asc')
+                ->get()->pluck('city_name', 'id')->toArray();
+
+        $payment_terms = ['' => 'select'] + payment_terms::orderBy("id", "desc")
+                ->get()->pluck("terms_name", "days")->toArray();
+
+        return view("admin.customer_add_v2")->with(['payment_terms' => $payment_terms, 'industry' => $industry, 'type' => $type, 'country' => $country, 'state' => $state, 'city' => $city]);
     }
 
     function product_list(Request $request)
@@ -5381,7 +5693,7 @@ class AdminController extends Controller
         $product = $product->leftJoin('category', 'category.id', 'product.category');
         $product = $product->leftJoin('material', 'material.id', 'product.material');
         $product = $product->where('product.status', 'product');
-        $product = $product->where('product.website_id', Session::get('website_id'));
+        $product = $product;
 
 
         if (isset($request->product_name)) {
@@ -5416,7 +5728,7 @@ class AdminController extends Controller
 
         }
         $product = $product->orderBy("id", "desc");
-        $product = $product->paginate(10);
+        $product = $product->paginate(session('records_per_page', 30));
 
 
         // dd($product);
@@ -5463,7 +5775,7 @@ class AdminController extends Controller
         }
 
         $product = $product->where('product.status', 'product');
-        $product = $product->paginate(10);
+        $product = $product->paginate(session('records_per_page', 30));
 
 
         // dd($product);
@@ -5624,7 +5936,7 @@ class AdminController extends Controller
     {
         $save = product::find($request->id);
 
-        $category = ['' => 'select category'] + category::where('website_id', Session::get('website_id'))
+        $category = ['' => 'select category'] + category::query()
                 ->orderBy('category_name', 'asc')->get()->pluck('category_name', 'id')->toArray();
         $subcategory = ['' => 'select subcategory'] + subcategory::orderBy('subcategory_name', 'asc')->get()->pluck('subcategory_name', 'id')->toArray();
 
@@ -5638,7 +5950,7 @@ class AdminController extends Controller
 
         $brand = ['' => 'select brand'] + brand::orderBy('brand_name', 'asc')->get()->pluck('brand_name', 'id')->toArray();
 
-        $material = ['' => 'select material'] + material::where('website_id', Session::get('website_id'))
+        $material = ['' => 'select material'] + material::query()
                 ->orderBy('material_name', 'asc')
                 ->get()
                 ->pluck('material_name', 'id')
@@ -5650,13 +5962,13 @@ class AdminController extends Controller
             ->leftJoin("variation", "variation.id", "product_attribute.option_id")
             ->where("product_attribute.group_id", $request->id)
             ->get();
-        $gst = ['' => 'select gst'] + gst::where('website_id', Session::get('website_id'))
+        $gst = ['' => 'select gst'] + gst::query()
                 ->orderBy('gst_per', 'asc')->get()->pluck('gst_per', 'id')->toArray();
 
-        $uom = ['' => 'select uom'] + uom::where('website_id', Session::get('website_id'))
+        $uom = ['' => 'select uom'] + uom::query()
                 ->orderBy('uom_name', 'asc')->get()->pluck('uom_name', 'id')->toArray();
 
-        $vendor = ['' => 'select vendor'] + vendor::where('website_id', Session::get('website_id'))
+        $vendor = ['' => 'select vendor'] + vendor::query()
                 ->orderBy('vendor_name', 'asc')->get()->pluck('vendor_name', 'id')->toArray();
 
         $raw_material_group = ['' => 'select Raw Material Group'] + raw_material_group::orderBy('group_name', 'asc')
@@ -5679,17 +5991,9 @@ class AdminController extends Controller
 
         $subcategory = ['' => 'select subcategory'] + subcategory::orderBy('subcategory_name', 'asc')->get()->pluck('subcategory_name', 'id')->toArray();
 
-        $manufacturer = ['' => 'select manufacturer'] + manufacturer::orderBy('manufacturer_name', 'asc')->get()->pluck('manufacturer_name', 'id')->toArray();
-
-        $importer = ['' => 'select Importer'] + importer::orderBy('manufacturer_name', 'asc')
-                ->get()->pluck('manufacturer_name', 'id')->toArray();
-
-        $packer = ['' => 'select Packer'] + packer::orderBy('manufacturer_name', 'asc')
-                ->get()->pluck('manufacturer_name', 'id')->toArray();
-
         $brand = ['' => 'select brand'] + brand::orderBy('brand_name', 'asc')->get()->pluck('brand_name', 'id')->toArray();
 
-        $material = ['' => 'select material'] + material::where('website_id', Session::get('website_id'))
+        $material = ['' => 'select material'] + material::query()
                 ->orderBy('material_name', 'asc')
                 ->get()
                 ->pluck('material_name', 'id')
@@ -5701,34 +6005,16 @@ class AdminController extends Controller
             ->leftJoin("variation", "variation.id", "product_attribute.option_id")
             ->where("product_attribute.group_id", $request->id)
             ->get();
-        $gst = ['' => 'select gst'] + gst::where('website_id', Session::get('website_id'))
+        $gst = ['' => 'select gst'] + gst::query()
                 ->orderBy('gst_per', 'asc')->get()->pluck('gst_per', 'id')->toArray();
 
-        $uom = ['' => 'select uom'] + uom::where('website_id', Session::get('website_id'))
+        $uom = ['' => 'select uom'] + uom::query()
                 ->orderBy('uom_name', 'asc')->get()->pluck('uom_name', 'id')->toArray();
 
-        $vendor = ['' => 'select vendor'] + vendor::where('website_id', Session::get('website_id'))
+        $vendor = ['' => 'select vendor'] + vendor::query()
                 ->orderBy('vendor_name', 'asc')->get()->pluck('vendor_name', 'id')->toArray();
 
-        $cotton = ['' => 'select cotton'] + product::orderBy('product_name', 'asc')->where("raw_material_group", "=", "Cotton")
-                ->get()->pluck('product_name', 'product_name')->toArray();
-        //dd($cotton);
-        $spendex = ['' => 'select spendex'] + product::orderBy('product_name', 'asc')->where("raw_material_group", "=", "Spendex")
-                ->get()->pluck('product_name', 'product_name')->toArray();
-
-        $elastics = ['' => 'select elstics'] + product::orderBy('product_name', 'asc')->where("raw_material_group", "=", "Elastics")
-                ->get()->pluck('product_name', 'product_name')->toArray();
-
-        $nylon = ['' => 'select nylon'] + product::orderBy('product_name', 'asc')->where("raw_material_group", "=", "Nylon")
-                ->get()->pluck('product_name', 'product_name')->toArray();
-
-        $polyester = ['' => 'select Polyester'] + product::orderBy('product_name', 'asc')->where("raw_material_group", "=", "Polyester")
-                ->get()->pluck('product_name', 'product_name')->toArray();
-
-        $P_P_Yarn = ['' => 'select P.P Yarn'] + product::orderBy('product_name', 'asc')->where("raw_material_group", "=", "P_P_Yarn")
-                ->get()->pluck('product_name', 'product_name')->toArray();
-
-        return view("admin/product_edit")->with(["product_multi_image" => $product_multi_image, "nylon" => $nylon, "cotton" => $cotton, "spendex" => $spendex, "elastics" => $elastics, "importer" => $importer, "packer" => $packer, "attribute" => $attribute, "brand" => $brand, "manufacturer" => $manufacturer, "subcategory" => $subcategory, 'category' => $category, 'uom' => $uom, 'gst' => $gst, 'data' => $save, 'vendor' => $vendor, 'material' => $material, 'polyester' => $polyester, 'P_P_Yarn' => $P_P_Yarn]);
+        return view("admin/product_edit")->with(["product_multi_image" => $product_multi_image, "attribute" => $attribute, "brand" => $brand, "subcategory" => $subcategory, 'category' => $category, 'uom' => $uom, 'gst' => $gst, 'data' => $save, 'vendor' => $vendor, 'material' => $material]);
 
     }
 
@@ -5736,22 +6022,22 @@ class AdminController extends Controller
     {
         $save = product::find($request->id);
 
-        $category = ['' => 'select category'] + category::where('website_id', Session::get('website_id'))
+        $category = ['' => 'select category'] + category::query()
                 ->orderBy('category_name', 'asc')->get()->pluck('category_name', 'id')->toArray();
 
-        $material = ['' => 'select material'] + material::where('website_id', Session::get('website_id'))
+        $material = ['' => 'select material'] + material::query()
                 ->orderBy('material_name', 'asc')
                 ->get()
                 ->pluck('material_name', 'id')
                 ->toArray();
 
-        $gst = ['' => 'select gst'] + gst::where('website_id', Session::get('website_id'))
+        $gst = ['' => 'select gst'] + gst::query()
                 ->orderBy('gst_per', 'asc')->get()->pluck('gst_per', 'id')->toArray();
 
-        $uom = ['' => 'select uom'] + uom::where('website_id', Session::get('website_id'))
+        $uom = ['' => 'select uom'] + uom::query()
                 ->orderBy('uom_name', 'asc')->get()->pluck('uom_name', 'id')->toArray();
 
-        $vendor = ['' => 'select vendor'] + vendor::where('website_id', Session::get('website_id'))
+        $vendor = ['' => 'select vendor'] + vendor::query()
                 ->orderBy('vendor_name', 'asc')->get()->pluck('vendor_name', 'id')->toArray();
 
         return view("admin/product_normal_edit")->with(['category' => $category, 'uom' => $uom, 'gst' => $gst, 'data' => $save, 'vendor' => $vendor, 'material' => $material]);

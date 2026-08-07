@@ -301,7 +301,7 @@ if ($discsum == 0) {
         ?>
         <tr>
             <td style="text-align: center;vertical-align:top;width: 5%">{{$srno}}</td>
-            <td style="text-align: left;vertical-align:top;">{{$item->product_name}}
+            <td style="text-align: left;vertical-align:top;"><x-product-name :row="$item" print />
                <textarea style="white-space: pre-wrap">{{$item->description}}</textarea>
 
             </td>

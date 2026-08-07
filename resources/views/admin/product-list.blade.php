@@ -1,4 +1,4 @@
-@extends('admin.layout.table_master')
+@extends('admin.layout.table_master_material')
 
 @section('title', 'List of Products')
 
@@ -73,6 +73,60 @@
                     @endif
                     <div class="col-sm-12">
 
+                        <div class="card-box">
+                            <h4 class="m-t-0 header-title">Filter</h4>
+                            <form method="get">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Item Code</label>
+                                            <input type="text" value="{{ request('item_code') }}" name="item_code" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Product Name</label>
+                                            <input type="text" value="{{ request('product_name') }}" name="product_name" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Category</label>
+                                            <input type="text" value="{{ request('category') }}" name="category" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Material</label>
+                                            <input type="text" value="{{ request('material') }}" name="material" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Usage Unit</label>
+                                            <input type="text" value="{{ request('usage_unit') }}" name="usage_unit" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Price</label>
+                                            <input type="text" value="{{ request('price') }}" name="price" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>GST</label>
+                                            <input type="text" value="{{ request('gst') }}" name="gst" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="hidden-xs">&nbsp;</label>
+                                        <button class="btn btn-primary btn-block waves-effect waves-light"><i class="mdi mdi-file-find"></i> Search</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
                         <div class="card-box table-responsive">
                             <form method="get">
 
@@ -82,6 +136,8 @@
                                         <th>Sr.</th>
                                         <th>Item Code</th>
                                         <th>Product Name</th>
+                                        <th>Size</th>
+                                        <th>Color</th>
                                         <th>Categrory</th>
                                         <th>Material</th>
                                         <th>Usage Unit</th>
@@ -89,36 +145,6 @@
                                         <th>GST</th>
 
                                         <th></th>
-                                    </tr>
-
-                                    <tr>
-                                        <td></td>
-                                        <td><input type="text" class="listSearchContributor inputElement" name="item_code" placeholder="Item Code" value="@if(isset($_GET['item_code'])){{$_GET['item_code']}}@endif">
-                                        </td>
-                                        <td><input type="text" class="listSearchContributor inputElement" name="product_name" placeholder="Product Name" value="@if(isset($_GET['product_name'])){{$_GET['product_name']}}@endif">
-                                        </td>
-                                        <td>
-                                            <input type="text" class="listSearchContributor inputElement" name="category" placeholder="Categrory" value="@if(isset($_GET['category'])){{$_GET['category']}}@endif">
-                                        </td>
-                                        <td>
-                                            <input type="text" class="listSearchContributor inputElement" name="material" placeholder="Material" value="@if(isset($_GET['material'])){{$_GET['material']}}@endif">
-                                        </td>
-                                        <td>
-                                            <input type="text" style="width:85px;border-radius: 1px;
-                                            box-shadow: none;
-                                            border: 1px solid #cccccc;height: 30px;padding: 3px 8px;" name="usage_unit" placeholder="Unit" value="@if(isset($_GET['usage_unit'])){{$_GET['usage_unit']}}@endif">
-                                        </td>
-                                        <td>
-                                            <input type="text" style="width:85px;border-radius: 1px;
-                                            box-shadow: none;
-                                            border: 1px solid #cccccc;height: 30px;padding: 3px 8px;" name="price" placeholder="Price" value="@if(isset($_GET['price'])){{$_GET['price']}}@endif">
-                                        </td>
-                                        <td>
-                                            <input type="text" class="" style="width:35px;border-radius: 1px;
-                                            box-shadow: none;
-                                            border: 1px solid #cccccc;height: 30px;padding: 3px 8px;" name="gst" placeholder="GST" value="@if(isset($_GET['gst'])){{$_GET['gst']}}@endif">
-                                        </td>
-                                        <td><button>Search</button></td>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -132,7 +158,9 @@
                                         <tr>
                                             <td style="text-align: center"> {{($data->currentPage() - 1) * $data->perPage() + $loop->iteration}}</td>
                                             <td style="text-align: center;">{{$list->item_code}}</td>
-                                            <td style="width: 40%"><a href="{{url('client/product/preview/'.$list->id)}}">{{$list->product_name}}</a></td>
+                                            <td style="width: 30%"><a href="{{url('client/product/preview/'.$list->id)}}"><x-product-name :row="$list" /></a></td>
+                                            <td style="text-align: center;">{{$list->value2}}</td>
+                                            <td style="text-align: center;">{{$list->value1}}</td>
                                             <td style="text-align: center;">{{$list->catname}}</td>
                                             <td style="text-align: center;">{{$list->matname}}</td>
                                             <td style="text-align: center;width: 10%">{{$list->uom_name}}</td>

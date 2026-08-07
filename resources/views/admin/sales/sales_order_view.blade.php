@@ -51,10 +51,6 @@
                         @endcan
                     </ul>
                 </ul>
-                {{Form::model($data,['method'=>'post','route'=>'post.quot_update'])}}
-                {{Form::hidden('id',null)}}
-                {{Form::hidden('quot_no',$data->quot_no)}}
-
                 <div class="tab-content">
                     <div id="home" class="tab-pane fade in active">
                         <div class="panel">
@@ -302,7 +298,7 @@
                                             <tr id="row{{$srno}}">
                                                 <td style="vertical-align: top !important;">
                                                     <div class="form-group">
-                                                        {{$item->product_name}}
+                                                        <x-product-name :row="$item" />
                                                     </div>
 
                                                     <div class="form-group">
@@ -509,7 +505,6 @@
 
                         </div> <!-- end Panel -->
 
-                        {{Form::close()}}
                     </div> <!-- container -->
 
                 </div> <!-- content -->
@@ -593,7 +588,7 @@
                                             <tbody>
                                             @foreach($product as $serarchprod)
                                                 <tr value="{{$serarchprod->id}}">
-                                                    <td style="width: 10%">{{$serarchprod->product_name}}</td>
+                                                    <td style="width: 10%"><x-product-name :row="$serarchprod" /></td>
                                                     <td>{{$serarchprod->uom_name}}</td>
                                                     <td>{{$serarchprod->price}}</td>
                                                     <td>{{$serarchprod->gst_per}}</td>
@@ -641,7 +636,7 @@
                                             <tbody>
                                             @foreach($service as $serarchservice)
                                                 <tr value="{{$serarchservice->id}}">
-                                                    <td style="width: 10%">{{$serarchservice->product_name}}</td>
+                                                    <td style="width: 10%"><x-product-name :row="$serarchservice" /></td>
                                                     <td>{{$serarchservice->uom_name}}</td>
                                                     <td>{{$serarchservice->price}}</td>
                                                     <td>{{$serarchservice->gst_per}}</td>

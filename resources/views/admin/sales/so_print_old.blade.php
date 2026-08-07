@@ -135,7 +135,7 @@
     @foreach($quotitem as $item)
         <tr>
             <td>{{$srno++}}</td>
-            <td>{{$item->item_code}}<br>{{$item->product_name}}<br>HSN: {{$item->hsn}}</td>
+            <td>{{$item->item_code}}<br><x-product-name :row="$item" print /><br>HSN: {{$item->hsn}}</td>
             @if(isset($isInternalPrint) && $isInternalPrint == 'yes')
             <td><img src="{{asset('public/product_image/'.$item->product_image)}}" style="height: 65px" width="65px"></td>
             @endif

@@ -296,9 +296,9 @@
                                                 <select class="form-control js-example-basic-single"
                                                         onchange="get_product(this.value,{{$srno}})" name="product[]"
                                                         id="product{{$srno}}" required>
-                                                    <option value="{{$item->product}}">{{$item->product_name}}</option>
+                                                    <option value="{{$item->product}}">{{ \App\product::nameWithVariantInline($item->product_name, $item->value1 ?? null, $item->value2 ?? null) }}</option>
                                                     @foreach($product as $prod)
-                                                        <option value="{{$prod->id}}">{{$prod->product_name}}</option>
+                                                        <option value="{{$prod->id}}">{{ \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) }}</option>
                                                     @endforeach
                                                 </select>
                                                 <div class="input-group-btn">
@@ -590,7 +590,7 @@
                                     <tbody>
                                     @foreach($product as $serarchprod)
                                         <tr value="{{$serarchprod->id}}">
-                                            <td style="width: 10%">{{$serarchprod->product_name}}</td>
+                                            <td style="width: 10%"><x-product-name :row="$serarchprod" /></td>
                                             <td>{{$serarchprod->uom_name}}</td>
                                             <td>{{$serarchprod->price}}</td>
                                             <td>{{$serarchprod->gst_per}}</td>
@@ -638,7 +638,7 @@
                                     <tbody>
                                     @foreach($service as $serarchservice)
                                         <tr value="{{$serarchservice->id}}">
-                                            <td style="width: 10%">{{$serarchservice->product_name}}</td>
+                                            <td style="width: 10%"><x-product-name :row="$serarchservice" /></td>
                                             <td>{{$serarchservice->uom_name}}</td>
                                             <td>{{$serarchservice->price}}</td>
                                             <td>{{$serarchservice->gst_per}}</td>
@@ -687,7 +687,7 @@
                                     <tbody>
 {{--                                    @foreach($bom as $serarchservice)--}}
 {{--                                        <tr value="{{$serarchservice->id}}">--}}
-{{--                                            <td style="width: 10%">{{$serarchservice->product_name}}</td>--}}
+{{--                                            <td style="width: 10%"><x-product-name :row="$serarchservice" /></td>--}}
 {{--                                            <td>{{$serarchservice->uom_name}}</td>--}}
 {{--                                            <td>{{$serarchservice->price}}</td>--}}
 {{--                                            <td>{{$serarchservice->gst_per}}</td>--}}
@@ -1155,7 +1155,7 @@
             var i = $("#totrow").val();
             i++;
 
-            var data = "<tr id='row" + i + "'><td><div class='input-group'><select class='form-control js-example-basic-single' onchange='get_product(this.value," + i + ")' name='product[]' id='product" + i + "'> <option>select</option>@foreach($product as $prod)<option value='{{$prod->id}}'>{{$prod->product_name}}</option>@endforeach</select><div class='input-group-btn'><a class='btn btn-default product_btn'  onclick='product_search(" + i + ")'><img src='<?=asset('public/product_icon.png');?>' style='height:20px'></a></div></div><div class='form-group'><label></label><textarea id='description" + i + "' name='description[]' class='form-control'></textarea></div></td>";
+            var data = "<tr id='row" + i + "'><td><div class='input-group'><select class='form-control js-example-basic-single' onchange='get_product(this.value," + i + ")' name='product[]' id='product" + i + "'> <option>select</option>@foreach($product as $prod)<option value='{{$prod->id}}'>{{ \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) }}</option>@endforeach</select><div class='input-group-btn'><a class='btn btn-default product_btn'  onclick='product_search(" + i + ")'><img src='<?=asset('public/product_icon.png');?>' style='height:20px'></a></div></div><div class='form-group'><label></label><textarea id='description" + i + "' name='description[]' class='form-control'></textarea></div></td>";
             // data += '<td style="vertical-align: top !important;text-align:center"><input type="text" name="inner_diamitter[]"  class="form-control" id="inner_diamitter' + i + '"></td>';
             // data += '<td style="vertical-align: top !important;text-align:center"><input type="text" name="outer_diamitter[]"  class="form-control" id="outer_diamitter' + i + '"></td>';
             // data += '<td style="vertical-align: top !important;text-align:center"><input type="text" name="thikness[]"  class="form-control" id="thikness' + i + '"></td>';
@@ -1197,7 +1197,7 @@
             var i = $("#totrow").val();
             i++;
 
-            var data = "<tr id='row" + i + "'><td><div class='input-group'><select class='form-control js-example-basic-single' onchange='get_service(this.value," + i + ")' name='product[]' id='product" + i + "'> <option>select</option>@foreach($service as $prod)<option value='{{$prod->id}}'>{{$prod->product_name}}</option>@endforeach</select><div class='input-group-btn'><a class='service_btn btn btn-default' onclick='service_search(" + i + ")'><img src='<?=asset('public/service_icon.jpg');?>' style='height:20px'></a></div></div><div class='form-group'><label></label><textarea id='description" + i + "' name='description[]' class='form-control'></textarea></div></td>";
+            var data = "<tr id='row" + i + "'><td><div class='input-group'><select class='form-control js-example-basic-single' onchange='get_service(this.value," + i + ")' name='product[]' id='product" + i + "'> <option>select</option>@foreach($service as $prod)<option value='{{$prod->id}}'>{{ \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) }}</option>@endforeach</select><div class='input-group-btn'><a class='service_btn btn btn-default' onclick='service_search(" + i + ")'><img src='<?=asset('public/service_icon.jpg');?>' style='height:20px'></a></div></div><div class='form-group'><label></label><textarea id='description" + i + "' name='description[]' class='form-control'></textarea></div></td>";
 
             // data += '<td style="vertical-align: top !important;text-align:center"><input type="text" name="inner_diamitter[]"  class="form-control" id="inner_diamitter' + i + '"></td>';
             // data += '<td style="vertical-align: top !important;text-align:center"><input type="text" name="outer_diamitter[]"  class="form-control" id="outer_diamitter' + i + '"></td>';
@@ -1242,7 +1242,7 @@
         {{--    var i = $("#totrow").val();--}}
         {{--    i++;--}}
 
-        {{--    var data = "<tr id='row" + i + "'><td><div class='input-group'><select class='form-control js-example-basic-single' onchange='get_bom(this.value," + i + ")' name='product[]' id='product" + i + "'> <option>select</option>@foreach($bom as $prod)<option value='{{$prod->id}}'>{{$prod->product_name}}</option>@endforeach</select><div class='input-group-btn'><a class='service_btn btn btn-default' onclick='bom_search(" + i + ")'><img src='<?=asset('public/service_icon.jpg');?>' style='height:20px'></a></div></div><div class='form-group'><label></label><textarea id='description" + i + "' name='description[]' class='form-control editor'></textarea></div></td>";--}}
+        {{--    var data = "<tr id='row" + i + "'><td><div class='input-group'><select class='form-control js-example-basic-single' onchange='get_bom(this.value," + i + ")' name='product[]' id='product" + i + "'> <option>select</option>@foreach($bom as $prod)<option value='{{$prod->id}}'>{{ \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) }}</option>@endforeach</select><div class='input-group-btn'><a class='service_btn btn btn-default' onclick='bom_search(" + i + ")'><img src='<?=asset('public/service_icon.jpg');?>' style='height:20px'></a></div></div><div class='form-group'><label></label><textarea id='description" + i + "' name='description[]' class='form-control editor'></textarea></div></td>";--}}
         {{--    data += '<td style="vertical-align: top !important;text-align:center"><input type="text" name="inner_diamitter[]"  class="form-control" id="inner_diamitter' + i + '"></td>';--}}
         {{--    data += '<td style="vertical-align: top !important;text-align:center"><input type="text" name="outer_diamitter[]"  class="form-control" id="outer_diamitter' + i + '"></td>';--}}
         {{--    data += '<td style="vertical-align: top !important;text-align:center"><input type="text" name="thikness[]"  class="form-control" id="thikness' + i + '"></td>';--}}

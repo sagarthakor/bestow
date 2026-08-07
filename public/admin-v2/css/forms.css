@@ -1,0 +1,120 @@
+/* ==========================================================================
+   FORMS (v2) — retheme Select2 + Flatpickr to match tokens.css, plus
+   floating-label / validation / spacing polish on top of components.css.
+   ========================================================================== */
+
+/* ---- Form layout rhythm --------------------------------------------------*/
+.form-section {
+  margin-bottom: var(--space-8);
+}
+.form-section-title {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--color-text-muted);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-4);
+}
+.form-actions {
+  display: flex;
+  gap: var(--space-2);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+  margin-top: var(--space-2);
+}
+
+/* ---- Floating labels (Bootstrap 5 native mechanism, retheme only) --------*/
+.form-floating > .form-control,
+.form-floating > .form-select {
+  height: calc(3.2rem + 2px);
+  padding: 1rem .75rem .375rem;
+}
+.form-floating > label {
+  padding: .85rem .75rem;
+}
+.form-floating > .form-control:focus,
+.form-floating > .form-control:not(:placeholder-shown) {
+  padding-top: 1.4rem;
+  padding-bottom: .3rem;
+}
+
+/* ---- Select2 --> Bootstrap 5 theme, remapped onto our tokens -------------*/
+.select2-container--bootstrap-5 .select2-selection {
+  min-height: calc(1.5em + 1rem + 2px);
+  border-color: var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-surface);
+}
+.select2-container--bootstrap-5 .select2-selection__rendered {
+  color: var(--color-text-primary);
+  font-size: var(--fs-base);
+}
+.select2-container--bootstrap-5.select2-container--focus .select2-selection,
+.select2-container--bootstrap-5.select2-container--open .select2-selection {
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+.select2-dropdown {
+  background-color: var(--color-bg-elevated);
+  border-color: var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+.select2-search__field {
+  background-color: var(--color-bg-surface) !important;
+  color: var(--color-text-primary) !important;
+  border-color: var(--color-border) !important;
+}
+.select2-results__option {
+  color: var(--color-text-primary);
+  font-size: var(--fs-base);
+}
+.select2-container--bootstrap-5 .select2-results__option--highlighted[aria-selected] {
+  background-color: var(--color-primary) !important;
+  color: #fff !important;
+}
+.select2-container--bootstrap-5 .select2-results__option[aria-selected="true"] {
+  background-color: var(--color-bg-subtle);
+}
+.select2-container--bootstrap-5 .select2-selection__clear { color: var(--color-text-muted); }
+
+/* ---- Flatpickr — retheme calendar to match tokens (incl. dark mode) -----*/
+.flatpickr-calendar {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  font-family: var(--font-family-base);
+}
+.flatpickr-calendar.arrowTop:before,
+.flatpickr-calendar.arrowTop:after { border-bottom-color: var(--color-border); }
+.flatpickr-months, .flatpickr-weekdays { background: var(--color-bg-elevated); }
+.flatpickr-current-month, .flatpickr-weekday { color: var(--color-text-primary); }
+.flatpickr-month svg, .flatpickr-months .flatpickr-prev-month svg, .flatpickr-months .flatpickr-next-month svg { fill: var(--color-text-secondary); }
+.flatpickr-day { color: var(--color-text-primary); border-radius: var(--radius-sm); }
+.flatpickr-day.flatpickr-disabled, .flatpickr-day.prevMonthDay, .flatpickr-day.nextMonthDay { color: var(--color-text-muted); }
+.flatpickr-day:hover { background: var(--color-bg-subtle); }
+.flatpickr-day.selected, .flatpickr-day.selected:hover {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+.flatpickr-day.today { border-color: var(--color-primary); }
+.numInputWrapper input, .flatpickr-current-month input.cur-year { color: var(--color-text-primary); }
+
+/* Image/file upload preview tile (category/product image fields etc.) */
+.form-upload-preview {
+  width: 96px; height: 96px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--color-border-strong);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-muted);
+  font-size: 1.5rem;
+  margin-bottom: var(--space-2);
+}
+.form-upload-preview img { width: 100%; height: 100%; object-fit: cover; }

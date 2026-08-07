@@ -237,35 +237,35 @@ class MachineController extends Controller
     }
     function machine_list(Request $request)
     {
-        $data=machine::orderBy("id","desc")->paginate(10);
+        $data=machine::orderBy("id","desc")->paginate(session('records_per_page', 30));
 
         return view("admin.machine.list")->with(['data'=>$data]);
     }
 
     function stitching_machine_list(Request $request)
     {
-        $data=stitching_machine::orderBy("id","desc")->paginate(10);
+        $data=stitching_machine::orderBy("id","desc")->paginate(session('records_per_page', 30));
 
         return view("admin.machine.stitchingMachineList")->with(['data'=>$data]);
     }
 
     function washing_machine_list(Request $request)
     {
-        $data=washing_machine::orderBy("id","desc")->paginate(10);
+        $data=washing_machine::orderBy("id","desc")->paginate(session('records_per_page', 30));
 
         return view("admin.machine.washingMachineList")->with(['data'=>$data]);
     }
 
     function pressing_machine_list(Request $request)
     {
-        $data=pressing_machine::orderBy("id","desc")->paginate(10);
+        $data=pressing_machine::orderBy("id","desc")->paginate(session('records_per_page', 30));
 
         return view("admin.machine.pressingMachineList")->with(['data'=>$data]);
     }
 
     function packaging_machine_list(Request $request)
     {
-        $data=packaging_machine::orderBy("id","desc")->paginate(10);
+        $data=packaging_machine::orderBy("id","desc")->paginate(session('records_per_page', 30));
 
         return view("admin.machine.packagingMachineList")->with(['data'=>$data]);
     }

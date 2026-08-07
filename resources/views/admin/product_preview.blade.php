@@ -83,7 +83,7 @@
                                         <div class="form-group row">
                                         <label for="staticEmail" class="col-sm-6 col-form-label">Product Name</label>
                                         <div class="col-sm-6">
-                                         {{$data->product_name}}
+                                         <x-product-name :row="$data" />
                                         </div>
                                     </div>
                                     </div>
@@ -124,46 +124,6 @@
                                         <label for="staticEmail" class="col-sm-6 col-form-label">Category</label>
                                         <div class="col-sm-6">
                                          {{$data->material_name}}
-                                        </div>
-                                    </div>
-                                    </div>
-                                    
-                                    </div>
-                                    
-                                    
-                                    <div class="row">
-                                                 <div class="col-md-3">
-                                        <div class="form-group row">
-                                        <label for="staticEmail" class="col-sm-6 col-form-label">Cotton</label>
-                                        <div class="col-sm-6">
-                                         {{$data->cotton}}
-                                        </div>
-                                    </div>
-                                    </div>
-                                    
-                                    <div class="col-md-3">
-                                        <div class="form-group row">
-                                        <label for="staticEmail" class="col-sm-6 col-form-label">Spendex</label>
-                                        <div class="col-sm-6">
-                                         {{$data->spendex}}
-                                        </div>
-                                    </div>
-                                    </div>
-                                    
-                                    <div class="col-md-3">
-                                        <div class="form-group row">
-                                        <label for="staticEmail" class="col-sm-6 col-form-label">Elastics</label>
-                                        <div class="col-sm-6">
-                                         {{$data->elastics}}
-                                        </div>
-                                    </div>
-                                    </div>
-                                    
-                                    <div class="col-md-3">
-                                        <div class="form-group row">
-                                        <label for="staticEmail" class="col-sm-6 col-form-label">Nylon</label>
-                                        <div class="col-sm-6">
-                                         {{$data->nylon}}
                                         </div>
                                     </div>
                                     </div>

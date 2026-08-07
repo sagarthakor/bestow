@@ -1,4 +1,4 @@
-@extends('admin.layout.table_master')
+@extends('admin.layout.table_master_material')
 
 @section('title', 'List of UOM')
 
@@ -26,6 +26,11 @@
                                         <li class="active">
                                             Usage Unit List
                                         </li>
+                                        @can('product_create')
+                                            <li style="text-align: right;margin-bottom: 5px">
+                                                <a class="btn btn-primary" href="{{route('admin.uom.add')}}">Add New</a>
+                                            </li>
+                                        @endcan
                                     </ol>
                                     <div class="clearfix"></div>
                                 </div>
@@ -33,35 +38,36 @@
             </div>
                         <!-- end row -->
 
-
-
-
-                        <div class="row">
-                             <div class="col-sm-4">
-                            </div>
-                            <div class="col-sm-4">
-                            </div>
-                         @can('product_create')
-                                <div class="col-sm-4" style="text-align: right;margin-bottom: 5px">
-                                    <a class="btn btn-primary" href="{{route('admin.uom.add')}}">Add New</a>
-                                </div>
-                         @endcan
-
-                        </div>
                         <div class="row">
                             @if(session()->has('message'))
                                   <div class="col-sm-12">
-                                    <div class="alert alert-info" style="background-color: #188ae2 !important">
-                                        <strong style="color: #fff">{{session()->get('message')}}</strong>
+                                    <div class="alert alert-info">
+                                        <strong>{{session()->get('message')}}</strong>
                                     </div>
                                 </div>
                             @endif
                             <div class="col-sm-12">
 
-                                <div class="card-box table-responsive">
-                                   <form method="get">
+                                <div class="card-box">
+                                    <h4 class="m-t-0 header-title">Filter</h4>
+                                    <form method="get">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label>Usage Unit</label>
+                                                <input value="<?php if(isset($_GET['usage_unit'])){echo $_GET['usage_unit']; }?>" type="text" class="form-control" name="usage_unit">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="hidden-xs">&nbsp;</label>
+                                            <button class="btn btn-primary btn-block waves-effect waves-light"><i class="fa fa-search"></i> Search</button>
+                                        </div>
+                                    </div>
+                                    </form>
+                                </div>
 
-                                    <table class="table table-striped table-bordered">
+                                <div class="card-box table-responsive">
+                                    <table class="table table-striped table-bordered table-hover">
                                         <thead>
                                         <tr>
                                             <th>Sr.</th>
@@ -70,13 +76,6 @@
                                             <th></th>
                                         </tr>
                                         </thead>
-                                        <tr>
-                                            <td><button>Search</button></td>
-                                            <td>
-                                                 <input value="<?php if(isset($_GET['usage_unit'])){echo $_GET['usage_unit']; }?>" type="text" class="listSearchContributor inputElement" name="usage_unit">
-                                            </td>
-                                            <td></td>
-                                        </tr>
 
                                         <tbody>
                                              <?php
@@ -92,17 +91,16 @@
 
                                             <td class="actions" style="width: 5%">
                                              @can('product_update')
-                                                    <a href="{{route('admin.uom.edit',['id' => $list->id] )}}" class="on-default edit-row"><i class="fa fa-pencil"></i></a>
+                                                    <a href="{{route('admin.uom.edit',['id' => $list->id] )}}" class="btn btn-xs btn-primary waves-effect"><i class="fa fa-pencil"></i> Edit</a>
                                              @endcan
                                             @can('product_delete')
-                                                     <a href="{{route('admin.uom.delete',['id' => $list->id] )}}" class="on-default remove-row"><i class="fa fa-trash-o" onclick="return confirm('Are you sure you want to delete this item?');"></i></a>
+                                                     <a href="{{route('admin.uom.delete',['id' => $list->id] )}}" class="btn btn-xs btn-danger waves-effect" onclick="return confirm('Are you sure you want to delete this item?');"><i class="fa fa-trash-o"></i> Delete</a>
                                             @endcan
                                                 </td>
                                         </tr>
                                             @endforeach
                                         </tbody>
                                     </table>
-                                </form>
                                         {{$data->appends(request()->input())->links()}}
                                 </div>
                             </div>

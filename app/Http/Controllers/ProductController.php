@@ -162,7 +162,7 @@ class ProductController extends Controller
         $product=$product->leftJoin('category','category.id','product.category');
         $product=$product->leftJoin('material','material.id','product.material');
         $product=$product->where('product.status','raw material');
-        $product=$product->where('product.website_id',Session::get('website_id'));
+        $product=$product;
 
 
         if(isset($request->product_name))
@@ -208,7 +208,7 @@ class ProductController extends Controller
 
         }
         $product=$product->orderBy("id","desc");
-        $product=$product->paginate(10);
+        $product=$product->paginate(session('records_per_page', 30));
 
 
         // dd($product);
@@ -570,7 +570,7 @@ class ProductController extends Controller
     }
     function group_edit(Request $request)
     {
-        $category=[''=>'select category']+category::where('website_id',Session::get('website_id'))
+        $category=[''=>'select category']+category::query()
                 ->orderBy('category_name','asc')
                 ->get()
                 ->pluck('category_name','id')
@@ -581,24 +581,24 @@ class ProductController extends Controller
                 ->pluck('subcategory_name','id')
                 ->toArray();
 
-        $material=[''=>'select material']+material::where('website_id',Session::get('website_id'))
+        $material=[''=>'select material']+material::query()
                 ->orderBy('material_name','asc')
                 ->get()
                 ->pluck('material_name','id')
                 ->toArray();
 
-        $gst=[''=>'select gst']+gst::where('website_id',Session::get('website_id'))
+        $gst=[''=>'select gst']+gst::query()
                 ->orderBy('gst_per','asc')
                 ->get()->pluck('gst_per','id')->toArray();
 
 
-        $uom=[''=>'select uom']+uom::where('website_id',Session::get('website_id'))
+        $uom=[''=>'select uom']+uom::query()
                 ->orderBy('uom_name','asc')
                 ->get()
                 ->pluck('uom_name','id')
                 ->toArray();
 
-        $vendor=[''=>'select vendor']+vendor::where('website_id',Session::get('website_id'))
+        $vendor=[''=>'select vendor']+vendor::query()
                 ->orderBy('vendor_name','asc')
                 ->get()
                 ->pluck('vendor_name','id')
@@ -625,7 +625,7 @@ class ProductController extends Controller
 
         $product_attribute=product_attribute::where("group_id",$request->id)->get();
 
-        $product_options=product_options::select("product_options.*","product.id as pid","product.product_name","product.price","product.purchase_price","product.sku","product.product_image")
+        $product_options=product_options::select("product_options.*","product.id as pid","product.product_name", "product.value1", "product.value2","product.price","product.purchase_price","product.sku","product.product_image")
             ->leftJoin("product","product.id","product_options.product")
             ->where("product_options.group_id",$request->id)
             ->get();
@@ -641,7 +641,7 @@ class ProductController extends Controller
 
     function item_group_list(Request $request)
     {
-        $group=item_group::orderBy("id","desc")->paginate(10);
+        $group=item_group::orderBy("id","desc")->paginate(session('records_per_page', 30));
         return view("admin.items.group_list")->with(['data'=>$group]);
     }
 
@@ -883,10 +883,25 @@ class ProductController extends Controller
         $m=brand::find($request->id);
         return view("admin/items/brand_edit")->with(['data'=>$m]);
     }
+
+    /** v2 sample migration only — identical to brand_edit() above, different view. */
+    function brand_edit_v2(Request $request)
+    {
+        $m=brand::find($request->id);
+        return view("admin.items.brand_edit_v2")->with(['data'=>$m]);
+    }
     function brand_list(Request $request)
     {
-        $data=brand::orderBy("id","desc")->paginate(10);
+        $data=brand::orderBy("id","desc")->paginate(session('records_per_page', 30));
         return view("admin/items/brand_list")
+            ->with(['data'=>$data]);
+    }
+
+    /** v2 sample migration only — identical query to brand_list() above, different view. */
+    function brand_list_v2(Request $request)
+    {
+        $data=brand::orderBy("id","desc")->paginate(session('records_per_page', 30));
+        return view("admin.items.brand_list_v2")
             ->with(['data'=>$data]);
     }
     function brand_save(Request $request)
@@ -1091,9 +1106,9 @@ class ProductController extends Controller
     function manufacturer_edit(Request $request)
     {
         $data=manufacturer::find($request->id);
-        $industry=[''=>'select industry']+industry::where('website_id',Session::get('website_id'))
+        $industry=[''=>'select industry']+industry::query()
                 ->orderBy('industry_name')->get()->pluck('industry_name','id')->toArray();
-        $type=[''=>'select type']+type::where('website_id',Session::get('website_id'))
+        $type=[''=>'select type']+type::query()
                 ->orderBy('type_name')->get()->pluck('type_name','id')->toArray();
 
         $country=[''=>'select country']+country::orderBy('country_name','asc')
@@ -1114,9 +1129,9 @@ class ProductController extends Controller
     function importer_edit(Request $request)
     {
         $data=importer::find($request->id);
-        $industry=[''=>'select industry']+industry::where('website_id',Session::get('website_id'))
+        $industry=[''=>'select industry']+industry::query()
                 ->orderBy('industry_name')->get()->pluck('industry_name','id')->toArray();
-        $type=[''=>'select type']+type::where('website_id',Session::get('website_id'))
+        $type=[''=>'select type']+type::query()
                 ->orderBy('type_name')->get()->pluck('type_name','id')->toArray();
 
         $country=[''=>'select country']+country::orderBy('country_name','asc')
@@ -1138,9 +1153,9 @@ class ProductController extends Controller
     function packer_edit(Request $request)
     {
         $data=packer::find($request->id);
-        $industry=[''=>'select industry']+industry::where('website_id',Session::get('website_id'))
+        $industry=[''=>'select industry']+industry::query()
                 ->orderBy('industry_name')->get()->pluck('industry_name','id')->toArray();
-        $type=[''=>'select type']+type::where('website_id',Session::get('website_id'))
+        $type=[''=>'select type']+type::query()
                 ->orderBy('type_name')->get()->pluck('type_name','id')->toArray();
 
         $country=[''=>'select country']+country::orderBy('country_name','asc')
@@ -1162,21 +1177,21 @@ class ProductController extends Controller
 
     function manufacturer_list(Request $request)
     {
-        $data=manufacturer::orderBy("id","desc")->paginate(10);
+        $data=manufacturer::orderBy("id","desc")->paginate(session('records_per_page', 30));
         return view("admin/items/manufacturer_list")
             ->with(['data'=>$data]);
     }
 
     function packer_list(Request $request)
     {
-        $data=packer::orderBy("id","desc")->paginate(10);
+        $data=packer::orderBy("id","desc")->paginate(session('records_per_page', 30));
         return view("admin/items/packer_list")
             ->with(['data'=>$data]);
     }
 
     function importer_list(Request $request)
     {
-        $data=importer::orderBy("id","desc")->paginate(10);
+        $data=importer::orderBy("id","desc")->paginate(session('records_per_page', 30));
         return view("admin/items/importer_list")
             ->with(['data'=>$data]);
     }
@@ -1500,9 +1515,9 @@ class ProductController extends Controller
 
     function packer(Request $request)
     {
-        $industry=[''=>'select industry']+industry::where('website_id',Session::get('website_id'))
+        $industry=[''=>'select industry']+industry::query()
                 ->orderBy('industry_name')->get()->pluck('industry_name','id')->toArray();
-        $type=[''=>'select type']+type::where('website_id',Session::get('website_id'))
+        $type=[''=>'select type']+type::query()
                 ->orderBy('type_name')->get()->pluck('type_name','id')->toArray();
 
         $country=[''=>'select country']+country::orderBy('country_name','asc')
@@ -1522,9 +1537,9 @@ class ProductController extends Controller
 
     function importer(Request $request)
     {
-        $industry=[''=>'select industry']+industry::where('website_id',Session::get('website_id'))
+        $industry=[''=>'select industry']+industry::query()
                 ->orderBy('industry_name')->get()->pluck('industry_name','id')->toArray();
-        $type=[''=>'select type']+type::where('website_id',Session::get('website_id'))
+        $type=[''=>'select type']+type::query()
                 ->orderBy('type_name')->get()->pluck('type_name','id')->toArray();
 
         $country=[''=>'select country']+country::orderBy('country_name','asc')
@@ -1544,9 +1559,9 @@ class ProductController extends Controller
 
     function manufacturer(Request $request)
     {
-        $industry=[''=>'select industry']+industry::where('website_id',Session::get('website_id'))
+        $industry=[''=>'select industry']+industry::query()
                 ->orderBy('industry_name')->get()->pluck('industry_name','id')->toArray();
-        $type=[''=>'select type']+type::where('website_id',Session::get('website_id'))
+        $type=[''=>'select type']+type::query()
                 ->orderBy('type_name')->get()->pluck('type_name','id')->toArray();
 
         $country=[''=>'select country']+country::orderBy('country_name','asc')
@@ -1565,30 +1580,30 @@ class ProductController extends Controller
     }
     function item_group(Request $request)
     {
-        $category=[''=>'select category']+category::where('website_id',Session::get('website_id'))
+        $category=[''=>'select category']+category::query()
                 ->orderBy('category_name','asc')
                 ->get()
                 ->pluck('category_name','id')
                 ->toArray();
 
-        $material=[''=>'select material']+material::where('website_id',Session::get('website_id'))
+        $material=[''=>'select material']+material::query()
                 ->orderBy('material_name','asc')
                 ->get()
                 ->pluck('material_name','id')
                 ->toArray();
 
-        $gst=[''=>'select gst']+gst::where('website_id',Session::get('website_id'))
+        $gst=[''=>'select gst']+gst::query()
                 ->orderBy('gst_per','asc')
                 ->get()->pluck('gst_per','id')->toArray();
 
 
-        $uom=[''=>'select uom']+uom::where('website_id',Session::get('website_id'))
+        $uom=[''=>'select uom']+uom::query()
                 ->orderBy('uom_name','asc')
                 ->get()
                 ->pluck('uom_name','id')
                 ->toArray();
 
-        $vendor=[''=>'select vendor']+vendor::where('website_id',Session::get('website_id'))
+        $vendor=[''=>'select vendor']+vendor::query()
                 ->orderBy('vendor_name','asc')
                 ->get()
                 ->pluck('vendor_name','id')
@@ -1618,30 +1633,30 @@ class ProductController extends Controller
 
     function raw_add(Request $request)
     {
-        $category=[''=>'select category']+category::where('website_id',Session::get('website_id'))
+        $category=[''=>'select category']+category::query()
                 ->orderBy('category_name','asc')
                 ->get()
                 ->pluck('category_name','id')
                 ->toArray();
 
-        $material=[''=>'select material']+material::where('website_id',Session::get('website_id'))
+        $material=[''=>'select material']+material::query()
                 ->orderBy('material_name','asc')
                 ->get()
                 ->pluck('material_name','id')
                 ->toArray();
 
-        $gst=[''=>'select gst']+gst::where('website_id',Session::get('website_id'))
+        $gst=[''=>'select gst']+gst::query()
                 ->orderBy('gst_per','asc')
                 ->get()->pluck('gst_per','id')->toArray();
 
 
-        $uom=[''=>'select uom']+uom::where('website_id',Session::get('website_id'))
+        $uom=[''=>'select uom']+uom::query()
                 ->orderBy('uom_name','asc')
                 ->get()
                 ->pluck('uom_name','id')
                 ->toArray();
 
-        $vendor=[''=>'select vendor']+vendor::where('website_id',Session::get('website_id'))
+        $vendor=[''=>'select vendor']+vendor::query()
                 ->orderBy('vendor_name','asc')
                 ->get()
                 ->pluck('vendor_name','id')
@@ -1683,30 +1698,30 @@ class ProductController extends Controller
 
     function product_add(Request $request)
     {
-        $category=[''=>'select category']+category::where('website_id',Session::get('website_id'))
+        $category=[''=>'select category']+category::query()
                 ->orderBy('category_name','asc')
                 ->get()
                 ->pluck('category_name','id')
                 ->toArray();
 
-        $material=[''=>'select material']+material::where('website_id',Session::get('website_id'))
+        $material=[''=>'select material']+material::query()
                 ->orderBy('material_name','asc')
                 ->get()
                 ->pluck('material_name','id')
                 ->toArray();
 
-        $gst=[''=>'select gst']+gst::where('website_id',Session::get('website_id'))
+        $gst=[''=>'select gst']+gst::query()
                 ->orderBy('gst_per','asc')
                 ->get()->pluck('gst_per','id')->toArray();
 
 
-        $uom=[''=>'select uom']+uom::where('website_id',Session::get('website_id'))
+        $uom=[''=>'select uom']+uom::query()
                 ->orderBy('uom_name','asc')
                 ->get()
                 ->pluck('uom_name','id')
                 ->toArray();
 
-        $vendor=[''=>'select vendor']+vendor::where('website_id',Session::get('website_id'))
+        $vendor=[''=>'select vendor']+vendor::query()
                 ->orderBy('vendor_name','asc')
                 ->get()
                 ->pluck('vendor_name','id')
@@ -1720,15 +1735,6 @@ class ProductController extends Controller
 
         $city=[''=>'select city']+city::orderBy('city_name','asc')
                 ->get()->pluck('city_name','id')->toArray();
-
-        $manufacturer=[''=>'select Manufacturer']+manufacturer::orderBy('manufacturer_name','asc')
-                ->get()->pluck('manufacturer_name','id')->toArray();
-
-        $importer=[''=>'select Importer']+importer::orderBy('manufacturer_name','asc')
-                ->get()->pluck('manufacturer_name','id')->toArray();
-
-        $packer=[''=>'select Packer']+packer::orderBy('manufacturer_name','asc')
-                ->get()->pluck('manufacturer_name','id')->toArray();
 
         $brand=[''=>'select Brand']+brand::orderBy('brand_name','asc')
                 ->get()->pluck('brand_name','id')->toArray();
@@ -1745,26 +1751,8 @@ class ProductController extends Controller
             ->leftJoin("attribute","attribute.id","variation.attribute")
             ->get();
 
-        $cotton=[''=>'select cotton']+product::orderBy('product_name','asc')->where("raw_material_group","=","Cotton")
-                ->get()->pluck('product_name','product_name')->toArray();
-        //dd($cotton);
-        $spendex=[''=>'select spendex']+product::orderBy('product_name','asc')->where("raw_material_group","=","Spendex")
-                ->get()->pluck('product_name','product_name')->toArray();
-
-        $elastics=[''=>'select elstics']+product::orderBy('product_name','asc')->where("raw_material_group","=","Elastics")
-                ->get()->pluck('product_name','product_name')->toArray();
-
-        $nylon=[''=>'select nylon']+product::orderBy('product_name','asc')->where("raw_material_group","=","Nylon")
-                ->get()->pluck('product_name','product_name')->toArray();
-
-        $polyester=[''=>'select Polyester']+product::orderBy('product_name','asc')->where("raw_material_group","=","Polyester")
-                ->get()->pluck('product_name','product_name')->toArray();
-
-        $P_P_Yarn=[''=>'select P.P Yarn']+product::orderBy('product_name','asc')->where("raw_material_group","=","P_P_Yarn")
-                ->get()->pluck('product_name','product_name')->toArray();
-
         return view("admin/product_add")
-            ->with(["color_value"=>$color_value,"size_value"=>$size_value,"nylon"=>$nylon,"elastics"=>$elastics,"spendex"=>$spendex,"cotton"=>$cotton,"importer"=>$importer,"packer"=>$packer,'variation'=>$variation,'attribute'=>$attribute,'brand'=>$brand,'manufacturer'=>$manufacturer,'category'=>$category,'uom'=>$uom,'gst'=>$gst,'vendor'=>$vendor,'country'=>$country,'state'=>$state,'city'=>$city,'material'=>$material,'polyester' => $polyester,'P_P_Yarn' => $P_P_Yarn]);
+            ->with(["color_value"=>$color_value,"size_value"=>$size_value,'variation'=>$variation,'attribute'=>$attribute,'brand'=>$brand,'category'=>$category,'uom'=>$uom,'gst'=>$gst,'vendor'=>$vendor,'country'=>$country,'state'=>$state,'city'=>$city,'material'=>$material]);
     }
 
 
@@ -1882,43 +1870,48 @@ class ProductController extends Controller
     function product_save(Request $request)
     {
         //dd($request->all());
-        $cover_image =  $request->item_code;
-        $cover_image .="-";
-        $cover_image=$request->product_name;
-        $coverImage = Str::slug($cover_image, '-');
+        $coverImage = Str::slug($request->product_name, '-');
 
         $request->validate([
-            'product_name' => 'required|unique:product|max:255',
-            'product_image'=>'required'
+            'product_name' => 'required|max:255',
         ]);
 
-        $image_uploader = (new ImageUpload());
-
-        if($request->file("product_image"))
+        // Same item_code + product_name can be reused to add more colour/size
+        // variants later, but the exact same variant cannot be added twice.
+        $duplicateVariations=[];
+        $tot=count($request->size);
+        for($i=0;$i<$tot;$i++)
         {
-            $imageName = 'cover_image_'.time().'.'.$request->product_image->extension();
-            $request->product_image->move(public_path('product_image'), $imageName);
+            $exists=product::where('item_code',$request->item_code)
+                ->where('product_name',$request->product_name)
+                ->where('value1',$request->color[$i])
+                ->where('value2',$request->size[$i])
+                ->exists();
 
-            $coverImageName = $imageName;
+            if($exists)
+            {
+                $duplicateVariations[]='Color: '.$request->color[$i].', Size: '.$request->size[$i];
+            }
+        }
+
+        if(!empty($duplicateVariations))
+        {
+            return back()->withInput()->withErrors([
+                'variation' => 'This variation already exists for Item Code "'.$request->item_code.'" / Product "'.$request->product_name.'" - '.implode('; ', $duplicateVariations)
+            ]);
         }
 
         $tot=count($request->size);
-        if(isset($request->bom) && $request->bom == 1){
-            dd($request->bom);
-        }
         for($i=0;$i<$tot;$i++)
         {
-            $productname = $request->size[$i].' '.$request->item_code.' '.$request->product_name.' '.$request->color[$i];
-
             date_default_timezone_set("Asia/Kolkata");
             $save=new product();
             $save->item_code=$request->item_code;
             $save->bar_code=$request->bar_code;
-            $save->product_name=$productname;
+            $save->product_name=$request->product_name;
             $save->make=$request->make;
             $save->model=$request->model;
             $save->price=$request->price[$i];
-            $save->purchase_price=$request->price[$i];
             $save->gst=$request->gst;
             $save->uom=$request->uom;
             $save->category=$request->category;
@@ -1933,39 +1926,27 @@ class ProductController extends Controller
             $save->created_time=date('Y-m-d h:i:s A');
             $save->sku=$request->sku;
             $save->subcategory=$request->subcategory;
-            $save->cotton=$request->cotton;
-            $save->spendex=$request->spendex;
-            $save->elastics=$request->elastics;
-            $save->nylon=$request->nylon;
-            $save->polyester=$request->polyester;
-            $save->p_p_yarn=$request->p_p_yarn;
-            if(isset($request->manufacturer)){
-                $manufacturername=manufacturer::find($request->manufacturer);
-                $save->manufacturer_name=$manufacturername->manufacturer_name;
-                $save->manufacturer=$request->manufacturer;
-            }
-            $save->importer=$request->importer;
-            $save->packer=$request->packer;
             if(isset($request->brand)){
                 $brandname=brand::find($request->brand);
                 $save->brand_name=$brandname->brand_name;
                 $save->brand=$request->brand;
             }
 
-            if ($request->attribute_image[$i]) {
-                $imageName = time().'.'.$request->attribute_image[$i]->extension();
-                $request->attribute_image[$i]->move(public_path('product_image'), $imageName);
-                $save->product_image=$imageName ?? "";
-            }
-
-            if($request->file("product_image"))
-            {
-                $save->cover_image=$coverImageName ?? "";
+            if ($request->hasFile("attribute_image.$i")) {
+                $variantImages=[];
+                foreach ($request->file("attribute_image.$i") as $file) {
+                    $imageName = time().'_'.uniqid().'.'.$file->extension();
+                    $file->move(public_path('product_image'), $imageName);
+                    $variantImages[]=$imageName;
+                }
+                $save->product_image=$variantImages[0] ?? "";
+                $save->variant_images=$variantImages;
             }
 
             $save->opening_stock=$request->opening_stock ?? 0;
             $save->show_hide=$request->show_hide ?? "hide";
             $save->price_show_hide=$request->price_show_hide ?? "hide";
+            $save->slug=$coverImage;
             $save->attribute1="Colour";
             $save->value1=$request->color[$i];
             $save->attribute2="Size";
@@ -1976,16 +1957,7 @@ class ProductController extends Controller
 
         }
 
-        if($request->status=="raw material")
-        {
-            return redirect()->route('admin.raw.material.list')
-                ->with('message','Raw Material save successfully');
-        }
-        if($request->status=="product")
-        {
-            return redirect()->route('admin.product.list')->with('message','product save successfully');
-        }
-
+        return redirect()->route('admin.product.list')->with('message','product save successfully');
     }
 
     function product_update(Request $request)
@@ -1998,7 +1970,6 @@ class ProductController extends Controller
         $request->validate([
             'product_name' => 'required',
             'price'=>'required',
-            'status'=>'required',
             'item_code'=>'required'
         ]);
 
@@ -2021,6 +1992,8 @@ class ProductController extends Controller
 
         $save->product_name=$request->product_name;
         $save->item_code=$request->item_code;
+        $newSlug = Str::slug($request->product_name, '-');
+        $save->slug = $newSlug;
         $save->bar_code=$request->bar_code;
         $save->make=$request->make;
         $save->model=$request->model;
@@ -2032,35 +2005,21 @@ class ProductController extends Controller
         $save->subcategory=$request->subcategory;
         //$save->subcategory=$request->subcategory_name;
         $save->material=$request->material;
-        $save->sku=$request->sku;
         $save->category_name=$category_name;
         $save->material_name=$material_name;
 
-        $save->sales_start_date=date('Y-m-d',strtotime($request->sales_start_date));
-        $save->sales_end_date=date('Y-m-d',strtotime($request->sales_end_date));
         $save->user_id=Session::get('user_id');
         $save->website_id=Session::get('website_id');
         $save->description=$request->description;
-        $save->vendor=$request->vendor;
-        $save->outer_diameter=$request->outer_diameter;
-        $save->inner_diameter=$request->inner_diameter;
-        $save->thikness=$request->thikness;
         $save->hsn=$request->hsn;
         $save->status='product';
         $save->remark=$request->remark;
-        $save->status=$request->status;
         $save->product_description=$request->product_description;
 
         $save->attribute1=$request->attribute1 ?? "";
         $save->value1=$request->value1 ?? "";
         $save->attribute2=$request->attribute2 ?? "";
         $save->value2=$request->value2 ?? "";
-        $save->cotton=$request->cotton;
-        $save->spendex=$request->spendex;
-        $save->elastics=$request->elastics;
-        $save->nylon=$request->nylon;
-        $save->polyester=$request->polyester;
-        $save->p_p_yarn=$request->p_p_yarn;
         if(isset($request->show_hide))
         {
             $save->show_hide=$request->show_hide;
@@ -2082,30 +2041,20 @@ class ProductController extends Controller
 
         if ($request->hasFile('attribute_image')) {
             $this->validate($request, [
-                'attribute_image' => 'required|image|mimes:jpeg,png,jpg,bmp,gif,svg|max:2024',
+                'attribute_image.*' => 'image|mimes:jpeg,png,jpg,bmp,gif,svg|max:2024',
             ]);
 
-            $imageName = time().'.'.$request->attribute_image->extension();
-            $request->attribute_image->move(public_path('product_image'), $imageName);
-            $save->product_image=$imageName ?? "";
-        }
-
-        if ($request->hasFile('product_image')) {
-
-            $this->validate($request, [
-                'product_image' => 'required|image|mimes:jpeg,png,jpg,bmp,gif,svg|max:2024',
-            ]);
-
-            $imageName = time().'.'.$request->product_image->extension();
-            $request->product_image->move(public_path('product_image'), $imageName);
-            $save->cover_image=$imageName ?? "";
-
-        }
-
-        if(empty($request->manufacturer)){}else{
-            $manufacturername=manufacturer::find($request->manufacturer);
-            $save->manufacturer_name=$manufacturername->manufacturer_name;
-            $save->manufacturer=$request->manufacturer;
+            $existingVariantImages=$save->variant_images ?: ($save->product_image ? [$save->product_image] : []);
+            $newVariantImages=[];
+            foreach ($request->file('attribute_image') as $file) {
+                $imageName = time().'_'.uniqid().'.'.$file->extension();
+                $file->move(public_path('product_image'), $imageName);
+                $newVariantImages[]=$imageName;
+            }
+            $save->variant_images=array_merge($existingVariantImages, $newVariantImages);
+            if (empty($save->product_image)) {
+                $save->product_image=$newVariantImages[0];
+            }
         }
 
         if(empty($request->brand)){}else{
@@ -2114,9 +2063,12 @@ class ProductController extends Controller
             $save->brand=$request->brand;
         }
 
-        $save->importer=$request->importer;
-        $save->packer=$request->packer;
         $save->save();
+
+        // Sync slug across all variants of same item_code
+        product::where('item_code', $save->item_code)
+            ->where('id', '!=', $save->id)
+            ->update(['slug' => $newSlug]);
 
         $mimage=array();
         $mimage1=array();
@@ -2154,16 +2106,6 @@ class ProductController extends Controller
             $multiimage->save();
         }
 
-        if($request->status=="raw material")
-        {
-            return redirect()->route('admin.raw.material.list')
-                ->with('message','Raw Material update successfully');
-        }
-
-        if($request->status=="product")
-        {
-            return redirect()->route('admin.product.list')->with('message','product update successfully');
-
-        }
+        return redirect()->route('admin.product.list')->with('message','product update successfully');
     }
 }

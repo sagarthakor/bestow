@@ -12,13 +12,6 @@ use App\variation;
 use Illuminate\Support\Facades\Route;
 
 
-Route::get('/', function () {
-    return "✅ Admin Panel Loaded Successfully!";
-})->name('admin.home');
-
-Route::get('/dashboard', function () {
-    return "✅ Admin Dashboard Page!";
-})->name('admin.dashboard');
 
 /*
 |--------------------------------------------------------------------------
@@ -33,6 +26,31 @@ Auth::routes();
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth'])->group(function () {
+
+    // v2 design-system preview only — renders master_v2/table_master_v2 with
+    // sample content so the new layout can be reviewed with a real session.
+    // Not linked from any menu; safe to remove once Phase 3 migration starts.
+    Route::get('/v2-preview', function () {
+        return view('admin.layout.preview_v2');
+    })->name('admin.v2.preview');
+
+    // v2 dashboard preview only — see AdminController::dashboardV2().
+    // The live '/' 'admin.dashboard' route below is untouched.
+    Route::get('/v2-dashboard', 'AdminController@dashboardV2')->name('admin.v2.dashboard');
+
+    // v2 table/form redesign sample migrations only (Category + Customer).
+    // Live routes further below (admin.category.*, admin.customers.*,
+    // admin.customer.*) are completely untouched. Forms below submit to
+    // those SAME existing save/update routes, so no backend logic changed.
+     Route::prefix('v2/category')->name('admin.v2.category.')->group(function () {
+        Route::get('/list', 'AdminController@category_list_v2')->name('list');
+        Route::get('/add', 'AdminController@category_add_v2')->name('add');
+        Route::get('/edit/{id}', 'AdminController@category_edit_v2')->name('edit');
+    });
+    Route::prefix('v2/customer')->name('admin.v2.customer.')->group(function () {
+        Route::get('/list', 'AdminController@customer_list_v2')->name('list');
+        Route::get('/add', 'AdminController@customer_add_v2')->name('add');
+    });
 
     Route::prefix('bukkal')->name('admin.bukkal.')->group(function () {
         Route::get('/list', [BukkalCodeController::class, 'index'])->name('list');
@@ -54,6 +72,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/edit/{id}', [NiwarCodeController::class, 'edit'])->name('edit');
         Route::post('/update/{id}', [NiwarCodeController::class, 'update'])->name('update');
         Route::get('/delete/{id}', [NiwarCodeController::class, 'destroy'])->name('delete');
+        Route::get('/details/{id}', [NiwarCodeController::class, 'details'])->name('details');
+        Route::post('/details/{id}', [NiwarCodeController::class, 'saveDetails'])->name('save_details');
     });
 
 // Belt Costing CRUD
@@ -64,6 +84,16 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/edit/{id}', [BeltCostingController::class, 'edit'])->name('edit');
         Route::post('/update/{id}', [BeltCostingController::class, 'update'])->name('update');
         Route::get('/delete/{id}', [BeltCostingController::class, 'destroy'])->name('delete');
+    });
+
+// Belt Production (separate module from the sock Production flow)
+    Route::prefix('belt-production')->name('admin.belt_production.')->group(function () {
+        Route::get('/list', 'BeltProductionController@belt_production_list')->name('list');
+        Route::get('/add', 'BeltProductionController@belt_production_add')->name('add');
+        Route::get('/check-material', 'BeltProductionController@belt_production_check_material')->name('check_material');
+        Route::post('/store', 'BeltProductionController@belt_production_store')->name('store');
+        Route::post('/complete', 'BeltProductionController@belt_production_complete')->name('complete');
+        Route::get('/wastage-material', 'BeltProductionController@belt_production_wastage_material')->name('wastage_material');
     });
 
     // ✅ Admin Dashboard
@@ -455,6 +485,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get("get_terms","AjaxController@get_terms");
     Route::get("get_vendor","AdminController@get_vendor");
     Route::get("get_vendor_contact","AdminController@get_vendor_contact");
+    Route::get("product/search-options","AdminController@product_search_options")->name('admin.product.search_options');
+    Route::get("vendor/search-options","AdminController@vendor_search_options")->name('admin.vendor.search_options');
 
 
     Route::get('quotation/list/{status?}', 'AdminController@quotation_list')->name('admin.quotation.list');
@@ -463,6 +495,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('quotation/save', 'AdminController@quot_save')->name('admin.quotation.save');
     Route::get('quotation/edit/{id}', 'AdminController@quotation_edit')->name('admin.quotation.edit');
     Route::post('quotation/update', 'AdminController@quot_update')->name('admin.quotation.update');
+    // post.quot_update: the same handler under the name expected by the leftover
+    // Form::model(...) wrapper in quotation_preview / invoice_view / deliverychallan_view.
+    // Those forms have no real submit button (their "Save" buttons trigger separate
+    // JS/AJAX calls) but the route name still needs to resolve for the page to render.
+    Route::post('quotation/update-legacy', 'AdminController@quot_update')->name('post.quot_update');
     Route::get('quotation/delete/{id}', 'AdminController@quotation_delete')->name('admin.quotation.delete');
 
     Route::get('quotation/duplicate/{id}', 'AdminController@quotation_duplicate')->name('admin.quotation.duplicate');
@@ -491,7 +528,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/edit/{id}', 'SalesController@so_edit')->name('edit');
         Route::post('/update', 'SalesController@salesorder_update1')->name('update');
         Route::get('/delete/{id}', 'SalesController@so_delete')->name('delete');
-        Route::get('/view/{id}', 'SalesController@show')->name('view');
+        Route::get('/view/{id}', 'SalesController@sales_view')->name('view');
         Route::get('/print/{id}', 'SalesController@so_print')->name('print');
         Route::get("delivery-challan/add/{id?}","DeliveryChallanController@challan_add")->name('delivery.add');
         Route::get("delivery-challan/add/{id?}/{customer?}","DeliveryChallanController@challan_add")->name('delivery.add');
@@ -620,6 +657,25 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/formula/delete/{id?}', "FormulaController@formula_delete")
             ->name('formula_delete');
+
+        // Buckle Formula (Belt raw-material formula - separate from the sock Formula Master above)
+        Route::get('/buckle-formula/list', "BuckleFormulaController@buckle_formula_list")
+            ->name('buckle_formula_list');
+
+        Route::get('/buckle-formula/add', "BuckleFormulaController@buckle_formula_add")
+            ->name('buckle_formula_add');
+
+        Route::post('/buckle-formula/store', "BuckleFormulaController@buckle_formula_store")
+            ->name('buckle_formula_store');
+
+        Route::get('/buckle-formula/edit/{id}', "BuckleFormulaController@buckle_formula_edit")
+            ->name('buckle_formula_edit');
+
+        Route::post('/buckle-formula/update', "BuckleFormulaController@buckle_formula_update")
+            ->name('buckle_formula_update');
+
+        Route::get('/buckle-formula/delete/{id}', "BuckleFormulaController@buckle_formula_delete")
+            ->name('buckle_formula_delete');
 
         // Dashboard
         Route::get('/dashboard', "ProductionController@production_dashboard")
@@ -848,7 +904,29 @@ Route::middleware(['auth'])->group(function () {
         Route::get('sales-out-of-stock-item', 'ReportsController@salesOutOfStockItems')->name('admin.reports.sales.out_of_stock_items');
         Route::get('challan', 'ReportsController@challan')->name('admin.reports.challan');
         Route::get('invoice', 'ReportsController@invoice')->name('admin.reports.invoice');
+        Route::get('sales-summary', 'ReportsController@salesSummary')->name('admin.reports.sales_summary');
+        Route::get('product-wise-sales', 'ReportsController@productWiseSales')->name('admin.reports.product_wise_sales');
+        Route::get('salesman-wise-sales', 'ReportsController@salesmanWiseSales')->name('admin.reports.salesman_wise_sales');
+        Route::get('stock-available', 'ReportsController@stockAvailable')->name('admin.reports.stock_available');
+        Route::get('raw-material-pending', 'ReportsController@rawMaterialPending')->name('admin.reports.raw_material_pending');
+        Route::get('production-pending', 'ReportsController@productionPending')->name('admin.reports.production_pending');
+        Route::get('stitching-pending', 'ReportsController@stitchingPending')->name('admin.reports.stitching_pending');
+        Route::get('pressing-pending', 'ReportsController@pressingPending')->name('admin.reports.pressing_pending');
+        Route::get('packaging-pending', 'ReportsController@packagingPending')->name('admin.reports.packaging_pending');
+        Route::get('belt-production', 'ReportsController@beltProduction')->name('admin.reports.belt_production');
+        Route::get('socks-missing-formula', 'ReportsController@socksMissingFormula')->name('admin.reports.socks_missing_formula');
+        Route::get('belt-missing-formula', 'ReportsController@beltMissingFormula')->name('admin.reports.belt_missing_formula');
     });
+
+    // Manual permission-cache buster for servers without terminal/artisan access -
+    // Spatie caches permissions for 24h and only auto-clears on Eloquent writes,
+    // so permissions inserted via raw SQL (no terminal to run migrate) stay stale
+    // until this is hit once. Safe to leave in place; visiting it just re-primes
+    // the cache from the DB, no data is changed.
+    Route::get('clear-permission-cache', function () {
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+        return 'Permission cache cleared.';
+    })->name('admin.clear_permission_cache');
 
 
 

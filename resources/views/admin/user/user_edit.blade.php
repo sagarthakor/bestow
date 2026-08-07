@@ -1,4 +1,4 @@
-@extends('admin.layout.master')
+@extends('admin.layout.master_material')
 
 @section('title', 'Edit User')
 
@@ -27,7 +27,7 @@
                                     <a href="{{route('admin.user.list')}}">User List </a>
                                 </li>
                                 <li>
-                                    Add User
+                                    Edit User
                                 </li>
                             </ol>
                             <div class="clearfix"></div>

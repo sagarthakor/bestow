@@ -1,4 +1,4 @@
-@extends('admin.layout.table_master')
+@extends('admin.layout.table_master_material')
 
 @section('title', 'List | Purchase')
 
@@ -55,6 +55,66 @@
 
                     <div class="col-sm-12">
 
+                        <div class="card-box">
+                            <h4 class="m-t-0 header-title">Filter</h4>
+                            <form method="get">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Purchase No</label>
+                                            <input type="text" value="{{ request('purchase_no') }}" name="purchase_no" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>From Date</label>
+                                            <input type="text" value="{{ request('from_date') }}" name="from_date" id="from_date" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>To Date</label>
+                                            <input type="text" value="{{ request('end_date') }}" name="end_date" id="to_date" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Vendor Name</label>
+                                            <input type="text" value="{{ request('client_name') }}" name="client_name" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Vendor PO</label>
+                                            <input type="text" value="{{ request('vendor_po') }}" name="vendor_po" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Subject</label>
+                                            <input type="text" value="{{ request('subject') }}" name="subject" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Amount</label>
+                                            <input type="text" value="{{ request('amount') }}" name="amount" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Status</label>
+                                            <input type="text" value="{{ request('status') }}" name="status" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="hidden-xs">&nbsp;</label>
+                                        <button class="btn btn-primary btn-block waves-effect waves-light"><i class="mdi mdi-file-find"></i> Search</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
                         <div class="card-box table-responsive">
                             {{Form::open(['method'=>'get'])}}
                             <table class="table table-striped table-bordered">
@@ -96,60 +156,6 @@
                                         P Invoice
                                     </th>
                                     <th></th>
-                                </tr>
-                                <tr>
-                                    <td>
-
-
-                                    </td>
-                                    <td>
-                                        <input type="text" value="<?php if (isset($_GET['purchase_no'])) {
-                                            echo $_GET['purchase_no'];
-                                        } ?>" name="purchase_no" class="listSearchContributor inputElement">
-                                    </td>
-                                    <td>
-                                        <input type="text" value="<?php if(isset($_GET['from_date'])){echo $_GET['from_date'];} ?>" name="from_date" id="from_date" class="listSearchContributor inputElement">
-                                        <input type="text" value="<?php if(isset($_GET['end_date'])){echo $_GET['end_date'];} ?>" name="end_date" id="to_date" class="listSearchContributor inputElement">
-                                    </td>
-
-
-                                    </td>
-                                    <td>
-                                        <input type="text" value="<?php if (isset($_GET['client_name'])) {
-                                            echo $_GET['client_name'];
-                                        } ?>" name="client_name" class="listSearchContributor inputElement">
-                                    </td>
-                                    <td>
-                                        <input type="text" value="<?php if (isset($_GET['vendor_po'])) {
-                                            echo $_GET['vendor_po'];
-                                        } ?>" name="vendor_po" class="listSearchContributor inputElement">
-                                    </td>
-                                    <td>
-                                        <input type="text" name="subject" class="listSearchContributor inputElement"
-                                               value="<?php if (isset($_GET['subject'])) {
-                                                   echo $_GET['subject'];
-                                               } ?>">
-                                    </td>
-                                    <td>
-                                        <input type="text" name="amount" style="width:85px;border-radius: 1px;
-                    box-shadow: none;
-                    border: 1px solid #cccccc;height: 30px;padding: 3px 8px;" value="<?php if (isset($_GET['amount'])) {
-                                            echo $_GET['amount'];
-                                        } ?>">
-                                    </td>
-                                    <td>
-                                        <input type="text" name="status" class="listSearchContributor inputElement"
-                                               value="<?php if (isset($_GET['status'])) {
-                                                   echo $_GET['status'];
-                                               } ?>">
-                                    </td>
-                                    <td></td>
-                                    <td></td>
-                                    <td>
-                                        <button class="btn btn-brown">
-                                            <i class="mdi mdi-file-find"></i>Search
-                                        </button>
-                                    </td>
                                 </tr>
                                 </thead>
 
@@ -301,7 +307,7 @@
 
                                     <!--                <tr class="child-{{$srno}}">-->
                                     <!--                    <td style="text-align:center">{{$totitem}}</td>-->
-                                    <!--                    <td colspan="5" style="text-align:center">{{$receive->product_name}}</td>-->
+                                    <!--                    <td colspan="5" style="text-align:center"><x-product-name :row="$receive" /></td>-->
                                     <!--                    <td style="text-align:center">{{$receive->order_qty}}</td>-->
                                     <!--                    <td style="text-align:center">{{$receive->qty_received}}</td>-->
                                     <!--                    <td style="text-align:center">{{$receive->remain_qty}}</td>-->

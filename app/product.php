@@ -4,11 +4,13 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\HtmlString;
 
 class product extends Model
 {
     protected $table="product";
     public $timestamps=false;
+    protected $casts=['variant_images'=>'array'];
     /**
      * @var mixed
      */
@@ -96,6 +98,84 @@ class product extends Model
         }
 
         return $name ?: trim($this->product_name ?? '');
+    }
+
+    /**
+     * Variant pieces as ["Size: X", "Color: Y"], skipping empty values.
+     * Plain scalars so callers can pass either an Eloquent product's
+     * columns or a stdClass row from a raw/joined query.
+     */
+    public static function variantParts($value1, $value2): array
+    {
+        $parts = [];
+        if (trim((string) $value2) !== '') {
+            $parts[] = 'Size: ' . trim((string) $value2);
+        }
+        if (trim((string) $value1) !== '') {
+            $parts[] = 'Color: ' . trim((string) $value1);
+        }
+        return $parts;
+    }
+
+    /**
+     * "Size: X, Color: Y" — comma separated, no product name.
+     */
+    public static function variantLabel($value1, $value2): string
+    {
+        return implode(', ', self::variantParts($value1, $value2));
+    }
+
+    /**
+     * Product name plus the variant stacked underneath in muted text:
+     *
+     *     Product Name
+     *     Size: 7 | Color: Red
+     *
+     * Escaped + inline styled so the same call works in a normal Blade view
+     * and inside a dompdf print view (dompdf ignores most stylesheet rules on
+     * table cells, so the muted line carries its own style).
+     */
+    public static function nameWithVariant($name, $value1, $value2, bool $print = false): HtmlString
+    {
+        $html = e(trim((string) $name));
+        $parts = self::variantParts($value1, $value2);
+
+        if ($parts) {
+            $size = $print ? '9px' : '11px';
+            $html .= '<span class="product-variant-line" style="display:block;font-size:' . $size
+                . ';line-height:1.35;color:#777777;">' . e(implode(' | ', $parts)) . '</span>';
+        }
+
+        return new HtmlString($html);
+    }
+
+    /**
+     * Single-line variant of the above, for places that cannot hold markup:
+     * <option> text, select2 labels, Excel exports, JS-built strings.
+     *
+     *     Product Name (Size: 7, Color: Red)
+     */
+    public static function nameWithVariantInline($name, $value1, $value2): string
+    {
+        $name = trim((string) $name);
+        $label = self::variantLabel($value1, $value2);
+
+        return $label === '' ? $name : $name . ' (' . $label . ')';
+    }
+
+    public function getVariantLabelAttribute(): string
+    {
+        return self::variantLabel($this->value1, $this->value2);
+    }
+
+    public function getNameWithVariantAttribute(): HtmlString
+    {
+        return self::nameWithVariant($this->product_name, $this->value1, $this->value2);
+    }
+
+    public function getNameWithVariantInlineAttribute(): string
+    {
+        return self::nameWithVariantInline($this->product_name, $this->value1, $this->value2);
     }
 
     // app/Models/Product.php

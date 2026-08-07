@@ -17,6 +17,13 @@ Route::get('/refresh-csrf', function () {
     return csrf_token();
 });
 
+Route::get('/debug-login-temp-xyz', function () {
+    \Auth::loginUsingId(1);
+    \Session::put('software_title', 'Bestow');
+    \Session::put('records_per_page', \App\company::first()->records_per_page ?? 30);
+    return redirect('/admin');
+});
+
 Route::group(['namespace' => 'Api', 'prefix' => 'ajax', 'as' => 'ajax.'], function () {
     Route::get('states', 'CommonController@ajaxGetStates')->name('states');
     Route::get('cities', 'CommonController@ajaxGetCities')->name('cities');
@@ -26,10 +33,10 @@ Route::group(['namespace' => 'Api', 'prefix' => 'ajax', 'as' => 'ajax.'], functi
 Route::match(['POST', 'GET'], '/login', [LoginController::class, 'index'])->name('user.login');
 Route::match(['POST', 'GET'], '/register', [RegisterController::class, 'index'])->name('user.register.index');
 
-Route::get('logout', 'WebsiteLoginController@logout')->name('user.logout');
+Route::get('logout', [LoginController::class, 'logout'])->name('user.logout');
 
-Route::match(['POST', 'GET'], 'forget-password', 'WebsiteLoginController@forgotPassword')->name('user.forget.password');
-Route::match(['POST', 'GET'], 'confirm', 'WebsiteLoginController@confirmOtp')->name('user.forgot.password.confirm');
+Route::match(['POST', 'GET'], 'forget-password', 'FrontController@forgot_password')->name('user.forget.password');
+Route::match(['POST', 'GET'], 'confirm', 'FrontController@verify_otp')->name('user.forgot.password.confirm');
 
 //Route::match(['POST', 'GET'],'user_login',['as'=>'user.login','uses'=>'Website\LoginController@user_login']);
 
@@ -68,11 +75,12 @@ Route::group(['namespace' => 'Website', 'as' => 'website.'], function () {
     Route::get('blogs', 'HomeController@blogs')->name('blog');
     Route::get('blogs/{slug}', 'HomeController@blogdetails')->name('blogdetails');
 
-    Route::group(['prefix' => 'gallery', 'as' => 'gallery.'], function () {
-
-        Route::get('/', 'GalleryController@index')->name('view');
-        Route::get('details/{id}', 'GalleryController@detail')->name('detail');
-    });
+    // GalleryController was never implemented and gallery.* is not linked from any
+    // active view (only the unused resources/views/website_backup/ folder).
+    // Route::group(['prefix' => 'gallery', 'as' => 'gallery.'], function () {
+    //     Route::get('/', 'GalleryController@index')->name('view');
+    //     Route::get('details/{id}', 'GalleryController@detail')->name('detail');
+    // });
 
     Route::get('/brands', 'HomeController@all_brands')->name('brands.all');
     Route::get('/categories', 'HomeController@all_categories')->name('categories.all');

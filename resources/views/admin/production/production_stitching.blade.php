@@ -1,4 +1,4 @@
-@extends('admin.layout.master')
+@extends('admin.layout.master_material')
 
 @section('title', 'Stitching Process')
 
@@ -78,7 +78,7 @@
                                             <table class="table table-bordered">
                                                 <tr>
                                                     <td>Product Name</td>
-                                                    <td>{{$production->product_name}}</td>
+                                                    <td><x-product-name :row="$production" /></td>
                                                 </tr>
                                             </table>
                                         </div>
@@ -122,7 +122,7 @@
                                                                             <?php
                                                                             $perc=$production->total_material*$formula->qty;
                                                                             ?>
-                                                        <!--                    <td>{{$mat->product_name}} : {{$perc}} {{$mat->uom_name}}</td>-->
+                                                        <!--                    <td><x-product-name :row="$mat" /> : {{$perc}} {{$mat->uom_name}}</td>-->
                                                         <!--                @endif-->
                                                         <!--            @endforeach-->
                                                         <!--        @endforeach-->

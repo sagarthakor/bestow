@@ -143,24 +143,23 @@ class QuotationController extends Controller
     function quot_revise(Request $request)
     {
         $quot=quotation::where('id',$request->id)
-            ->where('website_id',Session::get('website_id'))
             ->first();
 
         //dd($quot);
-        $quotitem=quotation_item::select('quot_item.*','product.product_name','product.make','product.model')
+        $quotitem=quotation_item::select('quot_item.*','product.product_name', 'product.value1', 'product.value2','product.make','product.model')
             ->leftJoin('product','product.id','quot_item.product')
             ->where('quot_item.quot_no',$quot->quot_no)
             ->get();
 
 
-        $customer=[''=>'select customer']+customers::where('website_id',Session::get('website_id'))->orderBy('customer_name','asc')
+        $customer=[''=>'select customer']+customers::query()->orderBy('customer_name','asc')
                 ->get()
                 ->pluck('customer_name','id')
                 ->toArray();
 
         if(empty($quot->contact_name))
         {
-            $contact_name=[''=>'select contact']+contact::where('website_id',Session::get('website_id'))
+            $contact_name=[''=>'select contact']+contact::query()
                     ->orderBy('contact_name','asc')
                     ->get()
                     ->pluck('contact_name','id')
@@ -168,7 +167,7 @@ class QuotationController extends Controller
         }else{
             $cname=contact::select('id','contact_name')->where('id',$quot->contact_name)->first();
 
-            $contact_name=[$cname->id=>$cname->contact_name]+contact::where('website_id',Session::get('website_id'))
+            $contact_name=[$cname->id=>$cname->contact_name]+contact::query()
                     ->where('customer',$quot->customer)
                     ->orderBy('contact_name','asc')
                     ->get()
@@ -179,39 +178,19 @@ class QuotationController extends Controller
 
 
 
-        $product=product::select('product.*','gst.gst_per','uom.uom_name')
-            ->leftJoin('gst','gst.id','product.gst')
-            ->leftJoin('uom','uom.id','product.uom')
-            ->where('product.status','product')
-            ->where('product.website_id',Session::get('website_id'))
-            ->orderBy('product.product_name','asc')
-            ->get();
-
-        $service=product::select('product.*','gst.gst_per','uom.uom_name')
-            ->leftJoin('gst','gst.id','product.gst')
-            ->leftJoin('uom','uom.id','product.uom')
-            ->where('product.status','service')
-            ->where('product.website_id',Session::get('website_id'))
-            ->orderBy('product.product_name','asc')
-            ->get();
-
-        $bom=product::select('product.*','gst.gst_per','uom.uom_name')
-            ->leftJoin('gst','gst.id','product.gst')
-            ->leftJoin('uom','uom.id','product.uom')
-            ->where('product.website_id',Session::get('website_id'))
-            ->where('product.status','bom')
-            ->orderBy('product.product_name','asc')
-            ->get();
+        // Product/service/BOM picking on this page uses the select2 AJAX
+        // search endpoint (product_search_options) now, so the full
+        // product-table dump that used to be passed to the view is gone.
 
         //$term=terms::where('website_id',Session::get('website_id'))->first();
 
-        $module=terms::where("website_id",Session::get('website_id'))
+        $module=terms::query()
             ->get()
             ->pluck('module','id')
             ->toArray();
 
 
-        return view("admin.quotation.quot_revise")->with(['data'=>$quot,'quotitem'=>$quotitem,'customer'=>$customer,'product'=>$product,'service'=>$service,'module'=>$module,'contact_name'=>$contact_name,'bom'=>$bom]);
+        return view("admin.quotation.quot_revise")->with(['data'=>$quot,'quotitem'=>$quotitem,'customer'=>$customer,'module'=>$module,'contact_name'=>$contact_name]);
 
     }
     
@@ -229,10 +208,9 @@ class QuotationController extends Controller
             ->leftJoin('contact','contact.id','quotation.contact_name')
             ->leftJoin('website_user','website_user.id','quotation.user_id')
             ->where('quotation.id',$request->id)
-            ->where('quotation.website_id',Session::get('website_id'))
             ->first();
 
-        $quotitem=quotation_item::select('quot_item.*','product.product_name','product.make','product.model','product.material_name','category.category_image','product.product_image',"product.hsn","product.item_code",'category.category_name as catname','uom.uom_name')
+        $quotitem=quotation_item::select('quot_item.*','product.product_name', 'product.value1', 'product.value2','product.make','product.model','product.material_name','category.category_image','product.product_image',"product.hsn","product.item_code",'category.category_name as catname','uom.uom_name')
             ->leftJoin('product','product.id','quot_item.product')
             ->leftJoin('category','category.id','product.category')
             ->leftJoin('uom','uom.id','product.uom')
@@ -240,7 +218,7 @@ class QuotationController extends Controller
             ->get();
         //dd($quotitem);
 
-        $discsum=quotation_item::select('quot_item.*','product.product_name','product.make','product.model','product.product_image','product.material_name','category.category_image')
+        $discsum=quotation_item::select('quot_item.*','product.product_name', 'product.value1', 'product.value2','product.make','product.model','product.product_image','product.material_name','category.category_image')
         ->leftJoin('product','product.id','quot_item.product')
         ->leftJoin('category','category.id','product.category')
         ->where('quot_item.quotation_no',$quot->quotation_no)
@@ -252,7 +230,7 @@ class QuotationController extends Controller
             ->leftJoin("state","state.id","company.state")
             ->first();
 
-        $terms=terms::where('website_id',Session::get('website_id'))->first();
+        $terms=terms::query()->first();
 
         $filename=$quot->quotation_no;
 

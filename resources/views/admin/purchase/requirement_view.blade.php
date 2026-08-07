@@ -1,4 +1,4 @@
-@extends('admin.layout.table_master')
+@extends('admin.layout.table_master_material')
 
 @section('title', 'Required Material')
 
@@ -114,7 +114,7 @@
                                             ?>
                                             <tr>
                                                 <td>{{$srno}}</td>
-                                                <td>{{$ilist->product_name}}</td>
+                                                <td><x-product-name :row="$ilist" /></td>
                                                 <td>{{$ilist->qty}}</td>
                                                 <td>{{$ilist->uom_name}}</td>
                                             </tr>

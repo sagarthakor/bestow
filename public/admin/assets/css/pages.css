@@ -22,6 +22,7 @@ File: Menu
    - Sitemaps (v1.1)
    - Search Results (v1.1)
    - Blog (v1.2)
+   - Real Estate (v1.5)
 
 ============= */
 /* =============
@@ -166,7 +167,7 @@ File: Menu
 }
 .mapael .mapTooltip {
   position: absolute;
-  background-color: #00acc1;
+  background-color: #7fc1fc;
   opacity: 0.95;
   border-radius: 3px;
   padding: 2px 10px;
@@ -240,7 +241,7 @@ File: Menu
   font-weight: 600;
 }
 .about-team .about-team-member p {
-  color: #989898;
+  color: #98a6ad;
 }
 /* =============
    Contact Us
@@ -371,7 +372,7 @@ h3.timeline-title {
 }
 .timeline-item .timeline-desk .arrow {
   border-bottom: 12px solid transparent;
-  border-right: 12px solid #ffffff !important;
+  border-right: 12px solid rgba(238, 238, 238, 0.3) !important;
   border-top: 12px solid transparent;
   display: block;
   height: 0;
@@ -394,7 +395,7 @@ h3.timeline-title {
 }
 .timeline-item.alt .timeline-desk .arrow-alt {
   border-bottom: 12px solid transparent;
-  border-left: 12px solid #ffffff !important;
+  border-left: 12px solid rgba(238, 238, 238, 0.3) !important;
   border-top: 12px solid transparent;
   display: block;
   height: 0;
@@ -444,7 +445,7 @@ h3.timeline-title {
   margin: 0;
 }
 .timeline-desk .panel {
-  background: #ffffff;
+  background: rgba(238, 238, 238, 0.25);
   display: block;
   margin-bottom: 5px;
   margin-left: 45px;
@@ -580,7 +581,7 @@ h3.timeline-title {
 }
 .answer {
   margin-left: 50px;
-  color: #989898;
+  color: #98a6ad;
   margin-bottom: 40px;
 }
 /* =============
@@ -667,7 +668,7 @@ h3.timeline-title {
 }
 .pricing-column .plan-duration {
   font-size: 13px;
-  color: #989898;
+  color: #98a6ad;
 }
 .pricing-column .plan-stats {
   position: relative;
@@ -700,7 +701,7 @@ h3.timeline-title {
   width: 100px;
   display: block;
   box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.06), 0 1px 0 0 rgba(0, 0, 0, 0.02);
-  background: #00acc1;
+  background: #7fc1fc;
   background: linear-gradient(#188ae2 0%, #188ae2 100%);
   position: absolute;
   top: 19px;
@@ -743,7 +744,6 @@ h3.timeline-title {
 }
 .account-pages .account-content {
   padding: 30px;
-  background-color: #ffffff;
 }
 .account-pages .account-btn {
   position: absolute;
@@ -839,11 +839,11 @@ ul.sitemap li {
 }
 ul.sitemap li a {
   text-decoration: none ;
-  color: #7f7f7f;
+  color: #7c8d96;
   display: inline-block;
 }
 ul.sitemap li a:hover {
-  color: #00acc1;
+  color: #7fc1fc;
 }
 ul.sitemap ul {
   margin-left: 1.5rem ;
@@ -858,7 +858,7 @@ ul.sitemap ul li::before {
   display: inline-block;
   width: 3rem;
   height: 100% ;
-  border-left: 1px solid rgba(152, 152, 152, 0.5);
+  border-left: 1px solid rgba(152, 166, 173, 0.5);
   position: absolute ;
   top: -1.25;
 }
@@ -879,7 +879,7 @@ ul.sitemap ul li a {
 ============= */
 .search-result-box .search-item {
   padding-bottom: 20px;
-  border-bottom: 1px solid rgba(152, 152, 152, 0.2);
+  border-bottom: 1px solid rgba(152, 166, 173, 0.2);
   margin-bottom: 25px;
 }
 /* =============
@@ -924,8 +924,7 @@ ul.sitemap ul li a {
   line-height: 20px;
 }
 .blog-post-column {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  background-color: #ffffff;
+  box-shadow: 0 8px 42px 0 rgba(0, 0, 0, 0.08);
 }
 .blog-post-column .post-image {
   margin-bottom: 0;
@@ -951,7 +950,6 @@ Real Estate
   box-sizing: border-box;
   margin-bottom: 30px;
   background-clip: padding-box;
-  background-color: #ffffff;
   box-shadow: 0 0 11px 0 rgba(49, 58, 70, 0.15);
 }
 .property-card .property-content {
@@ -1022,7 +1020,7 @@ Real Estate
   z-index: 9;
 }
 .property-detail-wrapper #bx-pager a.active img {
-  border: 1px solid #00acc1;
+  border: 1px solid #7fc1fc;
 }
 .property-detail-wrapper #bx-pager a img {
   padding: 3px;
@@ -1033,8 +1031,5 @@ Real Estate
 }
 .property-detail-wrapper #map-property {
   height: 300px;
-  background: #00acc1;
-}
-.bootstrap-select > .dropdown-toggle {
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12) !important;
+  background: #69c;
 }

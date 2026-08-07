@@ -184,7 +184,7 @@
     @foreach($quotitem as $item)
         <tr>
             <td class="text-center">{{ ++$srno }}</td>
-            <td>{{ $item->product_name }}<br>HSN: {{ $item->product_name }}</td>
+            <td>{{ $item->item_code }} - <x-product-name :row="$item" print /><br>HSN: {{ $item->hsn }}</td>
             <td class="text-center">{{ $item->qty }} {{ $item->uom_name }}</td>
             <td class="text-right">{{ number_format($item->price, 2, '.', ',') }}</td>
             @if($discsum != 0)

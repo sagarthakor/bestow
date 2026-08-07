@@ -1,8 +1,8 @@
-@if(!session()->has('user_id'))
+@guest
   <script type="text/javascript">
-     window.location="{{url('client')}}";
+     window.location="{{route('login')}}";
  </script>
- @endif
+ @endguest
       <div class="topbar">
 
                 <!-- LOGO -->
