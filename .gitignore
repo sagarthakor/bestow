@@ -15,4 +15,8 @@ yarn-error.log
 /.vscode
 /.claude
 error_log
-app.zip
+
+# Dated project backups kept next to the code (11aug.zip, aug10.zip ...).
+# Only the repo root - the zips shipped inside public/ and resources/ are
+# part of the app.
+/*.zip
