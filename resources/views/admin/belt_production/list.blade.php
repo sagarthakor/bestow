@@ -15,13 +15,14 @@
                 <div class="row">
                     <div class="col-xs-12">
                         <div class="page-title-box">
-                            <h4 class="page-title">Belt Production</h4>
+                            <h4 class="page-title">Belt Production <small class="text-muted">(old flow &mdash; archive)</small></h4>
                             <ol class="breadcrumb p-0 m-0">
                                 <li><a href="{{ url('admin') }}">{{Session::get('software_title')}}</a></li>
                                 <li>Belt Production</li>
                                 <li class="active">List</li>
                                 <li style="text-align: right;margin-bottom: 5px">
-                                    <a class="btn btn-primary" href="{{ route('admin.belt_production.add') }}">Add New</a>
+                                    <a class="btn btn-primary" href="{{ route('admin.belt_roll_production.add') }}">New Roll Production</a>
+                                    <a class="btn btn-primary" href="{{ route('admin.belt_cutting.add') }}">New Belt Cutting</a>
                                 </li>
                             </ol>
                             <div class="clearfix"></div>
@@ -47,6 +48,13 @@
                                     </div>
                                 </div>
                             @endif
+
+                            <div class="alert alert-warning">
+                                Belts are now made in two stages &mdash;
+                                <a href="{{ route('admin.belt_roll_production.list') }}">Roll Production</a> weaves the size-less roll, then
+                                <a href="{{ route('admin.belt_cutting.list') }}">Belt Cutting</a> cuts it to size and fits it.
+                                This screen is kept for history; batches left open here can still be completed.
+                            </div>
 
                             <table class="table table-striped table-bordered">
                                 <thead>

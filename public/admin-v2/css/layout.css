@@ -142,6 +142,17 @@
   width: 3px; background: var(--brand-400); border-radius: 2px;
 }
 
+.sidebar-subheading {
+  padding: var(--space-3) var(--space-3) 0.15rem;
+  font-size: 10.5px;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  font-weight: var(--fw-semibold);
+  color: var(--color-sidebar-muted, #8a97a8);
+  opacity: .8;
+}
+.sidebar-submenu > .sidebar-subheading:first-child { padding-top: 0.15rem; }
+
 .sidebar-help {
   padding: var(--space-4) var(--space-5);
   border-top: 1px solid var(--color-sidebar-border);

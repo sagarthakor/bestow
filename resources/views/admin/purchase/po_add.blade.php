@@ -42,6 +42,17 @@
 
                 {{Form::open(['method'=>'post','route'=>'admin.purchase.save','role'=>'form','data-parsley-validate novalidate'])}}
 
+                {{--
+                    Only set when this purchase order is being raised from a
+                    purchase requirement. po_save reads it to stamp the PO number
+                    back onto that requirement, which is what marks it as bought;
+                    without it the requirement stayed open for ever and could be
+                    turned into a second purchase order.
+                --}}
+                @isset($requirement_details)
+                    <input type="hidden" name="order_id" value="{{ $requirement_details->id }}">
+                @endisset
+
                 <div class="panel">
 
                     <div class="panel-body">
@@ -69,7 +80,15 @@
 
                                     <div class="form-group">
                                         <label class="control-label">Vendor Name <span style="color: red">*</span></label>
-                                    <select id="customer" name="vendor" class="form-control" onchange="getvendor(this.value)" required></select>
+                                    {{-- The vendor is searched over ajax, so an already-chosen one - a
+                                         purchase order raised from a requirement - has to be rendered
+                                         here for select2 to show it. Without it the vendor picked on
+                                         the requirement screen had to be picked a second time. --}}
+                                    <select id="customer" name="vendor" class="form-control" onchange="getvendor(this.value)" required>
+                                        @isset($selectedVendor)
+                                            <option value="{{ $selectedVendor->id }}" selected>{{ $selectedVendor->vendor_name }}</option>
+                                        @endisset
+                                    </select>
 
                                     <!--   <div class="input-group-btn" style="top: 10px">
 <span class="input-group-addon" id="start-date"><span class="glyphicon glyphicon-plus" style="cursor: pointer;" onclick="add_customer()"></span>
@@ -458,6 +477,7 @@
         <script type="text/javascript" src="{{public_path('/adminpanel/plugins/parsleyjs/parsley.min.js')}}"></script>
 
 
+        @include('admin.partials._product_search')
         <script type="text/javascript">
     $(document).ready(function() {
         var customer=$("#customer").val();
@@ -465,6 +485,13 @@
         getvendor(customer);
 
         initVendorAjaxSelect2($("#customer"));
+
+        // Rows carried over from a purchase requirement are rendered on the
+        // server with only their own product in the list, so they get the same
+        // searchable picker as a row added by hand.
+        $("#caltable tbody select.product").each(function () {
+            initProductAjaxSelect2($(this), 'po_product');
+        });
 
         $(".adjustment").on("input", function(){
             var item_total = $("#item_total").val();
@@ -496,27 +523,11 @@
         // /getdate("Sd");
     });
 
-    // Search-as-you-type product/service/BOM picker: fetches only the
-    // matching rows from the server instead of dumping the whole table
-    // (7000+ products) into every row.
+    // The picker itself lives in admin.partials._product_search so every
+    // document screen searches the catalogue the same way; this stays as
+    // the name the row builders already call it by.
     function initProductAjaxSelect2($select, status) {
-        $select.select2({
-            ajax: {
-                url: "{{ route('admin.product.search_options') }}",
-                dataType: 'json',
-                delay: 250,
-                data: function (params) {
-                    return {term: params.term, status: status};
-                },
-                processResults: function (data) {
-                    return data;
-                },
-                cache: true
-            },
-            minimumInputLength: 2,
-            placeholder: 'Type to search...',
-            width: '100%'
-        });
+        ProductSearch.attach($select, status);
     }
 
     // Search-as-you-type vendor picker: fetches only the matching rows from

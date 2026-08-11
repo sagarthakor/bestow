@@ -42,7 +42,7 @@
                     </div>
                 @endif
 
-                {{Form::model($data,['method'=>'post','route'=>'post.quot_duplicate','role'=>'form','data-parsley-validate novalidate'])}}
+                {{Form::model($data,['method'=>'post','route'=>'admin.quotation.duplicate.save','role'=>'form','data-parsley-validate novalidate'])}}
                 {{Form::hidden('id',null)}}
                 {{Form::hidden('challan_no',$data->challan_no)}}
 
@@ -306,8 +306,10 @@
                                                         onchange="get_product(this)" name="product[]"
                                                         id="product{{$srno}}" required>
                                                     <option value="{{$item->product}}">{{ \App\product::nameWithVariantInline($item->product_name, $item->value1 ?? null, $item->value2 ?? null) }}</option>
+                                                    {{-- Item code leads the label so the picker can be searched by it,
+                                                         the same way the newer document screens list a product. --}}
                                                     @foreach($product as $prod)
-                                                        <option value="{{$prod->id}}">{{ \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) }}</option>
+                                                        <option value="{{$prod->id}}">{{$prod->item_code}} - {{ \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) }}</option>
                                                     @endforeach
                                                 </select>
 
@@ -884,6 +886,14 @@
 
 
         <script src="{{asset('/admin/assets/js/jquery.min.js')}}"></script>
+        @include('admin.partials._product_search')
+        <script>
+            // Rows here still carry the whole catalogue in their own options, so the
+            // dropdown is matched word by word in the page - same rule as the server
+            // search on the newer screens.
+            ProductSearch.local('#caltable select.product, #caltable select[name="product[]"]',
+                '#add_product, #add_service, #add_bom');
+        </script>
 
         <script type="text/javascript">
 
@@ -1578,7 +1588,7 @@
             var i = $("#totrow").val();
             i++;
 
-            var data = "<tr id='row" + i + "'><td style='width:15%'><div class='form-group'><select class='form-control js-example-basic-single product' onchange='get_product(this)' name='product[]' id='product" + i + "'> <option>select</option>@foreach($product as $prod)<option value='{{$prod->id}}'>{{ \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) }}</option>@endforeach</select></div><div class='form-group'><label></label><textarea id='description" + i + "' name='description[]' class='description'></textarea></div></td>";
+            var data = "<tr id='row" + i + "'><td style='width:15%'><div class='form-group'><select class='form-control js-example-basic-single product' onchange='get_product(this)' name='product[]' id='product" + i + "'> <option>select</option>@foreach($product as $prod)<option value='{{$prod->id}}'>{{$prod->item_code}} - {{ \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) }}</option>@endforeach</select></div><div class='form-group'><label></label><textarea id='description" + i + "' name='description[]' class='description'></textarea></div></td>";
             data += '<td style="width:6%;vertical-align: top !important;text-align:center"><input type="text" name="inner_diamitter[]"  class="inner_diameter smallInputBox inputElement" id="inner_diamitter' + i + '"></td>';
             data += '<td style="width:6%;vertical-align: top !important;text-align:center"><input type="text" name="outer_diamitter[]"  class="outer_diameter smallInputBox inputElement" id="outer_diamitter' + i + '"></td>';
             data += '<td style="width:6%;vertical-align: top !important;text-align:center"><input type="text" name="thikness[]"  class="thikness smallInputBox inputElement" id="thikness' + i + '"></td>';

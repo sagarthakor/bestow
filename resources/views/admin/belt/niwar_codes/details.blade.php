@@ -15,7 +15,7 @@
                 <div class="row">
                     <div class="col-xs-12">
                         <div class="page-title-box">
-                            <h4 class="page-title">Manage Details — Niwar Type: {{ $niwar->type }} ({{ $niwar->code }})</h4>
+                            <h4 class="page-title">Manage Details &mdash; Niwar Type: {{ $niwar->type }} ({{ $niwar->code }})</h4>
                             <ol class="breadcrumb p-0 m-0">
                                 <li><a href="{{ url('admin') }}">{{ Session::get('software_title') }}</a></li>
                                 <li><a href="{{ route('admin.niwar.list') }}">Niwar Code List</a></li>
@@ -46,9 +46,8 @@
                                 </div>
                             @endif
 
-                            <h4>Meter Conversion</h4>
                             <div class="row">
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <div class="form-group">
                                         <label class="control-label">1 Meter = How Many Inches?</label>
                                         <input type="text" name="inch_per_meter" value="{{ $niwar->inch_per_meter ?? 39.37 }}" class="form-control">
@@ -57,15 +56,20 @@
                                 </div>
                             </div>
 
-                            <h4>Raw Material Rate (per 1 Meter of Niwar)</h4>
-                            <p class="text-muted">Used to auto-calculate belt size-wise material qty in Belt Formula Master (e.g. MONO 10gm, 300/ROTO PP 8.49gm). Check "Is Group" for a rate that is fulfilled by multiple raw materials in Belt Formula (e.g. 300/ROTO is a mix of different dhaga colors) &mdash; their qty must sum up to exactly this gm/meter rate.</p>
+                            <h4>Raw Material Rate &mdash; per 1 Meter of Niwar</h4>
+                            <p class="text-muted">
+                                The categories a meter of this niwar is made of, and how many grams each must come to &mdash; e.g. a PP niwar is Mono plus Roto,
+                                a cotton one is just its own material. Nothing here depends on belt size.<br>
+                                <b>Which actual raw materials fill a category is not chosen here</b> &mdash; that is per semi product, in
+                                <a href="{{ route('admin.roll_formula.list') }}">Roll Formula</a>, and those materials must add up to the gm/meter set below.
+                            </p>
 
                             <table class="table table-bordered" id="materialtable">
                                 <thead>
                                 <tr>
                                     <th>Raw Material</th>
-                                    <th>Gm per Meter</th>
-                                    <th>Is Group</th>
+                                    <th style="width:20%;">Gm per Meter</th>
+                                    <th style="width:12%;">Is Group</th>
                                     <th style="width:8%;"></th>
                                 </tr>
                                 </thead>
@@ -121,7 +125,7 @@
                             <hr>
 
                             <h4>PP Size &rarr; Required Niwar Inch Chart</h4>
-                            <p class="text-muted">e.g. PP Size 28 requires 30 inch of niwar cut length.</p>
+                            <p class="text-muted">e.g. PP Size 28 requires 30 inch of niwar cut length. Belt Cutting uses this to work out meters per piece.</p>
 
                             <table class="table table-bordered" id="sizetable">
                                 <thead>

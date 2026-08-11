@@ -86,14 +86,51 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/delete/{id}', [BeltCostingController::class, 'destroy'])->name('delete');
     });
 
-// Belt Production (separate module from the sock Production flow)
+// Belt Production - archive of the old single-stage flow, superseded by
+// roll-production + belt-cutting below. Read-only apart from finishing batches
+// that were already open when the two-stage flow came in.
     Route::prefix('belt-production')->name('admin.belt_production.')->group(function () {
         Route::get('/list', 'BeltProductionController@belt_production_list')->name('list');
-        Route::get('/add', 'BeltProductionController@belt_production_add')->name('add');
-        Route::get('/check-material', 'BeltProductionController@belt_production_check_material')->name('check_material');
-        Route::post('/store', 'BeltProductionController@belt_production_store')->name('store');
         Route::post('/complete', 'BeltProductionController@belt_production_complete')->name('complete');
         Route::get('/wastage-material', 'BeltProductionController@belt_production_wastage_material')->name('wastage_material');
+    });
+
+// Roll Formula - per 1 meter of a size-less semi product
+    Route::prefix('roll-formula')->name('admin.roll_formula.')->group(function () {
+        Route::get('/list', 'RollFormulaController@roll_formula_list')->name('list');
+        Route::get('/add', 'RollFormulaController@roll_formula_add')->name('add');
+        Route::get('/categories', 'RollFormulaController@roll_formula_categories')->name('categories');
+        Route::post('/store', 'RollFormulaController@roll_formula_store')->name('store');
+        Route::get('/edit/{id}', 'RollFormulaController@roll_formula_edit')->name('edit');
+        Route::post('/update', 'RollFormulaController@roll_formula_update')->name('update');
+        Route::get('/delete/{id}', 'RollFormulaController@roll_formula_delete')->name('delete');
+        Route::get('/revisions', 'RollFormulaController@roll_formula_revisions')->name('revisions');
+        Route::get('/belt-products', 'RollFormulaController@roll_formula_belt_products')->name('belt_products');
+    });
+
+// Stage A - niwar woven into size-less rolls, stocked in meters
+    Route::prefix('roll-production')->name('admin.belt_roll_production.')->group(function () {
+        Route::get('/list', 'BeltRollProductionController@roll_production_list')->name('list');
+        Route::get('/add', 'BeltRollProductionController@roll_production_add')->name('add');
+        Route::get('/check-material', 'BeltRollProductionController@roll_production_check_material')->name('check_material');
+        Route::post('/store', 'BeltRollProductionController@roll_production_store')->name('store');
+        Route::get('/completion-form', 'BeltRollProductionController@roll_production_completion_form')->name('completion_form');
+        Route::post('/complete', 'BeltRollProductionController@roll_production_complete')->name('complete');
+        Route::post('/cancel', 'BeltRollProductionController@roll_production_cancel')->name('cancel');
+        Route::get('/material', 'BeltRollProductionController@roll_production_material')->name('material');
+        Route::get('/register', 'BeltRollProductionController@roll_register')->name('register');
+    });
+
+// Stage B - one roll cut into multiple sizes, then fitted and stocked size-wise
+    Route::prefix('belt-cutting')->name('admin.belt_cutting.')->group(function () {
+        Route::get('/list', 'BeltCuttingController@belt_cutting_list')->name('list');
+        Route::get('/add', 'BeltCuttingController@belt_cutting_add')->name('add');
+        Route::get('/products', 'BeltCuttingController@belt_cutting_products')->name('products');
+        Route::get('/check', 'BeltCuttingController@belt_cutting_check')->name('check');
+        Route::post('/store', 'BeltCuttingController@belt_cutting_store')->name('store');
+        Route::post('/cancel', 'BeltCuttingController@belt_cutting_cancel')->name('cancel');
+        Route::post('/close-roll', 'BeltCuttingController@belt_cutting_close_roll')->name('close_roll');
+        Route::get('/detail', 'BeltCuttingController@belt_cutting_detail')->name('detail');
     });
 
     // ✅ Admin Dashboard
@@ -240,6 +277,9 @@ Route::middleware(['auth'])->group(function () {
 
     /* Product Image Delete */
     Route::get('product/image/delete/{item_code}/{image}', 'ProductController@product_img_delete')->name('admin.product.image.delete');
+
+    /* Photo of one picked product/size - used by belt cutting, the formulas and production */
+    Route::get('product/photo', 'ProductController@product_photo')->name('admin.product.photo');
 
 
     Route::get("material/list","AdminController@material_list")->name("admin.material.list");
@@ -504,6 +544,11 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('quotation/duplicate/{id}', 'AdminController@quotation_duplicate')->name('admin.quotation.duplicate');
     Route::post('quotation/duplicate/save', 'AdminController@quot_duplicate')->name('admin.quotation.duplicate.save');
+
+    // The follow-up box on the quotation duplicate screen and the purchase order
+    // list posts here. The controller was always there; the route was not, which
+    // took both screens down with "Route [post.quot_followup_save] not defined".
+    Route::post('quotation/followup/save', 'FollowupController@quot_followup_save')->name('post.quot_followup_save');
 
     Route::get('quotation/view/{id}', 'AdminController@quot_view')->name('admin.quotation.view');
     Route::get('quotation/print/{quot_no}/{is_internal?}', 'AdminController@quot_print')->name('admin.quotation.print');
@@ -874,7 +919,10 @@ Route::middleware(['auth'])->group(function () {
     */
     Route::prefix('requirement')->group(function () {
         Route::get('view/{id}', 'PurchaseController@requirement_view')->name('admin.requirement.view');
-        Route::post('add', 'PurchaseController@requirement_add')->name('admin.requirement.add');
+        // GET as well as POST: the screen only reads a requirement and renders a
+        // purchase order from it, so refreshing it or landing on it from history
+        // should show the screen, not a MethodNotAllowed page.
+        Route::match(['get', 'post'], 'add', 'PurchaseController@requirement_add')->name('admin.requirement.add');
         Route::get('list', 'PurchaseController@requirement_list')->name('admin.requirement.list');
     });
 
@@ -914,6 +962,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('pressing-pending', 'ReportsController@pressingPending')->name('admin.reports.pressing_pending');
         Route::get('packaging-pending', 'ReportsController@packagingPending')->name('admin.reports.packaging_pending');
         Route::get('belt-production', 'ReportsController@beltProduction')->name('admin.reports.belt_production');
+        Route::get('roll-production', 'ReportsController@rollProduction')->name('admin.reports.roll_production');
+        Route::get('roll-material-consumption', 'ReportsController@rollMaterialConsumption')->name('admin.reports.roll_material_consumption');
+        Route::get('belt-cutting', 'ReportsController@beltCutting')->name('admin.reports.belt_cutting');
         Route::get('socks-missing-formula', 'ReportsController@socksMissingFormula')->name('admin.reports.socks_missing_formula');
         Route::get('belt-missing-formula', 'ReportsController@beltMissingFormula')->name('admin.reports.belt_missing_formula');
     });

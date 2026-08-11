@@ -1696,6 +1696,44 @@ class ProductController extends Controller
             ->with(["raw_material_group"=>$raw_material_group,"importer"=>$importer,"packer"=>$packer,'variation'=>$variation,'attribute'=>$attribute,'brand'=>$brand,'manufacturer'=>$manufacturer,'category'=>$category,'uom'=>$uom,'gst'=>$gst,'vendor'=>$vendor,'country'=>$country,'state'=>$state,'city'=>$city,'material'=>$material]);
     }
 
+    /**
+     * The photos of one product, for screens that pick a product or a size and
+     * then show what it actually looks like - belt cutting, the formulas and
+     * production. A variant carries its own images; product_image is only the
+     * cover, and rows created before per-variant images have nothing else.
+     */
+    function product_photo(Request $request)
+    {
+        $item = product::find($request->product);
+
+        if (empty($item)) {
+            return response()->json(['found' => false, 'images' => [], 'name' => '']);
+        }
+
+        $files = $item->variant_images ?: [];
+        if (empty($files) && !empty($item->product_image)) {
+            $files = [$item->product_image];
+        }
+
+        // Served straight off the document root - a "public/" in the path 404s on
+        // this deployment, the same way the production screens link them.
+        $images = collect($files)
+            ->filter(fn ($file) => trim((string) $file) !== '')
+            ->map(fn ($file) => asset('product_image/' . $file))
+            ->values();
+
+        return response()->json([
+            'found' => true,
+            'id' => $item->id,
+            'name' => product::nameWithVariantInline($item->product_name, $item->value1 ?? null, $item->value2 ?? null),
+            'item_code' => $item->item_code,
+            'size' => $item->value2,
+            'colour' => $item->value1,
+            'images' => $images,
+            'image' => $images->first(),
+        ]);
+    }
+
     function product_add(Request $request)
     {
         $category=[''=>'select category']+category::query()

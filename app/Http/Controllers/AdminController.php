@@ -65,7 +65,13 @@ class AdminController extends Controller
     // Shared select2 remote-search source for product/service/BOM pickers on
     // Quotation, Sales Order, Delivery Challan, Invoice and Purchase Order add
     // forms. Replaces dumping every row of the product table (7000+) into the
-    // page on every load - only the top 30 matches for the typed term are sent.
+    // page on every load - only the top matches for the typed term are sent.
+    //
+    // A product is identified on the floor by a combination - item code, size,
+    // colour and name together - and never by one of them alone, so the term is
+    // matched word by word: every word typed has to appear somewhere on the
+    // product, in any of those fields and in any order. "9999 32 black" finds
+    // item code 9999 in size 32, black, whichever way round it is typed.
     function product_search_options(Request $request)
     {
         $term = trim((string) $request->get('term', ''));
@@ -81,15 +87,32 @@ class AdminController extends Controller
         } else {
             $query = product::where('status', $status);
         }
-        if ($term !== '') {
-            $query->where(function ($q) use ($term) {
-                $q->where('product_name', 'like', '%' . $term . '%')
-                    ->orWhere('item_code', 'like', '%' . $term . '%');
+
+        $words = preg_split('/\s+/', $term, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        foreach ($words as $word) {
+            $like = '%' . str_replace(['%', '_'], ['\%', '\_'], $word) . '%';
+
+            $query->where(function ($q) use ($like) {
+                $q->where('product_name', 'like', $like)
+                    ->orWhere('item_code', 'like', $like)
+                    // Size and colour are variant columns, not part of the name.
+                    ->orWhere('value2', 'like', $like)
+                    ->orWhere('value1', 'like', $like)
+                    ->orWhere('sku', 'like', $like);
             });
         }
 
+        // A whole item code or size typed in full is what the user is actually
+        // after, so those come before rows that merely contain the words.
+        if (!empty($words)) {
+            $first = $words[0];
+            $query->orderByRaw('CASE WHEN item_code = ? THEN 0 WHEN item_code LIKE ? THEN 1 ELSE 2 END', [$first, $first . '%']);
+        }
+
         $results = $query->orderBy('product_name', 'asc')
-            ->limit(30)
+            ->orderBy('value2', 'asc')
+            ->limit(40)
             ->get(['id', 'item_code', 'product_name', 'value1', 'value2'])
             ->map(function ($p) use ($status) {
                 $name = (in_array($status, ['product', 'po_product'], true) && $p->item_code)

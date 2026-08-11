@@ -13,7 +13,9 @@ class NiwarCodeController extends Controller
 {
     public function index()
     {
-        $items = NiwarCode::all();
+        // The list now shows whether each code is actually usable - its rate rows
+        // and its size chart - so both are loaded up front rather than per row.
+        $items = NiwarCode::with(['materials', 'sizeChart'])->orderBy('type')->get();
         return view('admin.belt.niwar_codes.index', compact('items'));
     }
 
@@ -31,6 +33,7 @@ class NiwarCodeController extends Controller
         ]);
 
         NiwarCode::create($request->all());
+
         return redirect()->route('admin.niwar.list')->with('success', 'Added Successfully');
     }
 
@@ -87,20 +90,59 @@ class NiwarCodeController extends Controller
         $niwar->inch_per_meter = $request->inch_per_meter ?: 39.37;
         $niwar->save();
 
-        NiwarTypeMaterial::where('niwar_code_id', $niwar->id)->delete();
+        $this->saveMaterialRows($niwar, $request);
+        $this->saveSizeChart($niwar, $request);
+
+        return redirect()->route('admin.niwar.details', $niwar->id)->with('success', 'Niwar type details updated');
+    }
+
+    /**
+     * The raw-material categories a meter of this niwar weighs - Mono, Roto and
+     * so on - with the gm per meter each must come to. Which actual raw materials
+     * fill a category is chosen per semi product, in its roll formula.
+     */
+    private function saveMaterialRows(NiwarCode $niwar, Request $request)
+    {
+        // Every roll formula points its rows at these category rows by id, so
+        // wiping and re-creating them - even with identical numbers - would
+        // orphan every formula built on this niwar code. A category is identified
+        // by its material, so rows are matched on that and kept in place; only a
+        // category genuinely removed from the screen is deleted.
+        $existing = NiwarTypeMaterial::where('niwar_code_id', $niwar->id)->get()->keyBy('material');
+        $keptIds = [];
+
         foreach ($request->material ?? [] as $i => $materialId) {
-            if ($materialId == '' || !isset($request->gm_per_meter[$i]) || $request->gm_per_meter[$i] == '') {
+            $gm = $request->gm_per_meter[$i] ?? '';
+            if ($materialId == '' || $gm === '') {
                 continue;
             }
-            NiwarTypeMaterial::create([
-                'niwar_code_id' => $niwar->id,
-                'material' => $materialId,
-                'gm_per_meter' => $request->gm_per_meter[$i],
+
+            $attributes = [
+                'gm_per_meter' => (float) $gm,
                 'is_group' => !empty($request->is_group[$i]),
-            ]);
+            ];
+
+            $row = $existing->get($materialId);
+
+            if ($row) {
+                $row->update($attributes);
+            } else {
+                $row = NiwarTypeMaterial::create($attributes + [
+                    'niwar_code_id' => $niwar->id,
+                    'material' => $materialId,
+                ]);
+            }
+
+            $keptIds[] = $row->id;
         }
 
+        NiwarTypeMaterial::where('niwar_code_id', $niwar->id)->whereNotIn('id', $keptIds ?: [0])->delete();
+    }
+
+    private function saveSizeChart(NiwarCode $niwar, Request $request)
+    {
         NiwarSizeChart::where('niwar_code_id', $niwar->id)->delete();
+
         foreach ($request->pp_size ?? [] as $i => $ppSize) {
             if ($ppSize == '' || !isset($request->required_inch[$i]) || $request->required_inch[$i] == '') {
                 continue;
@@ -111,8 +153,5 @@ class NiwarCodeController extends Controller
                 'required_inch' => $request->required_inch[$i],
             ]);
         }
-
-        return redirect()->route('admin.niwar.details', $niwar->id)->with('success', 'Niwar type details updated');
     }
-
 }

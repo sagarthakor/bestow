@@ -42,6 +42,11 @@
                             </div>
                         </div>
                     @endif
+                    @if(session()->has('error'))
+                        <div class="col-sm-12">
+                            <div class="alert alert-danger"><strong>{{session()->get('error')}}</strong></div>
+                        </div>
+                    @endif
 
                     <div class="col-sm-12">
 
@@ -75,6 +80,17 @@
                                     </div>
                                     <div class="col-md-3">
                                         <div class="form-group">
+                                            <label>Module</label>
+                                            <select name="module" class="form-control">
+                                                <option value="">All</option>
+                                                <option value="belt" {{ request('module') == 'belt' ? 'selected' : '' }}>Belt</option>
+                                                <option value="socks" {{ request('module') == 'socks' ? 'selected' : '' }}>Socks</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <div class="form-group">
                                             <label>Purchase No.</label>
                                             <input type="text" value="{{ request('purchase_no') }}" name="purchase_no" class="form-control">
                                         </div>
@@ -102,6 +118,7 @@
                                         Order Date & Time
                                     </th>
 
+                                    <th>Module</th>
                                     <th>User</th>
                                     <th>Purchase No.</th>
 
@@ -127,6 +144,15 @@
 
                                         <!--      <td  style="vertical-align: top;"></td>
                                          <td  style="vertical-align: top;"></td> -->
+                                        <td style="vertical-align: top;text-align: center;width: 10%">
+                                            {{-- Socks and belt requirements land in the same list, so which
+                                                 production floor raised it has to be readable at a glance. --}}
+                                            @if($data->module == 'belt')
+                                                <span class="label" style="background:#188ae2;">Belt</span>
+                                            @else
+                                                <span class="label label-default">Socks</span>
+                                            @endif
+                                        </td>
                                         <td  style="vertical-align: top;text-align: center;width: 20%">{{$data->first_name}} {{$data->last_name}}</td>
                                         <td  style="vertical-align: top;text-align: center;width: 20%">{{$data->po_no}}</td>
 

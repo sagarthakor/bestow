@@ -7,6 +7,15 @@
     #sidebar-menu > ul > li > a.active {
         border-left-color: #26a69a;
     }
+    #sidebar-menu ul ul li.menu-section-label {
+        padding: 12px 20px 4px;
+        font-size: 10.5px;
+        letter-spacing: .09em;
+        text-transform: uppercase;
+        color: #8a97a8;
+        font-weight: 600;
+        pointer-events: none;
+    }
     #sidebar-menu ul ul a:hover,
     #sidebar-menu ul ul li.active > a {
         border-left-color: #26a69a;
@@ -299,7 +308,7 @@
                             </ul>
                         </li>
                     @endif
-                    @if($user->hasAnyPermission(['quot_report_view', 'sales_report_view', 'invoice_report_view', 'sales_summary_report_view', 'product_wise_sales_report_view', 'salesman_wise_sales_report_view', 'stock_available_report_view', 'raw_material_pending_report_view', 'production_pending_report_view', 'stitching_pending_report_view', 'pressing_pending_report_view', 'packaging_pending_report_view', 'belt_production_report_view', 'socks_missing_formula_report_view', 'belt_missing_formula_report_view']))
+                    @if($user->hasAnyPermission(['quot_report_view', 'sales_report_view', 'invoice_report_view', 'sales_summary_report_view', 'product_wise_sales_report_view', 'salesman_wise_sales_report_view', 'stock_available_report_view', 'raw_material_pending_report_view', 'production_pending_report_view', 'stitching_pending_report_view', 'pressing_pending_report_view', 'packaging_pending_report_view', 'belt_production_report_view', 'roll_production_report_view', 'roll_material_consumption_report_view', 'roll_stock_report_view', 'belt_cutting_report_view', 'socks_missing_formula_report_view']))
                         <li class="has_sub">
                             <a href="javascript:void(0);" class="waves-effect">
                                 <i class="mdi mdi-chart-bar"></i>
@@ -344,14 +353,23 @@
                                 @can('packaging_pending_report_view')
                                     <li><a href="{{ route('admin.reports.packaging_pending') }}"><i class="mdi mdi-package"></i>Packing Pending</a></li>
                                 @endcan
+                                @can('roll_production_report_view')
+                                    <li><a href="{{ route('admin.reports.roll_production') }}"><i class="mdi mdi-buffer"></i>Roll Production</a></li>
+                                @endcan
+                                @can('roll_material_consumption_report_view')
+                                    <li><a href="{{ route('admin.reports.roll_material_consumption') }}"><i class="mdi mdi-scale-balance"></i>Roll Material Consumption</a></li>
+                                @endcan
+                                @can('roll_stock_report_view')
+                                    <li><a href="{{ route('admin.belt_roll_production.register') }}"><i class="mdi mdi-barcode-scan"></i>Roll Stock</a></li>
+                                @endcan
+                                @can('belt_cutting_report_view')
+                                    <li><a href="{{ route('admin.reports.belt_cutting') }}"><i class="mdi mdi-content-cut"></i>Belt Cutting</a></li>
+                                @endcan
                                 @can('belt_production_report_view')
-                                    <li><a href="{{ route('admin.reports.belt_production') }}"><i class="mdi mdi-buffer"></i>Belt Production</a></li>
+                                    <li><a href="{{ route('admin.reports.belt_production') }}"><i class="mdi mdi-buffer"></i>Belt Production (Old)</a></li>
                                 @endcan
                                 @can('socks_missing_formula_report_view')
                                     <li><a href="{{ route('admin.reports.socks_missing_formula') }}"><i class="mdi mdi-alert-circle"></i>Socks Products Without Formula</a></li>
-                                @endcan
-                                @can('belt_missing_formula_report_view')
-                                    <li><a href="{{ route('admin.reports.belt_missing_formula') }}"><i class="mdi mdi-alert-circle"></i>Belt Products Without Formula</a></li>
                                 @endcan
                             </ul>
                         </li>
@@ -415,24 +433,44 @@
                             </ul>
                         </li>
                     @endif
-                    @if($user->hasAnyPermission(['buckle_formula_view','belt_production_view']))
+                    @if($user->hasAnyPermission(['belt_production_view','belt_roll_production_view','belt_cutting_view','roll_formula_view']))
                         <li class="has_sub">
                             <a href="javascript:void(0);" class="waves-effect">
                                 <i class="mdi mdi-buffer"></i>
                                 <span> Belt Production </span>
                                 <span class="menu-arrow"></span>
                             </a>
+                            {{--
+                                Ordered the way the floor works: set the masters up once,
+                                then weave, then cut. The "Add ..." entries are gone - every
+                                list screen already has its own Add New button - and the
+                                superseded single-stage archive only appears while it still
+                                has an unfinished batch in it.
+                            --}}
                             <ul class="list-unstyled" style="display: none;">
-                                @can('belt_production_view')
-                                    <li><a href="{{ route('admin.belt_production.list') }}"><i class="mdi mdi-format-list-bulleted"></i>Belt Production List</a></li>
-                                    <li><a href="{{ route('admin.belt_production.add') }}"><i class="mdi mdi-plus-circle"></i>Add Belt Production</a></li>
-                                @endcan
-                                @can('buckle_formula_view')
-                                    <li><a href="{{ route('admin.production.buckle_formula_list') }}"><i class="mdi mdi-flask-outline"></i>Belt Formula Master</a></li>
-                                @endcan
-                                <li><a href="{{ route('admin.bukkal.list') }}"><i class="mdi mdi-barcode"></i>Bukkal Code</a></li>
+                                <li class="menu-section-label">Masters</li>
                                 <li><a href="{{ route('admin.niwar.list') }}"><i class="mdi mdi-tag-outline"></i>Niwar Code</a></li>
-                                <li><a href="{{ route('admin.belt.list') }}"><i class="mdi mdi-calculator"></i>Bukkal Costing</a></li>
+                                <li><a href="{{ route('admin.bukkal.list') }}"><i class="mdi mdi-barcode"></i>Bukkal Code</a></li>
+                                <li><a href="{{ route('admin.belt.list') }}"><i class="mdi mdi-calculator"></i>Belt Costing</a></li>
+                                @can('roll_formula_view')
+                                    <li><a href="{{ route('admin.roll_formula.list') }}"><i class="mdi mdi-flask-empty-outline"></i>Roll Formula</a></li>
+                                @endcan
+
+                                <li class="menu-section-label">Production</li>
+                                @can('belt_roll_production_view')
+                                    <li><a href="{{ route('admin.belt_roll_production.list') }}"><i class="mdi mdi-format-list-bulleted"></i>Roll Production</a></li>
+                                    <li><a href="{{ route('admin.belt_roll_production.register') }}"><i class="mdi mdi-barcode-scan"></i>Roll Stock Register</a></li>
+                                @endcan
+                                @can('belt_cutting_view')
+                                    <li><a href="{{ route('admin.belt_cutting.list') }}"><i class="mdi mdi-content-cut"></i>Belt Cutting</a></li>
+                                @endcan
+
+                                @can('belt_production_view')
+                                    @if(\App\Http\Controllers\BeltProductionController::hasOpenBatches())
+                                        <li class="menu-section-label">Archive</li>
+                                        <li><a href="{{ route('admin.belt_production.list') }}"><i class="mdi mdi-archive"></i>Belt Production (Old)</a></li>
+                                    @endif
+                                @endcan
                             </ul>
                         </li>
                     @endif

@@ -52,12 +52,26 @@
                                     </div>
                                 </div>
                             @endif
+                            @if(session()->has('error'))
+                                <div class="col-sm-12">
+                                    <div class="alert alert-danger"><strong>{{session()->get('error')}}</strong></div>
+                                </div>
+                            @endif
                             {{Form::model($list,['method'=>'post','route'=>'admin.requirement.add'])}}
                             {{Form::hidden("id",null)}}
                                 <div class="col-md-4">
                                 <table class="table table-bordered">
                                     <tr>
-                                        <td>Order No</td><td>{{$list->order_no}}</td>
+                                        <td>Order No</td>
+                                        <td>
+                                            {{$list->order_no}}
+                                            {{-- Which production floor raised this - socks and belt share the list. --}}
+                                            @if($list->module == 'belt')
+                                                <span class="label" style="background:#188ae2;">Belt Production</span>
+                                            @else
+                                                <span class="label label-default">Socks Production</span>
+                                            @endif
+                                        </td>
                                     </tr>
                                     <tr>
                                         <td>Order Date</td><td>{{$list->timestamp}}</td>

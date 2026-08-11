@@ -50,6 +50,22 @@
                                         $requiredmat="required_qty_";
                                         $requiredmat .=$machine->id;
                                         ?>
+                                        @php
+                                            // Carried over from "Move to Production" on the sales out-of-stock
+                                            // report; empty on a normal visit, which just leaves the form blank.
+                                            $prefill = $prefill ?? [];
+                                            $preProduct  = $prefill['finish_product'] ?? null;
+                                            $preNos      = $prefill['nos'] ?? null;
+                                            $preCustomer = $prefill['customer'] ?? null;
+                                            $preSoNo     = $prefill['so_no'] ?? null;
+                                        @endphp
+
+                                        @if($preSoNo)
+                                            <div class="alert alert-info text-left">
+                                                Covering the shortfall on sales order <b>{{ $preSoNo }}</b>.
+                                                Check the numbers below, then press Enter to save the batch.
+                                            </div>
+                                        @endif
 
                                         <div class="row">
                                             <h2>{{$machine->machine_name}}</h2>
@@ -60,23 +76,17 @@
                                                         <select onchange="getimage(this.value,{{$machine->id}})" id="finish_product_{{$machine->id}}" name="finish_product" class="js-example-basic-single form-control">
                                                             <option value="">Select product</option>
                                                             @foreach($product as $prod)
-                                                                <option value="{{$prod->id}}">{{ \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) }}</option>
+                                                                <option value="{{$prod->id}}" {{ (string) $preProduct === (string) $prod->id ? 'selected' : '' }}>{{ \App\product::nameWithVariantInline($prod->product_name, $prod->value1 ?? null, $prod->value2 ?? null) }}</option>
                                                             @endforeach
                                                         </select>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-2" style="text-align:left">
-                                                    <div class="form-group">
-                                                        <label class="control-label">Photo</label>
-                                                        <img src="" name="photo" data-id="{{$machine->id}}" class="photo img_{{$machine->id}} img-responsive">
+                                                    <div class="form-group product-photo-box">
+                                                        <label class="control-label" style="display:block;">Photo</label>
+                                                        <img class="product-photo img_{{$machine->id}}" style="display:none;" title="Click to enlarge">
+                                                        <span class="product-photo-empty"></span>
                                                     </div>
-                                                </div>
-
-                                                <!-- The Modal -->
-                                                <div id="myModal_{{$machine->id}}" class="modal">
-                                                    <span onclick="closmodal({{$machine->id}})" style="top:60px;color: red !important;" class="close"><i class="mdi mdi-close-box"></i></span>
-                                                    <img class="modal-content" id="popup_img{{$machine->id}}">
-                                                    <div id="caption"></div>
                                                 </div>
 
                                                 <div class="col-md-6">
@@ -85,7 +95,7 @@
                                                         <select name="customer" class="form-control js-example-basic-single">
                                                             <option value="">Select Customer</option>
                                                             @foreach($customer as $cust)
-                                                                <option value="{{$cust->id}}">{{$cust->customer_name}}</option>
+                                                                <option value="{{$cust->id}}" {{ (string) $preCustomer === (string) $cust->id ? 'selected' : '' }}>{{$cust->customer_name}}</option>
                                                             @endforeach
                                                         </select>
                                                     </div>
@@ -96,7 +106,7 @@
                                                 <div class="col-md-3">
                                                     <div class="form-group">
                                                         <label class="control-label">Nos.</label>
-                                                        {{Form::text('nos',null,['oninput'=>"getmaterial(this.value,$machine->id)",'class'=>'form-control','id'=>$nosid,"style"=>"text-align:center"])}}
+                                                        {{Form::text('nos',$preNos,['oninput'=>"getmaterial(this.value,$machine->id)",'class'=>'form-control','id'=>$nosid,"style"=>"text-align:center"])}}
 
                                                     </div>
                                                 </div>
@@ -240,26 +250,22 @@
         </style>
 
         <script src="{{asset('/admin/assets/js/jquery.min.js')}}"></script>
+        @include('admin.partials._product_photo')
         <script type="text/javascript">
             // Using jQuery.
             $(document).ready(function () {
                 $('.js-example-basic-single').select2();
 
-                $('.photo').click(function() {
-
-                    var path = $(this).attr('src');
-                    var id=$(this).attr("data-id");
-                    $("#myModal_"+id).show();
-                    $("#popup_img"+id).attr("src",path);
-                    //captionText.innerHTML = this.alt;
-                    //alert(id);
-                });
+                @if($preProduct)
+                    // Arrived from "Move to Production": the product is already chosen,
+                    // so pull its photo/size/colour and then the material requirement,
+                    // exactly as if the user had picked it and typed the qty by hand.
+                    getimage({{ (int) $preProduct }}, {{ $machine->id }}, function () {
+                        getmaterial($("#size_{{ $machine->id }}").val(), {{ $machine->id }});
+                    });
+                @endif
 
             });
-            function closmodal(machine)
-            {
-                $("#myModal_"+machine).hide();
-            }
             $(function() {
                 $('form').each(function() {
                     $(this).find('input').keypress(function(e) {
@@ -321,7 +327,9 @@
                     }
                 });
             }
-            function getimage(product,machine)
+            // `done` is optional - only the prefill path below passes one, so it can
+            // work out the material list once size/colour have actually landed.
+            function getimage(product,machine,done)
             {
                 var appurl="{{url('/')}}";
                 $.ajax({
@@ -331,23 +339,16 @@
                     dataType: 'json',
                     success:function (res)
                     {
-                        //alert(res["size"]);
-                        $(".img_"+machine).attr("src","/product_image/"+res['product_image']);
-                        $(".img_"+machine).attr('width', "50px");
-                        $(".img_"+machine).attr('height', "80px");
+                        // The photo itself comes from the shared widget, which
+                        // knows about per-variant images and opens the popup.
+                        ProductPhoto.load(product, $(".img_"+machine));
                         $("#size_"+machine).val(res["size"]);
                         $("#colour_"+machine).val(res["colour"]);
+
+                        if (typeof done === 'function') { done(); }
                     }
                 });
             }
-        </script>
-        <script>
-            function show_image(machine)
-            {
-                alert(machine);
-                alert(this.src);
-            }
-
         </script>
 
 @endsection

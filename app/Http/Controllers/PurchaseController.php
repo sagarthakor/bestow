@@ -181,11 +181,39 @@ class PurchaseController extends Controller
     }
     function requirement_add(Request $request)
     {
-        $vendor = ['' => 'select vendor'] + vendor::orderBy('vendor_name', 'asc')
-                ->get()
-                ->pluck('vendor_name', 'id')
-                ->toArray();
+        // Post/Redirect/Get. The purchase order form on this screen posts to
+        // po_save, whose validation sends the user back() on failure - and back()
+        // is a GET to whatever URL rendered the form. Rendering only from a GET
+        // with the requirement and vendor in the query string gives that redirect
+        // somewhere real to land, so a rejected purchase order comes back to its
+        // own screen with the errors instead of to a bare, argument-less URL.
+        if ($request->isMethod('post')) {
+            return redirect()->route('admin.requirement.add', [
+                'id' => $request->id,
+                'vendor' => $request->vendor,
+            ]);
+        }
 
+        // Everything below is built around one requirement, so it is looked up
+        // first: without it the page used to fall over on a null further down,
+        // which is what a refresh or a stale link produced.
+        $list = purchase_requirement::select("purchase_requirement.*", "website_user.first_name", "website_user.last_name")
+            ->leftJoin("website_user", "website_user.id", "purchase_requirement.user_id")
+            ->where("purchase_requirement.id", $request->id)
+            ->first();
+
+        if (empty($list)) {
+            return redirect()->route('admin.requirement.list')
+                ->with('error', 'Pick a purchase requirement to raise a purchase order from.');
+        }
+
+        // The whole tax split below is computed against the chosen vendor, so it
+        // has to exist. The form marks it required; arriving any other way (a
+        // refresh, a copied link) used to reach a null and fall over.
+        if (empty($request->vendor) || !vendor::where('id', $request->vendor)->exists()) {
+            return redirect()->route('admin.requirement.view', ['id' => $list->id])
+                ->with('error', 'Select a vendor to raise the purchase order against.');
+        }
 
         $product = product::select('product.*', 'gst.gst_per', 'uom.uom_name',"product.product_image")
             ->leftJoin('gst', 'gst.id', 'product.gst')
@@ -220,13 +248,6 @@ class PurchaseController extends Controller
         }
 
         $duedate = Date('d-m-Y', strtotime('+ 15 days'));
-
-    //dd($request->all());
-        $list=purchase_requirement::select("purchase_requirement.*","website_user.first_name","website_user.last_name")
-            ->leftJoin("website_user","website_user.id","purchase_requirement.user_id")
-            ->orderBy("purchase_requirement.id","desc")
-            ->where("purchase_requirement.id",$request->id)
-            ->first();
 
         $item=purchase_required_material::select("purchase_required_material.*","product.product_image","product.product_name", "product.value1", "product.value2","product.purchase_price","uom.uom_name","product.purchase_price","product.id as pid")
             ->leftJoin("product","product.id","purchase_required_material.raw_material")
@@ -419,23 +440,13 @@ class PurchaseController extends Controller
     }
 
 
-    if(isset($request->vendor))
-    {
-      $cust=vendor::where('id',$request->vendor)->first();
-
-      $customer=[$cust->id=>$cust->vendor_name]+vendor::orderBy('vendor_name','asc')
-      ->get()
-      ->pluck('vendor_name','id')
-      ->toArray();
-    }else{
-    $customer=[''=>'select customer']+vendor::orderBy('vendor_name','asc')
-    ->get()
-    ->pluck('vendor_name','id')
-    ->toArray();
-}
+        // The vendor was already chosen on the requirement screen, and the
+        // purchase order below is priced and taxed against it - so it is handed
+        // to the form as the selected one rather than asked for a second time.
+        $selectedVendor = vendor::find($request->vendor);
 
         return view("admin.purchase/po_add")
-            ->with(["str"=>$str,'requirement_details'=>$list,'item'=>$item,'payment_terms'=>$pterms,'duedate'=>$duedate,'bom'=>$bom,'vendor' => $customer, 'product' => $product, 'service' => $service, 'terms' => $term, 'solist' => $solist]);
+            ->with(["str"=>$str,'requirement_details'=>$list,'item'=>$item,'payment_terms'=>$pterms,'duedate'=>$duedate,'bom'=>$bom,'selectedVendor' => $selectedVendor, 'product' => $product, 'service' => $service, 'terms' => $term, 'solist' => $solist]);
 
     }
     function requirement_view(Request $request)
@@ -490,6 +501,11 @@ class PurchaseController extends Controller
         if(isset($request->purchase_no))
         {
             $list=$list->where("purchase_requirement.po_no",'like','%'.$request->purchase_no.'%');
+        }
+        // Socks and belt production both raise requirements into this one list.
+        if($request->module != '')
+        {
+            $list=$list->where("purchase_requirement.module",$request->module);
         }
         $list=$list->orderBy("purchase_requirement.id","desc");
         $list=$list->get();
@@ -1642,8 +1658,12 @@ class PurchaseController extends Controller
             ->orderBy('product.product_name', 'asc')
             ->get();
 
+        // The vendor picker searches over ajax, so the form renders the saved
+        // vendor as its one option and needs the name to show in it.
+        $vendorName = vendor::where('id', $quot->vendor)->value('vendor_name');
+
         return view("admin.purchase.po_edit")
-            ->with(['bom' => $bom,'contact_name'=>$contact_name,'data' => $quot, 'quotitem' => $quotitem, 'vendor' => $vendor, 'product' => $product, 'service' => $service, 'module' => $module, 'solist' => $solist]);
+            ->with(['bom' => $bom,'contact_name'=>$contact_name,'data' => $quot, 'quotitem' => $quotitem, 'vendor' => $vendor, 'vendorName' => $vendorName, 'product' => $product, 'service' => $service, 'module' => $module, 'solist' => $solist]);
         //
     }
 

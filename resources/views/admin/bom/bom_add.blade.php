@@ -69,7 +69,7 @@
                                     <div class="col-xs-12">
 
                                         <div class="row">
-                                            {{Form::open(['method'=>'post','route'=>'post.bom_save','files'=>'true'])}}
+                                            {{Form::open(['method'=>'post','route'=>'admin.bom.save','files'=>'true'])}}
                                             <div class="col-md-12">
                                                 <div class="demo-box">
                                                     <div class="col-md-12">
@@ -784,29 +784,14 @@ function cal(ele)
             }
         </script>
 
+        @include('admin.partials._product_search')
         <script>
 
-            // Search-as-you-type product picker: fetches only the matching
-            // rows from the server instead of dumping the whole product
-            // table (7000+ rows) into every new row.
+            // The picker itself lives in admin.partials._product_search so every
+            // document screen searches the catalogue the same way; this stays as
+            // the name the row builders already call it by.
             function initProductAjaxSelect2($select, status) {
-                $select.select2({
-                    ajax: {
-                        url: "{{ route('admin.product.search_options') }}",
-                        dataType: 'json',
-                        delay: 250,
-                        data: function (params) {
-                            return {term: params.term, status: status};
-                        },
-                        processResults: function (data) {
-                            return data;
-                        },
-                        cache: true
-                    },
-                    minimumInputLength: 2,
-                    placeholder: 'Type to search...',
-                    width: '100%'
-                });
+                ProductSearch.attach($select, status);
             }
 
             $("#service_datatable-buttons").on('click','tr',function(e){

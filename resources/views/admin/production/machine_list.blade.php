@@ -29,11 +29,35 @@
                 </div>
                 <!-- end row -->
 
+                @php
+                    // Set when the user arrived from "Move to Production" on the sales
+                    // out-of-stock report - carried on to whichever machine they pick.
+                    $prefill = $prefill ?? [];
+                    $carry   = array_filter($prefill, function ($v) { return $v !== null && $v !== ''; });
+                    $forProduct = !empty($carry['finish_product'])
+                        ? $product->firstWhere('id', (int) $carry['finish_product'])
+                        : null;
+                @endphp
+
+                @if($forProduct)
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div class="alert alert-info">
+                                <b>Producing:</b>
+                                {{ \App\product::nameWithVariantInline($forProduct->product_name, $forProduct->value1 ?? null, $forProduct->value2 ?? null) }}
+                                @if(!empty($carry['nos'])) &middot; <b>{{ $carry['nos'] }}</b> nos @endif
+                                @if(!empty($carry['so_no'])) &middot; for order <b>{{ $carry['so_no'] }}</b> @endif
+                                <br><small>Pick the machine to run it on - the batch form opens with these details already filled in.</small>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="row text-center">
 
                     @foreach($machine as $mlist)
                     <div class="col-lg-3 col-md-3 col-sm-6">
-                        <a href="{{route('admin.production.add_batch',['id' => $mlist->id] )}}">
+                        <a href="{{route('admin.production.add_batch', array_merge(['id' => $mlist->id], $carry))}}">
                             <div class="card-box widget-box-one bg-secondary">
                                 <div class="wigdet-one-content">
                                     <p class="m-0 text-uppercase font-600 font-secondary text-overflow text-dark">{{$mlist->machine_name}} </p>
@@ -76,18 +100,12 @@
                                             </div>
                                         </div>
                                         <div class="col-md-4">
-                                            <div class="form-group">
-                                                <label class="control-label">Photo</label>
-                                                <img src="" name="photo" data-id="{{$mlist->id}}" class="photo img_{{$mlist->id}} img-responsive">
+                                            <div class="form-group product-photo-box" style="text-align:left;">
+                                                <label class="control-label" style="display:block;">Photo</label>
+                                                <img class="product-photo img_{{$mlist->id}}" style="display:none;" title="Click to enlarge">
+                                                <span class="product-photo-empty"></span>
                                             </div>
                                         </div>
-
-                                            <!-- The Modal -->
-                                            <div id="myModal_{{$mlist->id}}" class="modal">
-                                                <span onclick="closmodal({{$mlist->id}})" style="top:60px;color: red !important;" class="close"><i class="mdi mdi-close-box"></i></span>
-                                                <img class="modal-content" id="popup_img{{$mlist->id}}">
-                                                <div id="caption"></div>
-                                            </div>
 
                                         <div class="col-md-4">
                                             <div class="form-group">
@@ -243,26 +261,12 @@
 </style>
 
         <script src="{{asset('/admin/assets/js/jquery.min.js')}}"></script>
+        @include('admin.partials._product_photo')
         <script type="text/javascript">
             // Using jQuery.
             $(document).ready(function () {
                 $('.js-example-basic-single').select2();
-
-                $('.photo').click(function() {
-
-                    var path = $(this).attr('src');
-                    var id=$(this).attr("data-id");
-                    $("#myModal_"+id).show();
-                    $("#popup_img"+id).attr("src",path);
-                    //captionText.innerHTML = this.alt;
-                    //alert(id);
-                });
-
             });
-            function closmodal(machine)
-            {
-                $("#myModal_"+machine).hide();
-            }
             $(function() {
                 $('form').each(function() {
                     $(this).find('input').keypress(function(e) {
@@ -301,28 +305,8 @@
             }
             function getimage(product,machine)
             {
-                var appurl="{{url('/')}}";
-                $.ajax({
-                   url:appurl+'/getproduct_image',
-                   data:{product:product},
-                   method: 'get',
-                   dataType: 'json',
-                   success:function (res)
-                   {
-                        $(".img_"+machine).attr("src","{{asset('public/product_image/')}}/"+res['product_image']);
-                        $(".img_"+machine).attr('width', "50px");
-                        $(".img_"+machine).attr('height', "80px");
-                   }
-                });
+                ProductPhoto.load(product, $(".img_"+machine));
             }
-        </script>
-        <script>
-            function show_image(machine)
-            {
-               alert(machine);
-               alert(this.src);
-            }
-
         </script>
 
 @endsection

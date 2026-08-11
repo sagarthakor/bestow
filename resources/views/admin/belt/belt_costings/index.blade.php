@@ -8,6 +8,8 @@
 
 @section('content')
 
+    @include('admin.belt._list_styles')
+
     <div class="content-page">
         <div class="content">
             <div class="container">
@@ -15,11 +17,12 @@
                 <div class="row">
                     <div class="col-xs-12">
                         <div class="page-title-box">
-                            <h4 class="page-title">{{ Session::get('software_title') }} </h4>
+                            <h4 class="page-title">Belt Costing</h4>
                             <ol class="breadcrumb p-0 m-0">
-                                <li><a href="#">{{ Session::get('software_title') }}</a></li>
-                                <li class="active">Belt Costing List</li>
-                                <li style="text-align: right;margin-bottom: 5px">
+                                <li><a href="{{ url('admin') }}">{{ Session::get('software_title') }}</a></li>
+                                <li>Belt</li>
+                                <li class="active">Belt Costing</li>
+                                <li style="text-align:right;margin-bottom:5px;">
                                     <a class="btn btn-primary" href="{{ route('admin.belt.add') }}">Add New</a>
                                 </li>
                             </ol>
@@ -38,7 +41,7 @@
                     <div class="col-sm-12">
                         <div class="card-box table-responsive">
 
-                            <table class="table table-striped table-bordered dt-responsive nowrap" width="100%">
+                            <table class="table table-striped belt-table dt-responsive nowrap" width="100%">
                                 <thead>
                                 <tr>
                                     <th>SR</th>
@@ -53,6 +56,7 @@
                                     <th>Size Lable</th>
                                     <th>Panni Packing Rate</th>
                                     <th>Total Costing</th>
+                                    <th>Fitting</th>
                                     <th>Action</th>
                                 </tr>
                                 </thead>
@@ -75,16 +79,19 @@
                                         <td>{{ $cost->panni_packing }}</td>
                                         <td>{{ $cost->total_cost }}</td>
 
+                                        {{-- Whether cutting will actually deduct anything for this
+                                             costing, which is invisible from the rates alone. --}}
                                         <td>
-                                            <div class="dropdown">
-                                                <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
-                                                    Action <span class="caret"></span>
-                                                </button>
-                                                <ul class="dropdown-menu">
-                                                    <li><a href="{{ route('admin.belt.edit', $cost->id) }}">Edit</a></li>
-                                                    <li><a href="{{ route('admin.belt.delete', $cost->id) }}" onclick="return confirm('Are you sure?')">Delete</a></li>
-                                                </ul>
-                                            </div>
+                                            @if($cost->fittings->count())
+                                                {{ $cost->fittings->count() }} component(s)
+                                            @else
+                                                <span class="text-danger">not set</span>
+                                            @endif
+                                        </td>
+                                        <td class="belt-actions-cell">
+                                            <a class="belt-act" href="{{ route('admin.belt.edit', $cost->id) }}"><i class="mdi mdi-pencil"></i>Edit</a>
+                                            <a class="belt-act belt-act-danger" href="{{ route('admin.belt.delete', $cost->id) }}"
+                                               onclick="return confirm('Delete this belt costing?')"><i class="mdi mdi-delete"></i>Delete</a>
                                         </td>
                                     </tr>
                                 @endforeach

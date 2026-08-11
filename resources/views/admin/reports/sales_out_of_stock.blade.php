@@ -133,6 +133,9 @@
                                         <th>Sold Qty</th>
                                         <th>Stock Qty</th>
                                         <th>Need To Purchase Qty</th>
+                                        @can('production_view')
+                                            <th>Action</th>
+                                        @endcan
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -156,10 +159,29 @@
                                                 @endphp
                                                 <span class="rpt-badge {{ $needClass }}">{{ number_format($need, 2) }}</span>
                                             </td>
+                                            @can('production_view')
+                                                {{-- Only socks are made on the production machines; belts are woven and
+                                                     cut in the Belt Production module, so they get no button here. --}}
+                                                <td style="white-space:nowrap;text-align:center;">
+                                                    @if($need > 0 && $data->category_name === 'Socks')
+                                                        <a class="btn btn-sm btn-primary"
+                                                           href="{{ route('admin.production.machine.list', [
+                                                                'finish_product' => $data->product_id,
+                                                                'nos'            => (int) ceil($need),
+                                                                'customer'       => $data->customer_id,
+                                                                'so_no'          => $data->order_no,
+                                                           ]) }}">
+                                                            <i class="mdi mdi-factory"></i> Move to Production
+                                                        </a>
+                                                    @else
+                                                        <span style="color:#bbb;">-</span>
+                                                    @endif
+                                                </td>
+                                            @endcan
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="10" class="text-center" style="padding:30px;color:#999;">No out of stock items found</td>
+                                            <td colspan="11" class="text-center" style="padding:30px;color:#999;">No out of stock items found</td>
                                         </tr>
                                     @endforelse
                                     </tbody>

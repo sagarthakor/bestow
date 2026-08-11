@@ -776,6 +776,7 @@
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
 
+    @include('admin.partials._product_search')
     <script type="text/javascript">
 
     function search_product(ele){
@@ -1141,27 +1142,11 @@
             window.location="{{url('customer_add')}}";
         }
 
-        // Search-as-you-type product/service/BOM picker: fetches only the
-        // matching rows from the server instead of dumping the whole table
-        // (7000+ products) into every row.
+        // The picker itself lives in admin.partials._product_search so every
+        // document screen searches the catalogue the same way; this stays as
+        // the name the row builders already call it by.
         function initProductAjaxSelect2($select, status) {
-            $select.select2({
-                ajax: {
-                    url: "{{ route('admin.product.search_options') }}",
-                    dataType: 'json',
-                    delay: 250,
-                    data: function (params) {
-                        return {term: params.term, status: status};
-                    },
-                    processResults: function (data) {
-                        return data;
-                    },
-                    cache: true
-                },
-                minimumInputLength: 2,
-                placeholder: 'Type to search...',
-                width: '100%'
-            });
+            ProductSearch.attach($select, status);
         }
     </script>
 

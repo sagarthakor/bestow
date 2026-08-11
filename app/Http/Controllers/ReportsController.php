@@ -410,6 +410,7 @@ class ReportsController extends Controller
                 'p.subcategory',
                 's.id',
                 's.salaesorder_no',
+                's.customer',
                 's.customer_name',
                 's.salaesorder_date',
                 'cat.category_name',
@@ -424,6 +425,7 @@ class ReportsController extends Controller
                 'p.subcategory as subcategory_id',
                 's.id as so_id',
                 's.salaesorder_no as order_no',
+                's.customer as customer_id',
                 's.customer_name as customer',
                 's.salaesorder_date as order_date',
                 'cat.category_name as category_name',
@@ -464,6 +466,7 @@ class ReportsController extends Controller
                 'w.subcategory_id',
                 'w.so_id',
                 'w.order_no',
+                'w.customer_id',
                 'w.customer',
                 'w.order_date',
                 'w.category_name',
@@ -795,7 +798,10 @@ class ReportsController extends Controller
             ->select(
                 DB::raw("'purchase_request' as source"),
                 'prm.id',
-                DB::raw("CONCAT('PR-', pr.order_no) as batch_no"),
+                // Belt roll production raises requests through the same tables as
+                // sock production, so the label carries the module to keep the two
+                // tellable apart (and searchable) in one list.
+                DB::raw("CONCAT(CASE WHEN pr.module = 'belt' THEN 'BELT PR-' ELSE 'PR-' END, pr.order_no) as batch_no"),
                 'rm.product_name as raw_material',
                 'rm.value1',
                 'rm.value2',
@@ -1059,4 +1065,266 @@ class ReportsController extends Controller
         return view('admin.reports.belt_missing_formula', compact('list', 'subcategories', 'totalMissing'));
     }
 
+    /**
+     * Stage A of the belt flow: what was woven, on which formula version, and how
+     * close the meters off the loom came to the meters planned.
+     */
+    function rollProduction(Request $request)
+    {
+        $query = $this->rollProductionBaseQuery($request)
+            ->leftJoin('customers as c', 'c.id', '=', 'b.customer')
+            ->select(
+                'b.id',
+                'b.batch_no',
+                'b.roll_formula_version',
+                'b.roll_length_mtr',
+                'b.no_of_rolls',
+                'b.planned_mtr',
+                'b.produced_mtr',
+                'b.wastage_mtr',
+                'b.status',
+                'b.created_at',
+                'p.product_name as product',
+                'n.type as niwar_type',
+                'n.code as niwar_code',
+                'c.customer_name as customer'
+            )
+            // Counted rather than joined, so a batch with five rolls stays one row.
+            ->selectSub(
+                DB::table('belt_rolls')->whereColumn('belt_rolls.belt_roll_production_id', 'b.id')->selectRaw('COUNT(*)'),
+                'rolls_made'
+            )
+            ->orderBy('b.id', 'desc');
+
+        if ($request->export_excel) {
+            return Excel::download(new \App\Exports\RollProductionExport($query->get()), 'RollProductionReport.xlsx');
+        }
+
+        // Aggregated in the database - a year of batches should not be pulled
+        // into PHP just to add up six columns. Built from the base query rather
+        // than cloned, because the row query carries a select subquery whose
+        // bindings do not belong in an aggregate.
+        $totals = $this->rollProductionBaseQuery($request)->select(DB::raw(
+            "COUNT(*) as batches,
+             COALESCE(SUM(b.planned_mtr), 0) as planned,
+             COALESCE(SUM(CASE WHEN b.status = 'Y' THEN b.produced_mtr ELSE 0 END), 0) as produced,
+             COALESCE(SUM(CASE WHEN b.status = 'Y' THEN b.wastage_mtr ELSE 0 END), 0) as wastage,
+             COALESCE(SUM(CASE WHEN b.status = 'N' THEN 1 ELSE 0 END), 0) as pending_batches,
+             COALESCE(SUM(CASE WHEN b.status = 'C' THEN 1 ELSE 0 END), 0) as cancelled_batches"
+        ))->first();
+
+        $niwarCodes = DB::table('niwar_codes')->orderBy('type')->get();
+
+        $list = $query->paginate(session('records_per_page', 30))->appends($request->all());
+
+        return view('admin.reports.roll_production', [
+            'list' => $list,
+            'niwarCodes' => $niwarCodes,
+            'totalBatches' => (int) ($totals->batches ?? 0),
+            'totalPlanned' => round($totals->planned ?? 0, 2),
+            'totalProduced' => round($totals->produced ?? 0, 2),
+            'totalWastage' => round($totals->wastage ?? 0, 2),
+            'pendingBatches' => (int) ($totals->pending_batches ?? 0),
+            'cancelledBatches' => (int) ($totals->cancelled_batches ?? 0),
+            'efficiency' => $totals->planned > 0 ? round($totals->produced / $totals->planned * 100, 2) : 0,
+        ]);
+    }
+
+    /**
+     * Dhaga planned against dhaga actually used, per raw material and per niwar
+     * category - so a Roto whose threads consistently run over shows up as four
+     * separate variances rather than one lump.
+     *
+     * Cancelled batches are excluded: their consumption was returned to stock, so
+     * counting it would overstate what the floor really used.
+     */
+    function rollMaterialConsumption(Request $request)
+    {
+        // 'p' stays the roll product across both reports so the shared filters
+        // mean the same thing; the raw material joins in under its own alias.
+        $query = $this->rollProductionBaseQuery($request)
+            ->join('belt_roll_production_material as m', 'm.belt_roll_production_id', '=', 'b.id')
+            ->leftJoin('product as mp', 'mp.id', '=', 'm.material')
+            ->where('b.status', '!=', 'C')
+            ->groupBy('m.material', 'm.category_name', 'mp.product_name')
+            ->select(
+                'm.material',
+                'm.category_name',
+                'mp.product_name as material_name',
+                DB::raw('MAX(m.stock_factor) as stock_factor'),
+                DB::raw('COUNT(DISTINCT m.belt_roll_production_id) as batches'),
+                DB::raw('COALESCE(SUM(m.required_qty), 0) as planned_qty'),
+                DB::raw('COALESCE(SUM(COALESCE(m.actual_qty, m.required_qty)), 0) as actual_qty'),
+                DB::raw('COALESCE(SUM(COALESCE(m.actual_qty, m.required_qty) - m.required_qty), 0) as variance')
+            );
+
+        if ($request->material != '') {
+            $query->where('mp.product_name', 'like', '%' . $request->material . '%');
+        }
+
+        $query->orderBy('m.category_name')->orderBy('mp.product_name');
+
+        $rows = collect($query->get())->map(function ($row) {
+            $row->unit = $row->stock_factor > 1 ? 'g' : '';
+            $row->planned_qty = round($row->planned_qty, 2);
+            $row->actual_qty = round($row->actual_qty, 2);
+            $row->variance = round($row->variance, 2);
+
+            return $row;
+        });
+
+        if ($request->export_excel) {
+            return Excel::download(new \App\Exports\RollMaterialConsumptionExport($rows), 'RollMaterialConsumption.xlsx');
+        }
+
+        $niwarCodes = DB::table('niwar_codes')->orderBy('type')->get();
+
+        return view('admin.reports.roll_material_consumption', [
+            'rows' => $rows,
+            'niwarCodes' => $niwarCodes,
+            'totalPlanned' => round($rows->sum('planned_qty'), 2),
+            'totalActual' => round($rows->sum('actual_qty'), 2),
+            'totalVariance' => round($rows->sum('variance'), 2),
+        ]);
+    }
+
+    /**
+     * Stage B: every size cut out of every roll, with the pieces that failed and
+     * the meters lost as trim.
+     */
+    function beltCutting(Request $request)
+    {
+        $query = $this->beltCuttingBaseQuery($request)
+            ->leftJoin('customers as c', 'c.id', '=', 'ct.customer')
+            ->select(
+                'i.id',
+                'ct.cutting_no',
+                'ct.wastage_mtr',
+                'ct.balance_mtr',
+                'ct.status',
+                'ct.created_at',
+                'r.roll_no',
+                'b.batch_no',
+                'p.product_name as product',
+                'p.value1',
+                'p.value2',
+                'i.size',
+                'i.pieces',
+                'i.rejected_pieces',
+                'i.meter_per_piece',
+                'i.total_meter',
+                'c.customer_name as customer'
+            )
+            ->orderBy('ct.id', 'desc')
+            ->orderBy('i.id', 'asc');
+
+        if ($request->export_excel) {
+            return Excel::download(new \App\Exports\BeltCuttingExport($query->get()), 'BeltCuttingReport.xlsx');
+        }
+
+        $totals = $this->beltCuttingBaseQuery($request)->select(DB::raw(
+            'COUNT(DISTINCT ct.id) as cuttings,
+             COALESCE(SUM(i.pieces), 0) as pieces,
+             COALESCE(SUM(i.rejected_pieces), 0) as rejected,
+             COALESCE(SUM(i.total_meter), 0) as meters'
+        ))->first();
+
+        // Trim wastage lives on the cutting header, so summing it over the item
+        // rows would multiply it by the number of sizes on the entry. Summed over
+        // the distinct headers the filtered items belong to instead.
+        $wastage = DB::table('belt_cutting as ct')
+            ->whereIn('ct.id', $this->beltCuttingBaseQuery($request)->select('ct.id')->distinct())
+            ->sum('ct.wastage_mtr');
+
+        $list = $query->paginate(session('records_per_page', 30))->appends($request->all());
+
+        return view('admin.reports.belt_cutting', [
+            'list' => $list,
+            'totalCuttings' => (int) ($totals->cuttings ?? 0),
+            'totalPieces' => (int) ($totals->pieces ?? 0),
+            'totalRejected' => (int) ($totals->rejected ?? 0),
+            'totalMeters' => round($totals->meters ?? 0, 2),
+            'totalWastage' => round($wastage, 2),
+        ]);
+    }
+
+    /**
+     * Cutting lines joined back through roll to batch and narrowed by the filter
+     * row. Same reasoning as rollProductionBaseQuery: no select list, rebuilt per
+     * caller.
+     */
+    private function beltCuttingBaseQuery(Request $request)
+    {
+        $query = DB::table('belt_cutting_item as i')
+            ->join('belt_cutting as ct', 'ct.id', '=', 'i.belt_cutting_id')
+            ->leftJoin('belt_rolls as r', 'r.id', '=', 'ct.roll_id')
+            ->leftJoin('belt_roll_production as b', 'b.id', '=', 'r.belt_roll_production_id')
+            ->leftJoin('product as p', 'p.id', '=', 'i.belt_product');
+
+        if ($request->cutting_no != '') {
+            $query->where('ct.cutting_no', 'like', '%' . $request->cutting_no . '%');
+        }
+        if ($request->roll_no != '') {
+            $query->where('r.roll_no', 'like', '%' . $request->roll_no . '%');
+        }
+        if ($request->product != '') {
+            $query->where('p.product_name', 'like', '%' . $request->product . '%');
+        }
+        if ($request->from_date != '') {
+            $query->whereDate('ct.created_at', '>=', $request->from_date);
+        }
+        if ($request->to_date != '') {
+            $query->whereDate('ct.created_at', '<=', $request->to_date);
+        }
+        if ($request->status != '') {
+            $query->where('ct.status', $request->status);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Roll batches joined to their semi product and niwar code and narrowed by
+     * the shared filter row - the common trunk of the roll production and
+     * material consumption reports, and of both their totals queries.
+     *
+     * Returned without a select list so each caller can put its own on, and
+     * rebuilt rather than cloned so no caller inherits another's select bindings.
+     */
+    private function rollProductionBaseQuery(Request $request)
+    {
+        $query = DB::table('belt_roll_production as b')
+            ->leftJoin('product as p', 'p.id', '=', 'b.roll_product_id')
+            ->leftJoin('niwar_codes as n', 'n.id', '=', 'b.niwar_code_id');
+
+        $this->applyRollProductionFilters($query, $request);
+
+        return $query;
+    }
+
+    /**
+     * Batch-level filters shared by the roll production and consumption reports,
+     * so the same filter row means the same thing on both.
+     */
+    private function applyRollProductionFilters($query, Request $request)
+    {
+        if ($request->batch_no != '') {
+            $query->where('b.batch_no', 'like', '%' . $request->batch_no . '%');
+        }
+        if ($request->product != '') {
+            $query->where('p.product_name', 'like', '%' . $request->product . '%');
+        }
+        if ($request->niwar_code_id != '') {
+            $query->where('b.niwar_code_id', $request->niwar_code_id);
+        }
+        if ($request->status != '') {
+            $query->where('b.status', $request->status);
+        }
+        if ($request->from_date != '') {
+            $query->whereDate('b.created_at', '>=', $request->from_date);
+        }
+        if ($request->to_date != '') {
+            $query->whereDate('b.created_at', '<=', $request->to_date);
+        }
+    }
 }

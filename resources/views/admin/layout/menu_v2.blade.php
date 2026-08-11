@@ -96,7 +96,7 @@
                 </div>
             @endif
 
-            @if($user->hasAnyPermission(['quot_report_view', 'sales_report_view', 'invoice_report_view', 'sales_summary_report_view', 'product_wise_sales_report_view', 'salesman_wise_sales_report_view', 'stock_available_report_view', 'raw_material_pending_report_view', 'production_pending_report_view', 'stitching_pending_report_view', 'pressing_pending_report_view', 'packaging_pending_report_view', 'belt_production_report_view', 'socks_missing_formula_report_view', 'belt_missing_formula_report_view']))
+            @if($user->hasAnyPermission(['quot_report_view', 'sales_report_view', 'invoice_report_view', 'sales_summary_report_view', 'product_wise_sales_report_view', 'salesman_wise_sales_report_view', 'stock_available_report_view', 'raw_material_pending_report_view', 'production_pending_report_view', 'stitching_pending_report_view', 'pressing_pending_report_view', 'packaging_pending_report_view', 'belt_production_report_view', 'roll_production_report_view', 'roll_material_consumption_report_view', 'roll_stock_report_view', 'belt_cutting_report_view', 'socks_missing_formula_report_view']))
                 @php $grpActive = request()->routeIs('admin.reports.*'); @endphp
                 <div class="sidebar-group {{ $grpActive ? 'open' : '' }}">
                     <button type="button" class="sidebar-link sidebar-group-toggle {{ $grpActive ? 'active' : '' }}">
@@ -142,14 +142,23 @@
                         @can('packaging_pending_report_view')
                             <a href="{{ route('admin.reports.packaging_pending') }}" class="sidebar-sublink {{ request()->routeIs('admin.reports.packaging_pending') ? 'active' : '' }}">Packing Pending</a>
                         @endcan
+                        @can('roll_production_report_view')
+                            <a href="{{ route('admin.reports.roll_production') }}" class="sidebar-sublink {{ request()->routeIs('admin.reports.roll_production') ? 'active' : '' }}">Roll Production</a>
+                        @endcan
+                        @can('roll_material_consumption_report_view')
+                            <a href="{{ route('admin.reports.roll_material_consumption') }}" class="sidebar-sublink {{ request()->routeIs('admin.reports.roll_material_consumption') ? 'active' : '' }}">Roll Material Consumption</a>
+                        @endcan
+                        @can('roll_stock_report_view')
+                            <a href="{{ route('admin.belt_roll_production.register') }}" class="sidebar-sublink">Roll Stock</a>
+                        @endcan
+                        @can('belt_cutting_report_view')
+                            <a href="{{ route('admin.reports.belt_cutting') }}" class="sidebar-sublink {{ request()->routeIs('admin.reports.belt_cutting') ? 'active' : '' }}">Belt Cutting</a>
+                        @endcan
                         @can('belt_production_report_view')
-                            <a href="{{ route('admin.reports.belt_production') }}" class="sidebar-sublink {{ request()->routeIs('admin.reports.belt_production') ? 'active' : '' }}">Belt Production</a>
+                            <a href="{{ route('admin.reports.belt_production') }}" class="sidebar-sublink {{ request()->routeIs('admin.reports.belt_production') ? 'active' : '' }}">Belt Production (Old)</a>
                         @endcan
                         @can('socks_missing_formula_report_view')
                             <a href="{{ route('admin.reports.socks_missing_formula') }}" class="sidebar-sublink {{ request()->routeIs('admin.reports.socks_missing_formula') ? 'active' : '' }}">Socks Products Without Formula</a>
-                        @endcan
-                        @can('belt_missing_formula_report_view')
-                            <a href="{{ route('admin.reports.belt_missing_formula') }}" class="sidebar-sublink {{ request()->routeIs('admin.reports.belt_missing_formula') ? 'active' : '' }}">Belt Products Without Formula</a>
                         @endcan
                     </div>
                 </div>
@@ -215,8 +224,8 @@
                 </div>
             @endif
 
-            @if($user->hasAnyPermission(['buckle_formula_view','belt_production_view']))
-                @php $grpActive = request()->routeIs(['admin.belt_production.*','admin.production.buckle_formula_*','admin.bukkal.*','admin.niwar.*','admin.belt.*']); @endphp
+            @if($user->hasAnyPermission(['belt_production_view','belt_roll_production_view','belt_cutting_view','roll_formula_view']))
+                @php $grpActive = request()->routeIs(['admin.belt_production.*','admin.belt_roll_production.*','admin.belt_cutting.*','admin.roll_formula.*','admin.bukkal.*','admin.niwar.*','admin.belt.*']); @endphp
                 <div class="sidebar-group {{ $grpActive ? 'open' : '' }}">
                     <button type="button" class="sidebar-link sidebar-group-toggle {{ $grpActive ? 'active' : '' }}">
                         <i class="mdi mdi-buffer sidebar-link-icon"></i>
@@ -224,16 +233,30 @@
                         <i class="mdi mdi-chevron-down sidebar-caret"></i>
                     </button>
                     <div class="sidebar-submenu" {{ $grpActive ? '' : 'style=display:none' }}>
-                        @can('belt_production_view')
-                            <a href="{{ route('admin.belt_production.list') }}" class="sidebar-sublink {{ request()->routeIs('admin.belt_production.list') ? 'active' : '' }}">Belt Production List</a>
-                            <a href="{{ route('admin.belt_production.add') }}" class="sidebar-sublink {{ request()->routeIs('admin.belt_production.add') ? 'active' : '' }}">Add Belt Production</a>
-                        @endcan
-                        @can('buckle_formula_view')
-                            <a href="{{ route('admin.production.buckle_formula_list') }}" class="sidebar-sublink {{ request()->routeIs('admin.production.buckle_formula_list') ? 'active' : '' }}">Belt Formula Master</a>
-                        @endcan
-                        <a href="{{ route('admin.bukkal.list') }}" class="sidebar-sublink {{ request()->routeIs('admin.bukkal.*') ? 'active' : '' }}">Bukkal Code</a>
+                        {{-- Masters first, then the floor's own order: weave, then cut. --}}
+                        <span class="sidebar-subheading">Masters</span>
                         <a href="{{ route('admin.niwar.list') }}" class="sidebar-sublink {{ request()->routeIs('admin.niwar.*') ? 'active' : '' }}">Niwar Code</a>
-                        <a href="{{ route('admin.belt.list') }}" class="sidebar-sublink {{ request()->routeIs('admin.belt.*') ? 'active' : '' }}">Bukkal Costing</a>
+                        <a href="{{ route('admin.bukkal.list') }}" class="sidebar-sublink {{ request()->routeIs('admin.bukkal.*') ? 'active' : '' }}">Bukkal Code</a>
+                        <a href="{{ route('admin.belt.list') }}" class="sidebar-sublink {{ request()->routeIs('admin.belt.*') ? 'active' : '' }}">Belt Costing</a>
+                        @can('roll_formula_view')
+                            <a href="{{ route('admin.roll_formula.list') }}" class="sidebar-sublink {{ request()->routeIs('admin.roll_formula.*') ? 'active' : '' }}">Roll Formula</a>
+                        @endcan
+
+                        <span class="sidebar-subheading">Production</span>
+                        @can('belt_roll_production_view')
+                            <a href="{{ route('admin.belt_roll_production.list') }}" class="sidebar-sublink {{ request()->routeIs('admin.belt_roll_production.list') ? 'active' : '' }}">Roll Production</a>
+                            <a href="{{ route('admin.belt_roll_production.register') }}" class="sidebar-sublink {{ request()->routeIs('admin.belt_roll_production.register') ? 'active' : '' }}">Roll Stock Register</a>
+                        @endcan
+                        @can('belt_cutting_view')
+                            <a href="{{ route('admin.belt_cutting.list') }}" class="sidebar-sublink {{ request()->routeIs('admin.belt_cutting.list') ? 'active' : '' }}">Belt Cutting</a>
+                        @endcan
+
+                        @can('belt_production_view')
+                            @if(\App\Http\Controllers\BeltProductionController::hasOpenBatches())
+                                <span class="sidebar-subheading">Archive</span>
+                                <a href="{{ route('admin.belt_production.list') }}" class="sidebar-sublink {{ request()->routeIs('admin.belt_production.list') ? 'active' : '' }}">Belt Production (Old)</a>
+                            @endif
+                        @endcan
                     </div>
                 </div>
             @endif

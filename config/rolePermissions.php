@@ -146,7 +146,25 @@ return [
             'View' => 'buckle_formula_view',
             'Delete' => 'buckle_formula_delete',
         ],
-        'Belt Production' => [
+        'Roll Formula' => [
+            'Create' => 'roll_formula_create',
+            'Update' => 'roll_formula_update',
+            'View' => 'roll_formula_view',
+            'Delete' => 'roll_formula_delete',
+        ],
+        'Roll Production' => [
+            'Create' => 'belt_roll_production_create',
+            'View' => 'belt_roll_production_view',
+            // Cancelling puts dhaga back and voids rolls, so it is deliberately
+            // not part of Create.
+            'Delete' => 'belt_roll_production_cancel',
+        ],
+        'Belt Cutting' => [
+            'Create' => 'belt_cutting_create',
+            'View' => 'belt_cutting_view',
+            'Delete' => 'belt_cutting_cancel',
+        ],
+        'Belt Production (Old)' => [
             'View' => 'belt_production_view',
         ],
     ],
@@ -190,6 +208,18 @@ return [
         ],
         'Belt Production Report' => [
             'View' => 'belt_production_report_view',
+        ],
+        'Roll Production Report' => [
+            'View' => 'roll_production_report_view',
+        ],
+        'Roll Material Consumption Report' => [
+            'View' => 'roll_material_consumption_report_view',
+        ],
+        'Roll Stock Report' => [
+            'View' => 'roll_stock_report_view',
+        ],
+        'Belt Cutting Report' => [
+            'View' => 'belt_cutting_report_view',
         ],
         'Socks Products Without Formula Report' => [
             'View' => 'socks_missing_formula_report_view',

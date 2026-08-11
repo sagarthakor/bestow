@@ -37,14 +37,31 @@ use App\raw_material_group;
 
 class ProductionController extends Controller
 {
+    /**
+     * Values carried in the query string by "Move to Production" on the sales
+     * out-of-stock report, so the batch form opens with the shortfall already
+     * filled in instead of the user re-picking the product by hand.
+     * Everything is optional - a plain visit just gets an empty form.
+     */
+    private function productionPrefill(Request $request): array
+    {
+        return [
+            'finish_product' => $request->finish_product ?: null,
+            'nos'            => $request->nos ?: null,
+            'customer'       => $request->customer ?: null,
+            'so_no'          => $request->so_no ?: null,
+        ];
+    }
+
     //
     function add_batch(Request $request)
     {
         $machine = machine::find($request->id);
         $customer=customers::orderBy("customer_name","asc")->get();
         $product=product::where("status","product")->orderBy("product_name","asc")->get();
+        $prefill = $this->productionPrefill($request);
 
-        return view("admin.production.add_batch",compact("machine","customer","product"));
+        return view("admin.production.add_batch",compact("machine","customer","product","prefill"));
     }
 
     function washing_pending(Request $request)
@@ -1865,6 +1882,9 @@ class ProductionController extends Controller
             $purchase_requirement->date = date('Y-m-d');
             $purchase_requirement->timestamp = date('d-m-Y h:i:s a');
             $purchase_requirement->order_no = $order;
+            // Explicit rather than leaning on the column default, so the purchase
+            // list can always tell a socks requirement from a belt one.
+            $purchase_requirement->module = 'socks';
             $purchase_requirement->user_id = Session::get("user_id");
             $purchase_requirement->finish_product = $request->finish_product;
             $purchase_requirement->customer = $request->customer;
@@ -1874,7 +1894,13 @@ class ProductionController extends Controller
                         $requirement = new purchase_required_material();
                         $requirement->order_id = $purchase_requirement->id;
                         $requirement->raw_material = $request->purchase_required_mat[$i];
-                        $requirement->qty = $request->purchase_required_stock_qty[$i] / $this->materialConversionFactor($request->purchase_required_mat[$i]);
+                        // Rounded up to the 0.01 the purchase and inward screens are
+                        // worked in: a shortfall of 462.2 g is 0.4622 KG, and an order
+                        // raised - or received - for 0.46 KG leaves production still
+                        // short, which looks like the request never worked.
+                        $shortInStockUnit = $request->purchase_required_stock_qty[$i]
+                            / $this->materialConversionFactor($request->purchase_required_mat[$i]);
+                        $requirement->qty = max(ceil(round($shortInStockUnit * 100, 6)) / 100, 0.01);
                         $requirement->timestamp = date('d-m-Y h:i:s a');
                         $requirement->user_id = Session::get("user_id");
                         $requirement->save();
@@ -2097,6 +2123,8 @@ class ProductionController extends Controller
         $machine = machine::orderBy("machine_name", "Asc")->get();
         $customer = customers::orderBy("customer_name", "asc")->get();
         $product = product::where("status", "product")->orderBy("product_name", "asc")->get();
-        return view("admin.production.machine_list", compact('machine', 'customer', 'product'));
+        // Passed straight through to add_batch on whichever machine is picked.
+        $prefill = $this->productionPrefill($request);
+        return view("admin.production.machine_list", compact('machine', 'customer', 'product', 'prefill'));
     }
 }

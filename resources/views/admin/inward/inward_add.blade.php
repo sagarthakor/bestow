@@ -211,6 +211,14 @@
 
         <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+        @include('admin.partials._product_search')
+        <script>
+            // Rows here still carry the whole catalogue in their own options, so the
+            // dropdown is matched word by word in the page - same rule as the server
+            // search on the newer screens.
+            ProductSearch.local('#caltable select.product, #caltable select[name="product[]"]',
+                '#add_product, #add_service, #add_bom');
+        </script>
 
 
         <script type="text/javascript">

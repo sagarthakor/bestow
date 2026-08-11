@@ -118,6 +118,46 @@
                             </table>
                         </div>
 
+
+                        <div class="col-md-12" style="margin-top:25px;">
+                            <h4>Fitting Consumed Per Belt <small class="text-muted">(used by Belt Cutting)</small></h4>
+                            <p class="text-muted">
+                                The rates above price a belt; this list says which products a belt is actually
+                                fitted with, so Belt Cutting can take them out of stock. Add a row per component
+                                &mdash; bukkal, kadi, slider, rivet, packaging, whatever this belt takes.
+                            </p>
+                            <table class="table table-bordered" id="fittingTable">
+                                <thead>
+                                <tr>
+                                    <th style="width:22%;">Component</th>
+                                    <th>Product</th>
+                                    <th style="width:18%;">Qty Per Belt</th>
+                                    <th style="width:6%;"></th>
+                                </tr>
+                                </thead>
+                                <tbody id="fitting-rows">
+                                @foreach(($item->fittings ?? collect()) as $fit)
+                                    <tr>
+                                        <td><input type="text" name="fitting_label[]" class="form-control" value="{{ $fit->label }}" placeholder="e.g. Bukkal"></td>
+                                        <td>
+                                            <select name="fitting_product[]" class="form-control js-example-basic-single">
+                                                <option value="">-- remove this row --</option>
+                                                @foreach($fittingProducts as $fp)
+                                                    <option value="{{ $fp->id }}" {{ $fit->product == $fp->id ? 'selected' : '' }}>
+                                                        {{ \App\product::nameWithVariantInline($fp->product_name, $fp->value1, $fp->value2) }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                        <td><input type="text" name="fitting_qty[]" class="form-control" value="{{ $fit->qty }}"></td>
+                                        <td class="text-center"><a href="javascript:void(0)" class="remove-fitting" title="Remove"><i class="fa fa-trash"></i></a></td>
+                                    </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                            <button type="button" class="btn btn-default btn-sm" id="add_fitting">+ Add Component</button>
+                        </div>
+
                         <div class="col-md-12 text-center" style="margin-top:20px;">
                             <button type="submit" class="btn btn-primary">Submit</button>
                         </div>
@@ -182,6 +222,34 @@
                         calculateTotal(); // recalc
                     }
                 });
+            }
+        });
+    </script>
+
+
+    <script>
+        // Repeatable fitting rows. A row whose product is cleared is simply not
+        // saved, which is how a component is removed without a delete endpoint.
+        var fittingProductOptions = `<option value="">-- remove this row --</option>@foreach($fittingProducts as $fp)<option value="{{ $fp->id }}">{{ \App\product::nameWithVariantInline($fp->product_name, $fp->value1, $fp->value2) }}</option>@endforeach`;
+
+        function addFittingRow(label, qty) {
+            var row = $('<tr></tr>').html(
+                '<td><input type="text" name="fitting_label[]" class="form-control" value="' + (label || '') + '" placeholder="e.g. Bukkal"></td>' +
+                '<td><select name="fitting_product[]" class="form-control">' + fittingProductOptions + '</select></td>' +
+                '<td><input type="text" name="fitting_qty[]" class="form-control" value="' + (qty || 1) + '"></td>' +
+                '<td class="text-center"><a href="javascript:void(0)" class="remove-fitting" title="Remove"><i class="fa fa-trash"></i></a></td>'
+            );
+            $('#fitting-rows').append(row);
+            row.find('select').select2();
+        }
+
+        $(document).ready(function () {
+            $('#add_fitting').on('click', function () { addFittingRow('', 1); });
+            $(document).on('click', '.remove-fitting', function () { $(this).closest('tr').remove(); });
+
+            if ($('#fitting-rows tr').length === 0) {
+                addFittingRow('Bukkal', 1);
+                addFittingRow('Kadi', 1);
             }
         });
     </script>
