@@ -65,12 +65,7 @@
 
                                 <div class="col-md-6">
                                     <label class="control-label">Customer Name <span style="color: red">*</span></label>
-                                    <div class="input-group">
-
-                                        {{Form::select('customer',$customer,null,['required','class'=>'form-control js-example-basic-single'. $errors->first('customer', ' error'),'id'=>'customer','onchange'=>'getcustomer(this.value)'])}}
-                                        <span class="input-group-addon"><i class="glyphicon glyphicon-plus"
-                                                                           onclick="add_customer()"></i></span>
-                                    </div>
+{{Form::select('customer',$customer,null,['required','class'=>'form-control js-example-basic-single'. $errors->first('customer', ' error'),'id'=>'customer','onchange'=>'getcustomer(this.value)'])}}
                                     @if ($errors->has('customer'))
                                         <p class="help-block">This field is required</p>
                                     @endif
@@ -110,49 +105,12 @@
 
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="control-label">Contact Name <span
-                                                    style="color: red">*</span></label>
-                                        {{Form::select('contact_name',[''=>'select contact'],null,['required','class'=>'form-control','id'=>"contact_name"])}}
-
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="control-label">Subject <span style="color: red">*</span></label>
-                                        {{Form::text('subject',null,['required','class'=>'form-control','id'=>"subject"])}}
-
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <?php
-                                        $stage = array('Created' => 'Created', 'Sent' => 'Sent', 'Reviewing' => 'Reviewing', 'QuoteRivision' => 'QuoteRivision', 'Accepted' => 'Accepted', 'Invoiced' => 'Invoiced', 'Canceled' => 'Canceled');
-                                        ?>
-                                        <label class="control-label">Quote Stage <span style="color: red">*</span>
-                                        </label>
-                                        {{Form::select('quot_stage',$stage,null,['required','class'=>'form-control js-example-basic-single','id'=>'quot_stage'])}}
-
-
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <div class="form-group">
                                         <label>Sales Person</label>
                                         {{Form::select('salesman_id',$salesMan,null,['class'=>'form-control js-example-basic-single','id'=>'salesman'])}}
 
                                     </div>
                                 </div>
 
-                                <div class="col-md-12">
-                                    <div class="form-group">
-                                        <label>Remarks</label>
-                                        {{Form::text('remark',null,['class'=>'form-control'])}}
-
-                                    </div>
-                                </div>
                             </div>
                             <div class="col-sm-12">
 
@@ -263,7 +221,6 @@
                             <table class="table table-striped add-edit-table table-bordered" id="caltable">
                                 <thead>
                                 <tr>
-                                    <th style="text-align: center;">Bar Code</th>
                                     <th style="text-align: center;">Product Name</th>
                                     {{--                                    <th style="text-align: center;">ID</th>--}}
                                     {{--                                    <th style="text-align: center;">OD</th>--}}
@@ -304,16 +261,11 @@
                                 <tfoot>
                                 <tr>
                                     <td colspan="15">
-                                        <div class="col-md-2">
-                                            <a class="btn btn-default" id="add_product">+ Add Product</a>
-                                        </div>
-
-                                        <div class="col-md-2">
-                                            <a class="btn btn-default" id="add_service">+ Add Service</a>
-                                        </div>
-
-                                        <div class="col-md-2">
-                                            <a class="btn btn-default" id="add_bom">+ Add BOM</a>
+                                        <div class="col-md-3">
+                                            {{-- One row for everything: the picker searches products,
+                                                 services and BOMs together, so the type does not have to
+                                                 be decided before the item is known. --}}
+                                            <a class="btn btn-default" id="add_row">+ Add Row</a>
                                         </div>
 
 
@@ -411,43 +363,6 @@
         </div> <!-- content -->
 
 
-        <div class="modal" id="myModal" role="dialog">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <a type="button" class="close" onclick="model_close()">&times;</a>
-                        <h4 class="modal-title">Quick Create Organization</h4>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label>Organization Name</label>
-                                    <input type="text" class="form-control" name="organization_name" id="organization_name">
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label>Website</label>
-                                    <input type="text" class="form-control" name="website" id="website">
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label>Primary Phone</label>
-                                    <input type="text" class="form-control" name="primary_phone" id="primary_phone">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <a type="button" onclick="customer_form()" class="btn btn-default">Go to full form</a>
-                        <a type="button" onclick="customer_save()" class="btn btn-primary">Save</a>
-                        <a type="button" class="btn btn-default" onclick="model_close()">Close</a>
-                    </div>
-                </div>
-            </div>
-        </div>
 
 
         <!-- ============================================================== -->
@@ -459,24 +374,6 @@
         @include('admin.partials._product_search')
         <script type="text/javascript">
 
-        function search_product(ele){
-                    $(ele).closest('tr').find('.product option').remove();
-                    var itemname= $(ele).closest('tr').find('.itemname').val();
-                    var appurl = "{{url('/')}}";
-                    $.ajax({
-                        url:appurl+'/api/get_product',
-                        data:{itemname:itemname},
-                        method:'get',
-                        success:function(response){
-
-                            $(ele).closest('tr').find('.product').html(response);
-
-                            get_product(ele);
-
-
-                        }
-                    });
-                }
 
             function getduedate(days)
             {
@@ -591,20 +488,8 @@
                     }
                 });
 
-                getcontact(customer);
             }
 
-            function getcontact(customer) {
-                var appurl = "{{url('/')}}";
-                $.ajax({
-                    url: appurl + '/admin/get_contact',
-                    data: {customer: customer},
-                    method: 'get',
-                    success: function (data) {
-                        $("#contact_name").html(data);
-                    }
-                });
-            }
 
             function get_product(ele) {
                 var customer = $("#customer").val();
@@ -693,179 +578,7 @@
 
             }
 
-            function get_service(ele) {
-                var customer = $("#customer").val();
-                if(customer==""){
-                    alert("please select customer first");
-                }else{
 
-                    $(ele).closest('tr').find('.description').val("");
-
-                    $(ele).closest('tr').find('.price').val(0);
-
-                    $(ele).closest('tr').find('.gst').val(0);
-
-                    $(ele).closest('tr').find('.cgst_per').val(0);
-                    $(ele).closest('tr').find('.cgst_amount').val(0);
-                    $(ele).closest('tr').find('.gst_amount').val(0);
-                    $(ele).closest('tr').find('.sgst_per').val(0);
-                    $(ele).closest('tr').find('.sgst_amount').val(0);
-                    $(ele).closest('tr').find('.gst_per').val(0);
-                    $(ele).closest('tr').find('.gst_amount').val(0);
-
-                    $(ele).closest('tr').find('.inner_diameter').val("");
-
-                    $(ele).closest('tr').find('.outer_diameter').val("");
-
-                    $(ele).closest('tr').find('.thikness').val("");
-
-                    $(ele).closest('tr').find('.hsn').val("");
-                    $(ele).closest('tr').find('.hsnSpan').text("");
-
-                    $(ele).closest('tr').find('.uom').val("");
-                    $(ele).closest('tr').find('.uomSpan').text("");
-
-                    $(ele).closest('tr').find('.discount_per').val(0);
-                    $(ele).closest('tr').find('.qty').val(0);
-                    $(ele).closest('tr').find('.photo').attr("src","");
-                    var product = $(ele).closest('tr').find('.product').val();
-                    var appurl = "{{url('/')}}";
-                    $.ajax({
-                        url: appurl + '/admin/get_product',
-                        data: {product: product, customer: customer},
-                        method: 'get',
-                        dataType: 'json',
-                        beforeSend: function(){
-                            $("#loader").show();
-                        },
-                        success: function (data) {
-                            var len = data.length;
-                            if (len > 0) {
-
-                                $(ele).closest('tr').find('.description').val(data[0]['description']);
-
-                                $(ele).closest('tr').find('.price').val(data[0]['price']);
-
-                                $(ele).closest('tr').find('.gst').val(data[0]['gst']);
-                                $(ele).closest('tr').find('.igst_per').val(data[0]['gst']);
-                                $(ele).closest('tr').find('.gst_per').val(data[0]['gst']);
-
-                                $(ele).closest('tr').find('.cgst_per').val(data[0]['cgst']);
-
-                                $(ele).closest('tr').find('.sgst_per').val(data[0]['sgst']);
-
-                                $(ele).closest('tr').find('.inner_diameter').val(data[0]['inner_diameter']);
-
-                                $(ele).closest('tr').find('.outer_diameter').val(data[0]['outer_diameter']);
-
-                                $(ele).closest('tr').find('.thikness').val(data[0]['thikness']);
-
-                                $(ele).closest('tr').find('.hsn').val(data[0]['hsn']);
-                                $(ele).closest('tr').find('.hsnSpan').text(data[0]['hsn']);
-                                $(ele).closest('tr').find('.stockQty').text("Stock : "+data[0]['stockqty']);
-
-                                $(ele).closest('tr').find('.uom').val(data[0]['uom']);
-                                $(ele).closest('tr').find('.uomSpan').text(data[0]['uom']);
-
-                                $(ele).closest('tr').find('.discount_per').val(data[0]['discper']);
-                                $(ele).closest('tr').find('.photo').attr("src",data[0]['product_image']);
-
-                            }
-                        },
-                        complete:function(data){
-                            // Hide image container
-                            $("#loader").hide();
-                        }
-                    });
-                }
-            }
-
-            function get_bom(ele) {
-                var customer = $("#customer").val();
-                if(customer==""){
-                    alert("please select customer first");
-                }else{
-
-                    $(ele).closest('tr').find('.description').val("");
-
-                    $(ele).closest('tr').find('.price').val(0);
-
-                    $(ele).closest('tr').find('.gst').val(0);
-
-                    $(ele).closest('tr').find('.cgst_per').val(0);
-                    $(ele).closest('tr').find('.cgst_amount').val(0);
-                    $(ele).closest('tr').find('.gst_amount').val(0);
-                    $(ele).closest('tr').find('.sgst_per').val(0);
-                    $(ele).closest('tr').find('.sgst_amount').val(0);
-                    $(ele).closest('tr').find('.gst_per').val(0);
-                    $(ele).closest('tr').find('.gst_amount').val(0);
-
-                    $(ele).closest('tr').find('.inner_diameter').val("");
-
-                    $(ele).closest('tr').find('.outer_diameter').val("");
-
-                    $(ele).closest('tr').find('.thikness').val("");
-
-                    $(ele).closest('tr').find('.hsn').val("");
-                    $(ele).closest('tr').find('.hsnSpan').text("");
-
-                    $(ele).closest('tr').find('.uom').val("");
-                    $(ele).closest('tr').find('.uomSpan').text("");
-
-                    $(ele).closest('tr').find('.discount_per').val(0);
-                    $(ele).closest('tr').find('.qty').val(0);
-                    $(ele).closest('tr').find('.photo').attr("src","");
-                    var product = $(ele).closest('tr').find('.product').val();
-                    var appurl = "{{url('/')}}";
-                    $.ajax({
-                        url: appurl + '/admin/get_product',
-                        data: {product: product, customer: customer},
-                        method: 'get',
-                        dataType: 'json',
-                        beforeSend: function(){
-                            $("#loader").show();
-                        },
-                        success: function (data) {
-                            var len = data.length;
-                            if (len > 0) {
-
-                                $(ele).closest('tr').find('.description').val(data[0]['description']);
-
-                                $(ele).closest('tr').find('.price').val(data[0]['price']);
-
-                                $(ele).closest('tr').find('.gst').val(data[0]['gst']);
-                                $(ele).closest('tr').find('.igst_per').val(data[0]['gst']);
-                                $(ele).closest('tr').find('.gst_per').val(data[0]['gst']);
-
-                                $(ele).closest('tr').find('.cgst_per').val(data[0]['cgst']);
-
-                                $(ele).closest('tr').find('.sgst_per').val(data[0]['sgst']);
-
-                                $(ele).closest('tr').find('.inner_diameter').val(data[0]['inner_diameter']);
-
-                                $(ele).closest('tr').find('.outer_diameter').val(data[0]['outer_diameter']);
-
-                                $(ele).closest('tr').find('.thikness').val(data[0]['thikness']);
-
-                                $(ele).closest('tr').find('.hsn').val(data[0]['hsn']);
-                                $(ele).closest('tr').find('.hsnSpan').text(data[0]['hsn']);
-                                $(ele).closest('tr').find('.stockQty').text("Stock : "+data[0]['stockqty']);
-
-                                $(ele).closest('tr').find('.uom').val(data[0]['uom']);
-                                $(ele).closest('tr').find('.uomSpan').text(data[0]['uom']);
-
-                                $(ele).closest('tr').find('.discount_per').val(data[0]['discper']);
-                                $(ele).closest('tr').find('.photo').attr("src",data[0]['product_image']);
-
-                            }
-                        },
-                        complete:function(data){
-                            // Hide image container
-                            $("#loader").hide();
-                        }
-                    });
-                }
-            }
 
             function discmatcal(ele)
             {
@@ -978,36 +691,6 @@
             }
 
 
-            function model_close() {
-                $("#myModal").hide();
-            }
-
-            function customer_save() {
-                var organization_name = $("#organization_name").val();
-                var website = $("#website").val();
-                var primary_phone = $("#primary_phone").val();
-                var appurl = "{{url('/')}}";
-                $.ajax({
-                    url: appurl + '/client/ajax_customer_save',
-                    data: {organization_name: organization_name, website: website, primary_phone: primary_phone},
-                    method: 'get',
-                    dataType: 'json',
-                    success: function (data) {
-                        var len = data.length;
-                        if (len > 0) {
-                            $("#primary_phone").val(data[0]['primary_phone']);
-                            $("#website").val(data[0]['website']);
-                            $("#customer").html(data[0]['str']);
-
-                        }
-                        $("#myModal").hide();
-                    }
-                });
-            }
-
-            function customer_form() {
-                window.location = "{{url('customer_add')}}";
-            }
 
             // The picker itself lives in admin.partials._product_search so every
             // document screen searches the catalogue the same way; this stays as
@@ -1016,12 +699,12 @@
                 ProductSearch.attach($select, status);
             }
 
-            $("#add_product").click(function (e) {
-                e.preventDefault();
+            function addQuotationRow(e) {
+                if (e) { e.preventDefault(); }
                 var i = $("#totrow").val();
                 i++;
 
-                var data = "<tr id='row" + i + "'><td style='vertical-align: top !important;width: 10%'><input type='text' onfocusout='search_product(this)' class='itemname form-control'></td><td style='width:15%'><div class='form-group'><select class='form-control product' onchange='get_product(this)' name='product[]' id='product" + i + "'> <option>select</option></select></div><div class='form-group'><label></label><textarea id='description" + i + "' name='description[]' class='description'></textarea></div></td>";
+                var data = "<tr id='row" + i + "'><td style='width:15%'><div class='form-group'><select class='form-control product' onchange='get_product(this)' name='product[]' id='product" + i + "'> <option>select</option></select></div><div class='form-group'><label></label><textarea id='description" + i + "' name='description[]' class='description'></textarea></div></td>";
                 {{--            data += '<td style="width:6%;vertical-align: top !important;text-align:center"><input type="text" name="inner_diamitter[]"  class="inner_diameter smallInputBox inputElement" id="inner_diamitter' + i + '"></td>';--}}
                         {{--            data += '<td style="width:6%;vertical-align: top !important;text-align:center"><input type="text" name="outer_diamitter[]"  class="outer_diameter smallInputBox inputElement" id="outer_diamitter' + i + '"></td>';--}}
                         {{--            data += '<td style="width:6%;vertical-align: top !important;text-align:center"><input type="text" name="thikness[]"  class="thikness smallInputBox inputElement" id="thikness' + i + '"></td>';--}}
@@ -1195,377 +878,11 @@
                 data += '<td class="actions" style="vertical-align: top !important;text-align:center"><a style="customer:pointer" onclick="remove_row(this)" class="rowremove"><i class="fa fa-trash" style="font-size: 22px"></i></a></td></tr>';
 
                 $("#caltable").append(data);
-                initProductAjaxSelect2($("#product" + i), 'product');
+                initProductAjaxSelect2($("#product" + i), 'any');
                 $("#totrow").val(i);
-            });
+            }
 
-
-            $("#add_service").click(function (e) {
-                e.preventDefault();
-                var i = $("#totrow").val();
-                i++;
-
-                var data = "<tr id='row" + i + "'><td style='vertical-align: top !important;text-align: center;width:10%'><input type='text'  onfocusout='search_product(this)' class='itemname form-control'></td><td style='width:15%'><div class='form-group'><select class='form-control product' onchange='get_service(this)' name='product[]' id='product" + i + "'> <option>select</option></select></div><div class='form-group'><label></label><textarea id='description" + i + "' name='description[]' class='description'></textarea></div></td>";
-                {{--            data += '<td style="width:6%;vertical-align: top !important;text-align:center"><input type="text" name="inner_diamitter[]"  class="inner_diameter smallInputBox inputElement" id="inner_diamitter' + i + '"></td>';--}}
-                        {{--            data += '<td style="width:6%;vertical-align: top !important;text-align:center"><input type="text" name="outer_diamitter[]"  class="outer_diameter smallInputBox inputElement" id="outer_diamitter' + i + '"></td>';--}}
-                        {{--            data += '<td style="width:6%;vertical-align: top !important;text-align:center"><input type="text" name="thikness[]"  class="thikness smallInputBox inputElement" id="thikness' + i + '"></td>';--}}
-
-                    data +='<td style="vertical-align: top !important;text-align:center"><img style="height: 55px;width: 55px;" src="" class="photo img-responsive"> </td>';
-                data +='<td style="vertical-align: top !important;text-align: center;">\n' +
-                    '                                            <span class="hsnSpan"></span><input type="hidden" class="hsn smallInputBox inputElement" name="hsn[]" value=""\n' +
-                    '                                                   id="">\n' +
-                    '                                        </td>\n' +
-                    '                                        <td style="vertical-align: top !important;text-align: center;width: 10%">\n' +
-                    '                                            <input type="text" name="qty[]" onkeyup="cal(this)" value="0"\n' +
-                    '                                                   class="qty smallInputBox inputElement" id="">\n' +
-                    '                                            <label class="stockQty">Stock : </label>\n' +
-                    '                                        </td>\n' +
-                    '                                        <td style="vertical-align: top !important;text-align: center;">\n' +
-                    '                                            <span class="uomSpan"></span><input type="hidden" class="uom smallInputBox inputElement" name="uom[]" value=""\n' +
-                    '                                                   id="">\n' +
-                    '                                        </td>\n' +
-                    '                                        \n' +
-                    '                                        <td style="vertical-align: top !important;">\n' +
-                    '                                            <div>\n' +
-                    '                                                <input oninput="cal(this)"  name="price[]" value="0"\n' +
-                    '                                                       type="text"\n' +
-                    '                                                       data-rule-required="true" data-rule-positive="true"\n' +
-                    '                                                       class="price listPrice smallInputBox inputElement"\n' +
-                    '                                                       data-is-price-changed="false" list-info=""\n' +
-                    '                                                       data-base-currency-id="" aria-required="true" autocomplete="off"\n' +
-                    '                                                       aria-invalid="false">&nbsp;<span\n' +
-                    '                                                    class="priceBookPopup cursorPointer" data-popup="Popup"\n' +
-                    '                                                    title="Price Books" data-module-name="PriceBooks"\n' +
-                    '                                                    style="float:left">\n' +
-                    '                                                    <i class="vicon-pricebooks" title="Price Books"></i>\n' +
-                    '                                                </span>\n' +
-                    '                                            </div>\n' +
-                    '                                            <div style="clear:both"></div>\n' +
-                    '                                            <div>\n' +
-                    '                                                <span>(-)&nbsp;<strong>\n' +
-                    '                                                         <a style="cursor: pointer" onclick="disDiv(this)">Discount</a>\n' +
-                    '                                                         (<span class="discountPerc">0</span>%)\n' +
-                    '                                                        </a> :\n' +
-                    '                                                        <div class="discountDiv" style="display: none">\n' +
-                    '                                                            <div class="form-group" style="width: 50%;display: inline;float: left;">\n' +
-                    '                                                                <label>Disc %</label>\n' +
-                    '                                                                <input oninput="cal(this)"\n' +
-                    '                                                                       name="discount_per[]"\n' +
-                    '                                                                       value="" type="text"\n' +
-                    '                                                                       data-rule-required="true"\n' +
-                    '                                                                       data-rule-positive="true"\n' +
-                    '                                                                       class="discount_per listPrice smallInputBox inputElement"\n' +
-                    '                                                                       data-is-price-changed="false" list-info=""\n' +
-                    '                                                                       data-base-currency-id="" aria-required="true"\n' +
-                    '                                                                       autocomplete="off" aria-invalid="false" style="width: 80%;">\n' +
-                    '\n' +
-                    '                                                            </div>\n' +
-                    '                                                            <div class="form-group" style="width: 50%;float: left;">\n' +
-                    '                                                                <label>Disc Amt</label>\n' +
-                    '                                                                <input oninput="discmatcal(this)"\n' +
-                    '                                                                       name="discount_amount[]"\n' +
-                    '                                                                       value="" type="text"\n' +
-                    '                                                                       class="discount_amount inputElement" style="width: 80%;">\n' +
-                    '\n' +
-                    '                                                            </div>\n' +
-                    '\n' +
-                    '                                                        </div>\n' +
-                    '                                                    </strong>\n' +
-                    '                                                </span>\n' +
-                    '                                            </div>\n' +
-                    '\n' +
-                    '                                            <div style="width:150px;">\n' +
-                    '                                                <strong>Total After Discount :</strong>\n' +
-                    '                                            </div>\n' +
-                    '                                            <div class="individualTaxContainer">(+)&nbsp;\n' +
-                    '                                                <strong>\n' +
-                    '                                                    <a style="cursor: pointer" onclick="taxDiv(this)">Tax </a> (<span class="taxTotal"></span>%):\n' +
-                    '                                                    <div style="display:none;" class="taxdiv">\n' +
-                    '                                                        <div class="form-group" style="width: 34%;display:inline;float: left;">\n' +
-                    '                                                            <label>CGST %</label>\n' +
-                    '                                                            <input style="width: 35px;" oninput="cal(this)"\n' +
-                    '                                                                   name="cgst_per1[]"\n' +
-                    '                                                                   value="" type="text"\n' +
-                    '                                                                   data-rule-required="true" data-rule-positive="true"\n' +
-                    '                                                                   class="cgst_per listPrice smallInputBox inputElement"\n' +
-                    '                                                                   data-is-price-changed="false" list-info=""\n' +
-                    '                                                                   data-base-currency-id="" aria-required="true"\n' +
-                    '                                                                   autocomplete="off" aria-invalid="false">\n' +
-                    '\n' +
-                    '                                                        </div>\n' +
-                    '                                                        <div class="form-group" style="width: 34%;display:inline;float: left;">\n' +
-                    '                                                            <label>SGST %</label>\n' +
-                    '                                                            <input style="width: 35px;" oninput="cal(this)"\n' +
-                    '                                                                   name="sgst_per1[]"\n' +
-                    '                                                                   value="" type="text"\n' +
-                    '                                                                   data-rule-required="true" data-rule-positive="true"\n' +
-                    '                                                                   class="sgst_per listPrice smallInputBox inputElement"\n' +
-                    '                                                                   data-is-price-changed="false" list-info=""\n' +
-                    '                                                                   data-base-currency-id="" aria-required="true"\n' +
-                    '                                                                   autocomplete="off" aria-invalid="false">\n' +
-                    '\n' +
-                    '                                                        </div>\n' +
-                    '                                                        <div class="form-group" style="width: 32%;float: left;">\n' +
-                    '                                                            <div class="form-group" >\n' +
-                    '                                                                <label>IGST %</label>\n' +
-                    '                                                                <input style="width: 35px;" oninput="cal(this)"\n' +
-                    '                                                                       name="igst_per1[]"\n' +
-                    '                                                                       value="" type="text"\n' +
-                    '                                                                       data-rule-required="true" data-rule-positive="true"\n' +
-                    '                                                                       class="igst_per listPrice smallInputBox inputElement"\n' +
-                    '                                                                       data-is-price-changed="false" list-info=""\n' +
-                    '                                                                       data-base-currency-id="" aria-required="true"\n' +
-                    '                                                                       autocomplete="off" aria-invalid="false">\n' +
-                    '\n' +
-                    '                                                            </div>\n' +
-                    '\n' +
-                    '                                                        </div>\n' +
-                    '                                                </strong>\n' +
-                    '                                            </div>\n' +
-                    '                                            <span class="taxDivContainer">\n' +
-                    '                                                <div class="taxUI hide" id="tax_div1">\n' +
-                    '                                                    <p class="popover_title hide">Set Tax for : <span\n' +
-                    '                                                            class="variable"></span>\n' +
-                    '                                                    </p>\n' +
-                    '                                                </div>\n' +
-                    '                                            </span>\n' +
-                    '\n' +
-                    '                                        </td>\n' +
-                    '\n' +
-                    '                                        <td style="vertical-align: top !important;">\n' +
-                    '                                            <div  align="right" class="productTotal">0.00</div>\n' +
-                    '                                            <div  align="right" class="discountTotal">\n' +
-                    '                                                0.00\n' +
-                    '                                            </div>\n' +
-                    '                                            <div  align="right" class="totalAfterDiscount">\n' +
-                    '                                                0.00\n' +
-                    '                                            </div>\n' +
-                    '                                            <div id="taxTotal1" align="right" class="productTaxTotal">0.00</div>\n' +
-                    '                                        </td>\n' +
-                    '\n' +
-                    '\n' +
-                    '                                        <td style="display:none;vertical-align: top !important;text-align: center;">\n' +
-                    '                                            <input type="text" name="cgst_per[]" value=""\n' +
-                    '                                                   class="cgst_per form-control" id=""\n' +
-                    '                                                   oninput="cal(this)">\n' +
-                    '                                        </td>\n' +
-                    '                                        <td style="display:none;vertical-align: top !important;text-align: center;">\n' +
-                    '                                            <input type="text" name="cgst_amount[]" value=""\n' +
-                    '                                                   class="cgst_amount form-control" id="">\n' +
-                    '                                        </td>\n' +
-                    '                                        <td style="display:none;vertical-align: top !important;text-align: center;">\n' +
-                    '                                            <input type="text" name="sgst_per[]" value=""\n' +
-                    '                                                   class="sgst_per form-control" id=""\n' +
-                    '                                                   oninput="cal(this)">\n' +
-                    '                                        </td>\n' +
-                    '                                        <td style="display:none;vertical-align: top !important;text-align: center;">\n' +
-                    '                                            <input type="text" name="sgst_amount[]" value=""\n' +
-                    '                                                   class="sgst_amount form-control" id="">\n' +
-                    '                                        </td>\n' +
-                    '                                        <td style="display:none;vertical-align: top !important;text-align: center;">\n' +
-                    '                                            <input type="text" name="gst_per[]" value=""\n' +
-                    '                                                   class="gst_per form-control" id=""\n' +
-                    '                                                   oninput="cal(this)">\n' +
-                    '                                        </td>\n' +
-                    '                                        <td style="display:none;vertical-align: top !important;text-align: center;">\n' +
-                    '                                            <input type="text" name="gst_amount[]" value=""\n' +
-                    '                                                   class="gst_amount form-control" id="">\n' +
-                    '                                        </td>\n' +
-                    '                                        <td style="vertical-align: top !important;text-align: center;">\n' +
-                    '\n' +
-                    '                                           <input type="hidden" class="total" name="total_amount[]"><input type="text" name="net_price[]" value=""\n' +
-                    '                                                   class="netprice smallInputBox inputElement" id="">\n' +
-                    '                                        </td>';
-                data += '<td class="actions" style="vertical-align: top !important;text-align:center"><a style="customer:pointer" onclick="remove_row(this)" class="rowremove"><i class="fa fa-trash" style="font-size: 22px"></i></a></td></tr>';
-
-                $("#caltable").append(data);
-                initProductAjaxSelect2($("#product" + i), 'service');
-                $("#totrow").val(i);
-            });
-
-            $("#add_bom").click(function (e) {
-                e.preventDefault();
-                var i = $("#totrow").val();
-                i++;
-
-                var data = "<tr id='row" + i + "'><td style='vertical-align: top !important;text-align: center;width:10%'><input type='text'  onfocusout='search_product(this)' class='itemname form-control'></td><td style='width:15%'><div class='form-group'><select class='form-control product' onchange='get_bom(this)' name='product[]' id='product" + i + "'> <option>select</option></select></div><div class='form-group'><label></label><textarea id='description" + i + "' name='description[]' class='description'></textarea></div></td>";
-                {{--            data += '<td style="width:6%;vertical-align: top !important;text-align:center"><input type="text" name="inner_diamitter[]"  class="inner_diameter smallInputBox inputElement" id="inner_diamitter' + i + '"></td>';--}}
-                        {{--            data += '<td style="width:6%;vertical-align: top !important;text-align:center"><input type="text" name="outer_diamitter[]"  class="outer_diameter smallInputBox inputElement" id="outer_diamitter' + i + '"></td>';--}}
-                        {{--            data += '<td style="width:6%;vertical-align: top !important;text-align:center"><input type="text" name="thikness[]"  class="thikness smallInputBox inputElement" id="thikness' + i + '"></td>';--}}
-
-                    data +='<td style="vertical-align: top !important;text-align:center"><img style="height: 55px;width: 55px;" src="" class="photo img-responsive"> </td>';
-                data +='<td style="vertical-align: top !important;text-align: center;">\n' +
-                    '                                            <span class="hsnSpan"></span><input type="hidden" class="hsn smallInputBox inputElement" name="hsn[]" value=""\n' +
-                    '                                                   id="">\n' +
-                    '                                        </td>\n' +
-                    '                                        <td style="vertical-align: top !important;text-align: center;width: 10%">\n' +
-                    '                                            <input type="text" name="qty[]" onkeyup="cal(this)" value="0"\n' +
-                    '                                                   class="qty smallInputBox inputElement" id="">\n' +
-                    '                                            <label class="stockQty">Stock : </label>\n' +
-                    '                                        </td>\n' +
-                    '                                        <td style="vertical-align: top !important;text-align: center;">\n' +
-                    '                                            <span class="uomSpan"></span><input type="hidden" class="uom smallInputBox inputElement" name="uom[]" value=""\n' +
-                    '                                                   id="">\n' +
-                    '                                        </td>\n' +
-                    '                                        \n' +
-                    '                                        <td style="vertical-align: top !important;">\n' +
-                    '                                            <div>\n' +
-                    '                                                <input oninput="cal(this)"  name="price[]" value="0"\n' +
-                    '                                                       type="text"\n' +
-                    '                                                       data-rule-required="true" data-rule-positive="true"\n' +
-                    '                                                       class="price listPrice smallInputBox inputElement"\n' +
-                    '                                                       data-is-price-changed="false" list-info=""\n' +
-                    '                                                       data-base-currency-id="" aria-required="true" autocomplete="off"\n' +
-                    '                                                       aria-invalid="false">&nbsp;<span\n' +
-                    '                                                    class="priceBookPopup cursorPointer" data-popup="Popup"\n' +
-                    '                                                    title="Price Books" data-module-name="PriceBooks"\n' +
-                    '                                                    style="float:left">\n' +
-                    '                                                    <i class="vicon-pricebooks" title="Price Books"></i>\n' +
-                    '                                                </span>\n' +
-                    '                                            </div>\n' +
-                    '                                            <div style="clear:both"></div>\n' +
-                    '                                            <div>\n' +
-                    '                                                <span>(-)&nbsp;<strong>\n' +
-                    '                                                         <a style="cursor: pointer" onclick="disDiv(this)">Discount</a>\n' +
-                    '                                                         (<span class="discountPerc">0</span>%)\n' +
-                    '                                                        </a> :\n' +
-                    '                                                        <div class="discountDiv" style="display: none">\n' +
-                    '                                                            <div class="form-group" style="width: 50%;display: inline;float: left;">\n' +
-                    '                                                                <label>Disc %</label>\n' +
-                    '                                                                <input oninput="cal(this)"\n' +
-                    '                                                                       name="discount_per[]"\n' +
-                    '                                                                       value="" type="text"\n' +
-                    '                                                                       data-rule-required="true"\n' +
-                    '                                                                       data-rule-positive="true"\n' +
-                    '                                                                       class="discount_per listPrice smallInputBox inputElement"\n' +
-                    '                                                                       data-is-price-changed="false" list-info=""\n' +
-                    '                                                                       data-base-currency-id="" aria-required="true"\n' +
-                    '                                                                       autocomplete="off" aria-invalid="false" style="width: 80%;">\n' +
-                    '\n' +
-                    '                                                            </div>\n' +
-                    '                                                            <div class="form-group" style="width: 50%;float: left;">\n' +
-                    '                                                                <label>Disc Amt</label>\n' +
-                    '                                                                <input oninput="discmatcal(this)"\n' +
-                    '                                                                       name="discount_amount[]"\n' +
-                    '                                                                       value="" type="text"\n' +
-                    '                                                                       class="discount_amount inputElement" style="width: 80%;">\n' +
-                    '\n' +
-                    '                                                            </div>\n' +
-                    '\n' +
-                    '                                                        </div>\n' +
-                    '                                                    </strong>\n' +
-                    '                                                </span>\n' +
-                    '                                            </div>\n' +
-                    '\n' +
-                    '                                            <div style="width:150px;">\n' +
-                    '                                                <strong>Total After Discount :</strong>\n' +
-                    '                                            </div>\n' +
-                    '                                            <div class="individualTaxContainer">(+)&nbsp;\n' +
-                    '                                                <strong>\n' +
-                    '                                                    <a style="cursor: pointer" onclick="taxDiv(this)">Tax </a> (<span class="taxTotal"></span>%):\n' +
-                    '                                                    <div style="display:none;" class="taxdiv">\n' +
-                    '                                                        <div class="form-group" style="width: 34%;display:inline;float: left;">\n' +
-                    '                                                            <label>CGST %</label>\n' +
-                    '                                                            <input style="width: 35px;" oninput="cal(this)"\n' +
-                    '                                                                   name="cgst_per1[]"\n' +
-                    '                                                                   value="" type="text"\n' +
-                    '                                                                   data-rule-required="true" data-rule-positive="true"\n' +
-                    '                                                                   class="cgst_per listPrice smallInputBox inputElement"\n' +
-                    '                                                                   data-is-price-changed="false" list-info=""\n' +
-                    '                                                                   data-base-currency-id="" aria-required="true"\n' +
-                    '                                                                   autocomplete="off" aria-invalid="false">\n' +
-                    '\n' +
-                    '                                                        </div>\n' +
-                    '                                                        <div class="form-group" style="width: 34%;display:inline;float: left;">\n' +
-                    '                                                            <label>SGST %</label>\n' +
-                    '                                                            <input style="width: 35px;" oninput="cal(this)"\n' +
-                    '                                                                   name="sgst_per1[]"\n' +
-                    '                                                                   value="" type="text"\n' +
-                    '                                                                   data-rule-required="true" data-rule-positive="true"\n' +
-                    '                                                                   class="sgst_per listPrice smallInputBox inputElement"\n' +
-                    '                                                                   data-is-price-changed="false" list-info=""\n' +
-                    '                                                                   data-base-currency-id="" aria-required="true"\n' +
-                    '                                                                   autocomplete="off" aria-invalid="false">\n' +
-                    '\n' +
-                    '                                                        </div>\n' +
-                    '                                                        <div class="form-group" style="width: 32%;float: left;">\n' +
-                    '                                                            <div class="form-group" >\n' +
-                    '                                                                <label>IGST %</label>\n' +
-                    '                                                                <input style="width: 35px;" oninput="cal(this)"\n' +
-                    '                                                                       name="igst_per1[]"\n' +
-                    '                                                                       value="" type="text"\n' +
-                    '                                                                       data-rule-required="true" data-rule-positive="true"\n' +
-                    '                                                                       class="igst_per listPrice smallInputBox inputElement"\n' +
-                    '                                                                       data-is-price-changed="false" list-info=""\n' +
-                    '                                                                       data-base-currency-id="" aria-required="true"\n' +
-                    '                                                                       autocomplete="off" aria-invalid="false">\n' +
-                    '\n' +
-                    '                                                            </div>\n' +
-                    '\n' +
-                    '                                                        </div>\n' +
-                    '                                                </strong>\n' +
-                    '                                            </div>\n' +
-                    '                                            <span class="taxDivContainer">\n' +
-                    '                                                <div class="taxUI hide" id="tax_div1">\n' +
-                    '                                                    <p class="popover_title hide">Set Tax for : <span\n' +
-                    '                                                            class="variable"></span>\n' +
-                    '                                                    </p>\n' +
-                    '                                                </div>\n' +
-                    '                                            </span>\n' +
-                    '\n' +
-                    '                                        </td>\n' +
-                    '\n' +
-                    '                                        <td style="vertical-align: top !important;">\n' +
-                    '                                            <div  align="right" class="productTotal">0.00</div>\n' +
-                    '                                            <div  align="right" class="discountTotal">\n' +
-                    '                                                0.00\n' +
-                    '                                            </div>\n' +
-                    '                                            <div  align="right" class="totalAfterDiscount">\n' +
-                    '                                                0.00\n' +
-                    '                                            </div>\n' +
-                    '                                            <div id="taxTotal1" align="right" class="productTaxTotal">0.00</div>\n' +
-                    '                                        </td>\n' +
-                    '\n' +
-                    '\n' +
-                    '                                        <td style="display:none;vertical-align: top !important;text-align: center;">\n' +
-                    '                                            <input type="text" name="cgst_per[]" value=""\n' +
-                    '                                                   class="cgst_per form-control" id=""\n' +
-                    '                                                   oninput="cal(this)">\n' +
-                    '                                        </td>\n' +
-                    '                                        <td style="display:none;vertical-align: top !important;text-align: center;">\n' +
-                    '                                            <input type="text" name="cgst_amount[]" value=""\n' +
-                    '                                                   class="cgst_amount form-control" id="">\n' +
-                    '                                        </td>\n' +
-                    '                                        <td style="display:none;vertical-align: top !important;text-align: center;">\n' +
-                    '                                            <input type="text" name="sgst_per[]" value=""\n' +
-                    '                                                   class="sgst_per form-control" id=""\n' +
-                    '                                                   oninput="cal(this)">\n' +
-                    '                                        </td>\n' +
-                    '                                        <td style="display:none;vertical-align: top !important;text-align: center;">\n' +
-                    '                                            <input type="text" name="sgst_amount[]" value=""\n' +
-                    '                                                   class="sgst_amount form-control" id="">\n' +
-                    '                                        </td>\n' +
-                    '                                        <td style="display:none;vertical-align: top !important;text-align: center;">\n' +
-                    '                                            <input type="text" name="gst_per[]" value=""\n' +
-                    '                                                   class="gst_per form-control" id=""\n' +
-                    '                                                   oninput="cal(this)">\n' +
-                    '                                        </td>\n' +
-                    '                                        <td style="display:none;vertical-align: top !important;text-align: center;">\n' +
-                    '                                            <input type="text" name="gst_amount[]" value=""\n' +
-                    '                                                   class="gst_amount form-control" id="">\n' +
-                    '                                        </td>\n' +
-                    '                                        <td style="vertical-align: top !important;text-align: center;">\n' +
-                    '\n' +
-                    '                                           <input type="hidden" class="total" name="total_amount[]"><input type="text" name="net_price[]" value=""\n' +
-                    '                                                   class="netprice smallInputBox inputElement" id="">\n' +
-                    '                                        </td>';
-                data += '<td class="actions" style="vertical-align: top !important;text-align:center"><a style="customer:pointer" onclick="remove_row(this)" class="rowremove"><i class="fa fa-trash" style="font-size: 22px"></i></a></td></tr>';
-
-                $("#caltable").append(data);
-                initProductAjaxSelect2($("#product" + i), 'bom');
-                $("#totrow").val(i);
-            });
-
+            $("#add_row").click(addQuotationRow);
             $(".service_btn").click(function (e) {
                 e.preventDefault();
             });
@@ -1576,9 +893,6 @@
                 e.preventDefault();
             });
 
-            function add_customer() {
-                $("#myModal").show();
-            }
 
             function remove_row(ele) {
                 if (confirm("Are you sure you want to delete this?")) {

@@ -974,7 +974,7 @@ class ProductionController extends Controller
     {
         stitching::where('id', $request->id)->delete();
 
-        return redirect()->route("stitching/dashboard")->with("message","Stitching record deleted");
+        return redirect()->route("stitching.dashboard")->with("message","Stitching record deleted");
     }
 
     function getproduct_image(Request $request)
@@ -1943,7 +1943,7 @@ class ProductionController extends Controller
             $production->customer = $request->customer;
             $production->production_status ="N";
             if ($production->save()) {
-                $tot = count($request->required_mat);
+                $tot = $request->required_mat ? count($request->required_mat) : 0;
                 for ($i = 0; $i < $tot; $i++) {
                     $pmaterial = new production_material();
                     $pmaterial->machine = $request->machine_id;

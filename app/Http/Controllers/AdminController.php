@@ -76,14 +76,18 @@ class AdminController extends Controller
     {
         $term = trim((string) $request->get('term', ''));
         $status = $request->get('status', 'product');
-        if (!in_array($status, ['product', 'service', 'bom', 'po_product'], true)) {
+        if (!in_array($status, ['product', 'service', 'bom', 'po_product', 'any'], true)) {
             $status = 'product';
         }
 
         // Purchase Order line items can also be raw materials, unlike every
-        // other module which only picks status='product'.
+        // other module which only picks status='product'. Quotation asks for
+        // 'any', because a quotation line can be a product, a service or a BOM
+        // and which one it is only becomes clear once the item is found.
         if ($status === 'po_product') {
             $query = product::whereIn('status', ['product', 'raw material']);
+        } elseif ($status === 'any') {
+            $query = product::whereIn('status', ['product', 'service', 'bom']);
         } else {
             $query = product::where('status', $status);
         }
@@ -113,12 +117,20 @@ class AdminController extends Controller
         $results = $query->orderBy('product_name', 'asc')
             ->orderBy('value2', 'asc')
             ->limit(40)
-            ->get(['id', 'item_code', 'product_name', 'value1', 'value2'])
+            ->get(['id', 'item_code', 'product_name', 'value1', 'value2', 'status'])
             ->map(function ($p) use ($status) {
-                $name = (in_array($status, ['product', 'po_product'], true) && $p->item_code)
+                $name = (in_array($status, ['product', 'po_product', 'any'], true) && $p->item_code)
                     ? ($p->item_code . ' - ' . $p->product_name)
                     : $p->product_name;
                 $label = product::nameWithVariantInline($name, $p->value1, $p->value2);
+
+                // Searching the three catalogues at once, the row has to say
+                // which one it came from - a service and a product can be named
+                // almost the same.
+                if ($status === 'any' && $p->status !== 'product') {
+                    $label .= ' · ' . ($p->status === 'bom' ? 'BOM' : ucfirst($p->status));
+                }
+
                 return ['id' => $p->id, 'text' => $label];
             });
 
@@ -1681,10 +1693,12 @@ class AdminController extends Controller
 
         $quotation = quotation::find($request->id);
         $quotation->quot_date = date('Y-m-d', strtotime($request->quot_date));
-        $quotation->subject = $request->subject;
+        // Subject, contact and remark are not on the edit screen any more,
+        // so what the quotation already carries is kept rather than blanked.
+        $quotation->subject = $request->filled('subject') ? $request->subject : $quotation->subject;
         $quotation->customer = $request->customer;
         $quotation->customer_name = $customer_name->customer_name;
-        $quotation->contact_name = $request->contact_name;
+        $quotation->contact_name = $request->filled('contact_name') ? $request->contact_name : $quotation->contact_name;
         $quotation->quot_stage = $request->quot_stage;
         $quotation->valid_until = date('Y-m-d', strtotime($request->valid_until));
         $quotation->billing_address = $request->billing_address;
@@ -1710,7 +1724,7 @@ class AdminController extends Controller
         $quotation->discount_total = $request->discount_total;
         $quotation->grand_total = $request->grand_total;
         $quotation->module = $request->module;
-        $quotation->remark = $request->remark;
+        $quotation->remark = $request->filled('remark') ? $request->remark : $quotation->remark;
         $quotation->invoice_no = $request->invoice_no;
         $quotation->finacial_year = $finacial_year->id;
         $quotation->payment_terms = $request->payment_terms;
@@ -2068,7 +2082,7 @@ class AdminController extends Controller
         $customer_name = customers::find($request->customer);
 
         $request->validate([
-            'quot_stage' => 'required',
+            // quot_stage is not asked for here any more - it starts at Created.
             'valid_until' => 'required',
             'customer' => 'required',
             'quot_date' => 'required',
@@ -2114,11 +2128,18 @@ class AdminController extends Controller
         $quotation->quot_no = $qno + 1;
         $quotation->quotation_no = $n2;
         $quotation->quot_date = date('Y-m-d', strtotime($request->quot_date));
-        $quotation->subject = $request->subject;
+        // Subject, contact and stage are no longer asked for on the create
+        // screen. The quotation list shows the subject and offers it as the
+        // mail subject, and the printed quotation names the contact, so
+        // neither can be left empty just because the field went.
+        $quotation->subject = $request->subject
+            ?: ('Quotation ' . $n2 . ' - ' . $customer_name->customer_name);
         $quotation->customer = $request->customer;
-        $quotation->contact_name = $request->contact_name;
+        $quotation->contact_name = $request->contact_name
+            ?: contact::where('customer', $request->customer)->value('id');
         $quotation->customer_name = $customer_name->customer_name;
-        $quotation->quot_stage = $request->quot_stage;
+        // A quotation starts at Created and is moved on from the edit screen.
+        $quotation->quot_stage = $request->quot_stage ?: 'Created';
         $quotation->valid_until = date('Y-m-d', strtotime($request->valid_until));
         $quotation->billing_address = $request->billing_address;
         $quotation->shipping_address = $request->shipping_address;
@@ -4849,6 +4870,9 @@ class AdminController extends Controller
     {
 
         $data = vendor::find($request->customer);
+        if (!isset($data)) {
+            return json_encode([]);
+        }
         $bcityname = $bstatename = $bcountryname = $scityname = $sstatename = $scountryname = '';
         if ($data->billing_city != '') {
             $bcity = city::find($data->billing_city);

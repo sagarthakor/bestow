@@ -192,6 +192,24 @@ class ProductController extends Controller
         ]);
     }
 
+    public function listingByCategory(Request $request, $category_slug = null)
+    {
+        if ($category_slug) {
+            $request->merge(['category' => $category_slug]);
+        }
+
+        return $this->index($request);
+    }
+
+    public function listingByBrand(Request $request, $brand_slug = null)
+    {
+        if ($brand_slug) {
+            $request->merge(['brand' => $brand_slug]);
+        }
+
+        return $this->index($request);
+    }
+
     public function details(Request $request, $slug, $code = null)
     {
         // Find the anchor product — by ID when available (avoids duplicate-slug collision), else by slug
