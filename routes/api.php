@@ -33,3 +33,18 @@ Route::get("get_product_detail_image","FrontController@get_product_detail_image"
 Route::get('update-inquiry', 'CartController@inquiry_update');
 
 Route::get("get_product","AdminController@ajax_search_product");
+
+// Salesman Android app - Bearer token auth (see SalesmanApiAuth middleware),
+// not the session-based front.salesman.* login used by the storefront.
+Route::prefix('salesman')->group(function () {
+    Route::post('login', 'Api\SalesmanApiController@login');
+
+    Route::middleware('salesman.auth')->group(function () {
+        Route::post('logout', 'Api\SalesmanApiController@logout');
+        Route::get('products', 'Api\SalesmanApiController@products');
+        Route::get('customers', 'Api\SalesmanApiController@customers');
+        Route::post('customers', 'Api\SalesmanApiController@storeCustomer');
+        Route::post('orders', 'Api\SalesmanApiController@storeOrder');
+        Route::get('orders', 'Api\SalesmanApiController@myOrders');
+    });
+});

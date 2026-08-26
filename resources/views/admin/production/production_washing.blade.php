@@ -102,6 +102,15 @@
                                             <tr>
                                                 <td>Socks Size.</td><td>{{$production->size}}</td>
                                             </tr>
+                                            <?php
+                                                $washedSoFar = (float) ($production->total_washing ?? 0);
+                                                $targetNos = (float) $production->nos;
+                                                $remainingNos = $targetNos - $washedSoFar;
+                                            ?>
+                                            <tr>
+                                                <td>Washed So Far</td>
+                                                <td>{{$washedSoFar}} / {{$targetNos}} (Remaining: <span id="production_remaining">{{$remainingNos}}</span>)</td>
+                                            </tr>
                                         </table>
                                     </div>
                                     <div class="col-md-6">
@@ -136,9 +145,55 @@
 
                                 </div>
 
-                                @if($production->status=="Move to Packaging")
+                                @if($production->washing_status != "Y")
+                                <div class="row" id="finished_record" style="margin-top: 15px">
+                                    <h2>Today's Washing Entry</h2>
+                                    <div class="col-md-6">
+                                        <table class="table table-bordered">
+                                            <tr>
+                                                <td>Today's Washing Qty</td>
+                                                <td><input value="" type="text" oninput="cal_product(this.value)" class="form-control" name="total_washing"></td>
+                                            </tr>
 
-                                @else
+                                            <tr>
+                                                <td>Today's Wastage Nos.</td>
+                                                <td><input type="text" value="" id="total_wastage_nos" class="form-control" name="total_washing_wastage_nos"></td>
+                                            </tr>
+
+                                        </table>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <table class="table table-bordered">
+                                            <tr>
+                                                <td>Today's Material Used</td>
+                                                <td><input type="text" value="" class="form-control" id="total_material_used" name="total_washing_material_used"></td>
+                                            </tr>
+
+                                            <tr>
+                                                <td>Today's Wastage Material</td>
+                                                <td><input type="text" value="" class="form-control" id="total_wastage_used" name="total_washing_wastage_material"></td>
+                                            </tr>
+
+                                        </table>
+                                    </div>
+                                        <div class="row" style="margin-top: 10px">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label>Remarks</label>
+                                                    {{Form::text("remarks",null,['class'=>'form-control'])}}
+                                                </div>
+                                            </div>
+                                        </div>
+                                </div>
+
+                                <div class="row" id="finished_submit">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <button class="btn btn-success" name="process" value="Finished">Submit Today's Washing &amp; Forward to Packaging</button>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <div class="row">
                                    @if($last_record=="no")
@@ -186,72 +241,15 @@
                                                     </div>
                                                   @endif
                                            @endif
-                                    <div class="col-md-3 col-sm-3">
-                                        <button id="finished" class="btn btn-danger"><i class="mdi mdi-play-protected-content"></i> Finished Washing</button>
-                                    </div>
 
                                 </div>
+                                @else
+                                    <div class="row" style="margin-top: 15px">
+                                        <div class="col-md-12">
+                                            <div class="alert alert-success">Batch fully washed ({{$production->total_washing}} / {{$production->nos}}) and forwarded to Packaging.</div>
+                                        </div>
+                                    </div>
                                 @endif
-
-                                @if($production->status == "Finished" || $production->status =="Move to Packaging")
-                                <div class="row" id="finished_record" style="margin-top: 15px">
-                                    @else
-                                    <div class="row" id="finished_record" style="margin-top: 15px;display: none">
-                                        @endif
-                                        <h2>Finished Washing Process</h2>
-                                        <div class="col-md-6">
-                                            <table class="table table-bordered">
-                                                <tr>
-                                                    <td>Total Washing Socks No.</td>
-                                                    <td><input @if($production->washing_status == "Y") readonly @endif value="{{$production->total_washing ?? ''}}" type="text" oninput="cal_product(this.value)" class="form-control" name="total_washing"></td>
-                                                </tr>
-
-                                                <tr>
-                                                    <td>Total Washing Wastage Nos.</td>
-                                                    <td><input @if($production->washing_status == "Y") readonly @endif type="text" value="{{$production->total_washing_wastage_nos ?? ''}}" id="total_wastage_nos" class="form-control" name="total_washing_wastage_nos"></td>
-                                                </tr>
-
-                                            </table>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <table class="table table-bordered">
-                                                <tr>
-                                                    <td>Total Washing Material Used</td>
-                                                    <td><input @if($production->washing_status == "Y") readonly @endif type="text" value="{{$production->total_washing_material_used ?? ''}}" class="form-control" id="total_material_used" name="total_washing_material_used"></td>
-                                                </tr>
-
-                                                <tr>
-                                                    <td>Total Washing Wastage Material</td>
-                                                    <td><input @if($production->washing_status == "Y") readonly @endif type="text" value="{{$production->total_washing_wastage_material ?? ''}}" class="form-control" id="total_wastage_used" name="total_washing_wastage_material"></td>
-                                                </tr>
-
-                                            </table>
-                                        </div>
-                                        @if($production->status == "Finished" || $production->status =="Move to Packaging")
-                                        @else
-                                        <div class="row" style="margin-top: 10px">
-                                            <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <label>Remarks</label>
-                                                    {{Form::text("remarks",null,['class'=>'form-control'])}}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        @endif
-                                    </div>
-                                    @if($production->status=="Finished")
-                                    <button name="process" value="Move to Packaging" class="btn btn-info">Move to Packaging <i class="mdi mdi-arrow-right mdi-18px"></i></button>
-                                    @endif
-
-
-                                    <div class="row" id="finished_submit" style="display:none;">
-                                        <div class="col-md-2">
-                                            <div class="form-group">
-                                                <button class="btn btn-success" name="process" value="Finished">Submit</button>
-                                            </div>
-                                        </div>
-                                    </div>
 
                                     <div class="row" style="margin-top: 15px">
                                         @if(session()->has("message"))
@@ -261,7 +259,7 @@
                                         @endif
                                         <table class="table table-bordered">
                                             <tr>
-                                                <th>#.</th><th>Process</th><th>Time & Date</th><th>Operator Name</th>
+                                                <th>#.</th><th>Process</th><th>Qty</th><th>Time & Date</th><th>Operator Name</th>
                                                 <?php
                                                 $srno=0;
                                                 ?>
@@ -272,6 +270,7 @@
                                             <tr>
                                                 <td style="width: 5%;text-align: center">{{$srno}}</td>
                                                 <td style="text-align: center">{{$record->process}}</td>
+                                                <td style="text-align: center">{{$record->total_washing}}</td>
                                                 <td style="text-align: center">{{$record->time}} | {{date('d-m-Y',strtotime($record->date))}}</td>
                                                 <td style="text-align: center">{{$record->first_name}} {{$record->last_name}}</td>
                                             </tr>
@@ -405,41 +404,28 @@
                 });
             });
 
-            $("#finished").click(function (e){
-                e.preventDefault();
-                $("#finished_record").show();
-                $("#finished_submit").show();
-            });
-
             function closmodal()
             {
                 $("#myModal").hide();
             }
 
+            // Validates today's entry against the row's remaining qty (not
+            // the full target - a washing row can be completed across
+            // several days) and estimates today's material usage from the
+            // row's per-unit ratio.
             function cal_product(socks)
             {
+                var production_remaining=$("#production_remaining").text();
+                if(Number(socks)>Number(production_remaining))
+                {
+                    alert("Entered qty exceeds remaining qty for this batch ("+production_remaining+")");
+                    return;
+                }
 
                 var production_nos=$("#production_nos").text();
-                 if(Number(socks)>Number(production_nos))
-                {
-                $("#finished_submit").hide();
-                alert("do not enter more qty");
-            }else{
-                var produce=Number(production_nos)-Number(socks);
-                $("#total_wastage_nos").val(produce);
-
                 var production_material=$("#production_material").text();
                 var perNosMaterialUsed=Number(production_material)/Number(production_nos);
-                var perNosWastageMaterial=Number(perNosMaterialUsed)*Number(produce);
-
-                var totalmaterialused=Number(perNosMaterialUsed)*Number(socks);
-                //alert(totalmaterialused);
-                $("#total_material_used").val(totalmaterialused);
-
-                $("#total_wastage_used").val(Number(perNosWastageMaterial));
-
-                $("#finished_submit").show();
-            }
+                $("#total_material_used").val((Number(perNosMaterialUsed)*Number(socks)).toFixed(2));
             }
         </script>
         @endsection

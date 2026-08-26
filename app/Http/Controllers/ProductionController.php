@@ -464,8 +464,43 @@ class ProductionController extends Controller
 
     function production_washing_record(Request $request)
     {
-
         date_default_timezone_set("Asia/Kolkata");
+
+        $production = washing::find($request->washing_id);
+
+        // Start/Pause/End are pure shift-status pings - log them but never
+        // touch the row's accumulated quantities.
+        if (in_array($request->process, ["start", "pause", "end"])) {
+            $batch_record = new washing_batch_record();
+            $batch_record->washing_id = $request->washing_id;
+            $batch_record->batch_no = $request->batch_no;
+            $batch_record->process = $request->process;
+            $batch_record->remarks = $request->remarks;
+            $batch_record->time = date('h:i:s a');
+            $batch_record->date = date('Y-m-d');
+            $batch_record->operater_name = Session::get("user_id");
+            $batch_record->save();
+
+            $production->status = $request->process;
+            $production->save();
+
+            $url = route('admin.production.washing.move', ['batch_no' => $request->batch_no]);
+            return redirect()->to($url);
+        }
+
+        // Day-by-day washing entry: $request->total_washing etc. are TODAY's
+        // qty, not the row's final total. Each day's amount is accumulated
+        // onto this washing row and sent to Packaging immediately as its own
+        // row.
+        $delta = (float) $request->total_washing;
+        $alreadyWashed = (float) $production->total_washing;
+        $target = (float) $production->nos;
+        $remaining = $target - $alreadyWashed;
+
+        if ($delta <= 0 || $delta > $remaining) {
+            $url = route('admin.production.washing.move', ['batch_no' => $request->batch_no]);
+            return redirect()->to($url)->with("message", "Enter a qty between 1 and the remaining " . $remaining);
+        }
 
         $batch_record = new washing_batch_record();
         $batch_record->washing_id = $request->washing_id;
@@ -481,74 +516,98 @@ class ProductionController extends Controller
         $batch_record->total_washing_wastage_material = $request->total_washing_wastage_material;
         $batch_record->save();
 
-
-        $production = washing::find($request->washing_id);
         $production->status = $request->process;
         $production->complete_time = date('d-m-Y h:i:s a');
-        $production->total_washing = $request->total_washing;
-        $production->total_washing_wastage_nos = $request->total_washing_wastage_nos;
-        $production->total_washing_material_used = $request->total_washing_material_used;
-        $production->total_washing_wastage_material = $request->total_washing_wastage_material;
+        $production->total_washing = $alreadyWashed + $delta;
+        $production->total_washing_wastage_nos = (float) $production->total_washing_wastage_nos + (float) $request->total_washing_wastage_nos;
+        $production->total_washing_material_used = (float) $production->total_washing_material_used + (float) $request->total_washing_material_used;
+        $production->total_washing_wastage_material = (float) $production->total_washing_wastage_material + (float) $request->total_washing_wastage_material;
         $production->finished_user = Session::get("user_id");
         $production->remarks = $request->remarks;
-        $production->washing_status="N";
+        $production->washing_status = ($production->total_washing >= $target) ? "Y" : "N";
         $production->save();
 
+        packaging_machine_allocate::truncate();
+        $stitching_machine = packaging_machine::orderBy("id", "asc")->get();
 
-
-
-        if($request->process =="Move to Packaging")
-        {
-            $production = washing::find($request->washing_id);
-            $production->washing_status="Y";
-            $production->save();
-
-            packaging_machine_allocate::truncate();
-            $stitching_machine=packaging_machine::orderBy("id","asc")->get();
-
-            foreach ($stitching_machine as $stitchMachine) {
-
-                $stitch=packaging::where("machine",$stitchMachine->id)
-                    ->where("packaging_status",'=','N')
-                    ->sum("nos");
-                $stitching_machine_allocate=new packaging_machine_allocate();
-                $stitching_machine_allocate->machine=$stitchMachine->id;
-                $stitching_machine_allocate->total_socks=$stitch ?? 0;
-                $stitching_machine_allocate->save();
-            }
-            $minimumSocksMachine=packaging_machine_allocate::select("machine")->first()->min('total_socks');
-
-            $machine=packaging_machine_allocate::where("total_socks",$minimumSocksMachine)->first();
-
-
-            $stitch=new packaging();
-            $stitch->washing_id=$production->id;
-            $stitch->machine=$machine->machine;
-            $stitch->batch_no=$production->batch_no;
-            $stitch->batch=$production->batch;
-            $stitch->customer=$production->customer;
-            $stitch->finish_product=$production->finish_product;
-            $stitch->nos=$request->total_washing;
-            $stitch->size=$production->size;
-            $stitch->total_material=$request->total_washing_material_used;
-            $stitch->timestamp=date('d-m-Y h:i:s a');
-            $stitch->user_id=Session::get("user_id");
-            $stitch->status="Created";
-            $stitch->packaging_status="N";
-            $stitch->save();
-
-            $url = url('/admin/production/washing/dashboard/');
-            return redirect()->to($url)->with("message","This Batch Send to Packaging Department");
-        }else{
-            $url = route('admin.production.washing.move',['batch_no' => $request->batch_no]);
-            return redirect()->to($url)->with("message","Stage Change Successfully");
+        foreach ($stitching_machine as $stitchMachine) {
+            $stitch = packaging::where("machine", $stitchMachine->id)
+                ->where("packaging_status", '=', 'N')
+                ->sum("nos");
+            $stitching_machine_allocate = new packaging_machine_allocate();
+            $stitching_machine_allocate->machine = $stitchMachine->id;
+            $stitching_machine_allocate->total_socks = $stitch ?? 0;
+            $stitching_machine_allocate->save();
         }
+        $minimumSocksMachine = packaging_machine_allocate::select("machine")->first()->min('total_socks');
+        $machine = packaging_machine_allocate::where("total_socks", $minimumSocksMachine)->first();
+
+        $stitch = new packaging();
+        $stitch->washing_id = $production->id;
+        $stitch->machine = $machine->machine;
+        // Suffixed with this daily entry's batch_record id so each day's
+        // forward from this washing row stays individually addressable -
+        // packaging.batch_no is used as the lookup key on the packaging
+        // screens.
+        $stitch->batch_no = $production->batch_no . '-' . $batch_record->id;
+        $stitch->batch = $production->batch;
+        $stitch->customer = $production->customer;
+        $stitch->finish_product = $production->finish_product;
+        $stitch->nos = $delta;
+        $stitch->size = $production->size;
+        $stitch->total_material = $request->total_washing_material_used;
+        $stitch->timestamp = date('d-m-Y h:i:s a');
+        $stitch->user_id = Session::get("user_id");
+        $stitch->status = "Created";
+        $stitch->packaging_status = "N";
+        $stitch->save();
+
+        $url = route('admin.production.washing.move', ['batch_no' => $request->batch_no]);
+        $message = $production->washing_status == "Y"
+            ? "Batch fully washed and forwarded to Packaging"
+            : "Today's washing forwarded to Packaging";
+        return redirect()->to($url)->with("message", $message);
     }
 
     function production_packaging_record(Request $request)
     {
-
         date_default_timezone_set("Asia/Kolkata");
+
+        $production = packaging::find($request->packaging_id);
+
+        // Start/Pause/End are pure shift-status pings - log them but never
+        // touch the row's accumulated quantities.
+        if (in_array($request->process, ["start", "pause", "end"])) {
+            $batch_record = new packaging_batch_record();
+            $batch_record->packaging_id = $request->packaging_id;
+            $batch_record->batch_no = $request->batch_no;
+            $batch_record->process = $request->process;
+            $batch_record->remarks = $request->remarks;
+            $batch_record->time = date('h:i:s a');
+            $batch_record->date = date('Y-m-d');
+            $batch_record->operater_name = Session::get("user_id");
+            $batch_record->save();
+
+            $production->status = $request->process;
+            $production->save();
+
+            $url = route('admin.production.packaging.move', ['batch_no' => $request->batch_no]);
+            return redirect()->to($url);
+        }
+
+        // Day-by-day packaging entry: $request->total_packaging etc. are
+        // TODAY's qty, not the row's final total. This is the terminal
+        // stage, so each day's packaged qty is inward to stock immediately
+        // rather than held back until the whole batch is packaged.
+        $delta = (float) $request->total_packaging;
+        $alreadyPackaged = (float) $production->total_packaging;
+        $target = (float) $production->nos;
+        $remaining = $target - $alreadyPackaged;
+
+        if ($delta <= 0 || $delta > $remaining) {
+            $url = route('admin.production.packaging.move', ['batch_no' => $request->batch_no]);
+            return redirect()->to($url)->with("message", "Enter a qty between 1 and the remaining " . $remaining);
+        }
 
         $batch_record = new packaging_batch_record();
         $batch_record->packaging_id = $request->packaging_id;
@@ -564,73 +623,91 @@ class ProductionController extends Controller
         $batch_record->total_packaging_wastage_material = $request->total_packaging_wastage_material;
         $batch_record->save();
 
-
-        $production = packaging::find($request->packaging_id);
         $production->status = $request->process;
         $production->complete_time = date('d-m-Y h:i:s a');
-        $production->total_packaging = $request->total_packaging;
-        $production->total_packaging_wastage_nos = $request->total_packaging_wastage_nos;
-        $production->total_packaging_material_used = $request->total_packaging_material_used;
-        $production->total_packaging_wastage_material = $request->total_packaging_wastage_material;
+        $production->total_packaging = $alreadyPackaged + $delta;
+        $production->total_packaging_wastage_nos = (float) $production->total_packaging_wastage_nos + (float) $request->total_packaging_wastage_nos;
+        $production->total_packaging_material_used = (float) $production->total_packaging_material_used + (float) $request->total_packaging_material_used;
+        $production->total_packaging_wastage_material = (float) $production->total_packaging_wastage_material + (float) $request->total_packaging_wastage_material;
         $production->finished_user = Session::get("user_id");
         $production->remarks = $request->remarks;
-        $production->packaging_status="N";
+        $production->packaging_status = ($production->total_packaging >= $target) ? "Y" : "N";
         $production->save();
 
+        $checkproduct = stock_status::where("product", $production->finish_product)->first();
 
-
-
-        if($request->process =="Move to Stock")
-        {
-            $production = packaging::find($request->packaging_id);
-            $production->packaging_status="Y";
-
-            if($production->save())
-            {
-                $checkproduct=stock_status::where("product",$production->finish_product)
-                    ->first();
-
-                if(empty($checkproduct))
-                {
-                    $status=new stock_status();
-                    $status->product=$production->finish_product;
-                    $status->qty=$request->total_packaging;
-                    $status->particular="Inward From Production Batch : ".$request->batch_no;
-                    $status->inward_date=date('Y-m-d');
-                    $status->user_id=Session::get("user_id");
-                    $status->created_time=date('d-m-Y h:i:s a');
-                    $status->save();
-                }else{
-                    $qty=$checkproduct->qty+$request->total_packaging;
-                    $checkproduct->qty=$qty;
-                    $checkproduct->inward_date=date('Y-m-d');
-                    $checkproduct->particular="Inward From Production Batch : ".$request->batch_no;
-                    $checkproduct->created_time=date('d-m-Y h:i:s a');
-                    $checkproduct->save();
-                }
-
-                $book=new stock_book();
-                $book->product=$production->finish_product;
-                $book->inward_date=date('Y-m-d');
-                $book->inward_qty=$request->total_packaging;
-                $book->remaining_qty=$request->total_packaging;
-                $book->particular="Inward From Production Batch : ".$request->batch_no;
-                $book->created_time=date('d-m-Y h:i:s a');
-                $book->user_id=Session::get("user_id");
-                $book->save();
-            }
-
-            $url = route('admin.production.packaging.dashboard');
-            return redirect()->to($url)->with("message","Stock Inward Successfully");
-        }else{
-            $url = route('admin.production.packaging.move',['batch_no' => $request->batch_no]);
-            return redirect()->to($url)->with("message","Stage Change Successfully");
+        if (empty($checkproduct)) {
+            $status = new stock_status();
+            $status->product = $production->finish_product;
+            $status->qty = $delta;
+            $status->particular = "Inward From Production Batch : " . $request->batch_no;
+            $status->inward_date = date('Y-m-d');
+            $status->user_id = Session::get("user_id");
+            $status->created_time = date('d-m-Y h:i:s a');
+            $status->save();
+        } else {
+            $checkproduct->qty = $checkproduct->qty + $delta;
+            $checkproduct->inward_date = date('Y-m-d');
+            $checkproduct->particular = "Inward From Production Batch : " . $request->batch_no;
+            $checkproduct->created_time = date('d-m-Y h:i:s a');
+            $checkproduct->save();
         }
+
+        $book = new stock_book();
+        $book->product = $production->finish_product;
+        $book->inward_date = date('Y-m-d');
+        $book->inward_qty = $delta;
+        $book->remaining_qty = $delta;
+        $book->particular = "Inward From Production Batch : " . $request->batch_no;
+        $book->created_time = date('d-m-Y h:i:s a');
+        $book->user_id = Session::get("user_id");
+        $book->save();
+
+        $url = route('admin.production.packaging.move', ['batch_no' => $request->batch_no]);
+        $message = $production->packaging_status == "Y"
+            ? "Batch fully packaged - today's qty inward to stock, batch closed"
+            : "Today's packaging inward to stock successfully";
+        return redirect()->to($url)->with("message", $message);
     }
     function production_pressing_record(Request $request)
     {
-
         date_default_timezone_set("Asia/Kolkata");
+
+        $production = pressing::find($request->pressing_id);
+
+        // Start/Pause/End are pure shift-status pings - log them but never
+        // touch the row's accumulated quantities.
+        if (in_array($request->process, ["start", "pause", "end"])) {
+            $batch_record = new pressing_batch_record();
+            $batch_record->pressing_id = $request->pressing_id;
+            $batch_record->batch_no = $request->batch_no;
+            $batch_record->process = $request->process;
+            $batch_record->remarks = $request->remarks;
+            $batch_record->time = date('h:i:s a');
+            $batch_record->date = date('Y-m-d');
+            $batch_record->operater_name = Session::get("user_id");
+            $batch_record->save();
+
+            $production->status = $request->process;
+            $production->save();
+
+            $url = route('admin.production.pressing.move', ['batch_no' => $request->batch_no]);
+            return redirect()->to($url);
+        }
+
+        // Day-by-day pressing entry: $request->total_pressing etc. are
+        // TODAY's qty, not the row's final total. Each day's amount is
+        // accumulated onto this pressing row and sent to Washing immediately
+        // as its own row.
+        $delta = (float) $request->total_pressing;
+        $alreadyPressed = (float) $production->total_pressing;
+        $target = (float) $production->nos;
+        $remaining = $target - $alreadyPressed;
+
+        if ($delta <= 0 || $delta > $remaining) {
+            $url = route('admin.production.pressing.move', ['batch_no' => $request->batch_no]);
+            return redirect()->to($url)->with("message", "Enter a qty between 1 and the remaining " . $remaining);
+        }
 
         $batch_record = new pressing_batch_record();
         $batch_record->pressing_id = $request->pressing_id;
@@ -646,74 +723,100 @@ class ProductionController extends Controller
         $batch_record->total_pressing_wastage_material = $request->total_pressing_wastage_material;
         $batch_record->save();
 
-
-        $production = pressing::find($request->pressing_id);
         $production->status = $request->process;
         $production->complete_time = date('d-m-Y h:i:s a');
-        $production->total_pressing = $request->total_pressing;
-        $production->total_pressing_wastage_nos = $request->total_pressing_wastage_nos;
-        $production->total_pressing_material_used = $request->total_pressing_material_used;
-        $production->total_pressing_wastage_material = $request->total_pressing_wastage_material;
+        $production->total_pressing = $alreadyPressed + $delta;
+        $production->total_pressing_wastage_nos = (float) $production->total_pressing_wastage_nos + (float) $request->total_pressing_wastage_nos;
+        $production->total_pressing_material_used = (float) $production->total_pressing_material_used + (float) $request->total_pressing_material_used;
+        $production->total_pressing_wastage_material = (float) $production->total_pressing_wastage_material + (float) $request->total_pressing_wastage_material;
         $production->finished_user = Session::get("user_id");
         $production->remarks = $request->remarks;
-        $production->pressing_status="N";
+        $production->pressing_status = ($production->total_pressing >= $target) ? "Y" : "N";
         $production->save();
 
+        washing_machine_allocate::truncate();
+        $stitching_machine = washing_machine::orderBy("id", "asc")->get();
 
-
-
-        if($request->process =="Move to Washing")
-        {
-            $production = pressing::find($request->pressing_id);
-            $production->pressing_status="Y";
-            $production->save();
-
-            washing_machine_allocate::truncate();
-            $stitching_machine=washing_machine::orderBy("id","asc")->get();
-
-            foreach ($stitching_machine as $stitchMachine) {
-
-                $stitch=washing::where("machine",$stitchMachine->id)
-                    ->where("washing_status",'=','N')
-                    ->sum("nos");
-                $stitching_machine_allocate=new washing_machine_allocate();
-                $stitching_machine_allocate->machine=$stitchMachine->id;
-                $stitching_machine_allocate->total_socks=$stitch ?? 0;
-                $stitching_machine_allocate->save();
-            }
-            $minimumSocksMachine=washing_machine_allocate::select("machine")->first()->min('total_socks');
-
-            $machine=washing_machine_allocate::where("total_socks",$minimumSocksMachine)->first();
-
-
-            $stitch=new washing();
-            $stitch->pressing_id=$production->id;
-            $stitch->machine=$machine->machine;
-            $stitch->batch_no=$production->batch_no;
-            $stitch->batch=$production->batch;
-            $stitch->customer=$production->customer;
-            $stitch->finish_product=$production->finish_product;
-            $stitch->nos=$request->total_pressing;
-            $stitch->size=$production->size;
-            $stitch->total_material=$request->total_pressing_material_used;
-            $stitch->timestamp=date('d-m-Y h:i:s a');
-            $stitch->user_id=Session::get("user_id");
-            $stitch->status="Created";
-            $stitch->washing_status="N";
-            $stitch->save();
-
-            $url = route('admin.production.pressing.dashboard');
-            return redirect()->to($url)->with("message","This Batch Send to Washing Department");
-        }else{
-            $url = route('admin.production.pressing.move',['batch_no' => $request->batch_no]);
-            return redirect()->to($url);
+        foreach ($stitching_machine as $stitchMachine) {
+            $stitch = washing::where("machine", $stitchMachine->id)
+                ->where("washing_status", '=', 'N')
+                ->sum("nos");
+            $stitching_machine_allocate = new washing_machine_allocate();
+            $stitching_machine_allocate->machine = $stitchMachine->id;
+            $stitching_machine_allocate->total_socks = $stitch ?? 0;
+            $stitching_machine_allocate->save();
         }
+        $minimumSocksMachine = washing_machine_allocate::select("machine")->first()->min('total_socks');
+        $machine = washing_machine_allocate::where("total_socks", $minimumSocksMachine)->first();
+
+        $stitch = new washing();
+        $stitch->pressing_id = $production->id;
+        $stitch->machine = $machine->machine;
+        // Suffixed with this daily entry's batch_record id so each day's
+        // forward from this pressing row stays individually addressable -
+        // washing.batch_no is used as the lookup key on the washing screens.
+        $stitch->batch_no = $production->batch_no . '-' . $batch_record->id;
+        $stitch->batch = $production->batch;
+        $stitch->customer = $production->customer;
+        $stitch->finish_product = $production->finish_product;
+        $stitch->nos = $delta;
+        $stitch->size = $production->size;
+        $stitch->total_material = $request->total_pressing_material_used;
+        $stitch->timestamp = date('d-m-Y h:i:s a');
+        $stitch->user_id = Session::get("user_id");
+        $stitch->status = "Created";
+        $stitch->washing_status = "N";
+        $stitch->save();
+
+        $url = route('admin.production.pressing.move', ['batch_no' => $request->batch_no]);
+        $message = $production->pressing_status == "Y"
+            ? "Batch fully pressed and forwarded to Washing"
+            : "Today's pressing forwarded to Washing";
+        return redirect()->to($url)->with("message", $message);
     }
 
     function production_stitching_record(Request $request)
     {
-
         date_default_timezone_set("Asia/Kolkata");
+
+        $production = stitching::find($request->stitching_id);
+
+        // Start/Pause/End are pure shift-status pings - log them but never
+        // touch the row's accumulated quantities.
+        if (in_array($request->process, ["start", "pause", "end"])) {
+            $batch_record = new stitching_batch_record();
+            $batch_record->stitching_id = $request->stitching_id;
+            $batch_record->production_id = $request->production_id;
+            $batch_record->batch_no = $request->batch_no;
+            $batch_record->process = $request->process;
+            $batch_record->remarks = $request->remarks;
+            $batch_record->time = date('h:i:s a');
+            $batch_record->date = date('Y-m-d');
+            $batch_record->operater_name = Session::get("user_id");
+            $batch_record->save();
+
+            $production->status = $request->process;
+            $production->save();
+
+            $url = route('admin.production.stitching.move', ['batch_no' => $request->batch_no]);
+            return redirect()->to($url);
+        }
+
+        // Day-by-day stitching entry: $request->total_stitching etc. are
+        // TODAY's qty, not the row's final total. Each day's amount is
+        // accumulated onto this stitching row (whose own "nos" is the target
+        // it was forwarded with, whether that came from a full production
+        // batch or a single daily production forward) and sent to Pressing
+        // immediately as its own row.
+        $delta = (float) $request->total_stitching;
+        $alreadyStitched = (float) $production->total_stitching;
+        $target = (float) $production->nos;
+        $remaining = $target - $alreadyStitched;
+
+        if ($delta <= 0 || $delta > $remaining) {
+            $url = route('admin.production.stitching.move', ['batch_no' => $request->batch_no]);
+            return redirect()->to($url)->with("message", "Enter a qty between 1 and the remaining " . $remaining);
+        }
 
         $batch_record = new stitching_batch_record();
         $batch_record->stitching_id = $request->stitching_id;
@@ -730,76 +833,71 @@ class ProductionController extends Controller
         $batch_record->total_stitching_wastage_material = $request->total_stitching_wastage_material;
         $batch_record->save();
 
-
-        $production = stitching::find($request->stitching_id);
         $production->status = $request->process;
         $production->complete_time = date('d-m-Y h:i:s a');
-        $production->total_stitching = $request->total_stitching;
-        $production->total_stitching_wastage_nos = $request->total_stitching_wastage_nos;
-        $production->total_stitching_material_used = $request->total_stitching_material_used;
-        $production->total_stitching_wastage_material = $request->total_stitching_wastage_material;
+        $production->total_stitching = $alreadyStitched + $delta;
+        $production->total_stitching_wastage_nos = (float) $production->total_stitching_wastage_nos + (float) $request->total_stitching_wastage_nos;
+        $production->total_stitching_material_used = (float) $production->total_stitching_material_used + (float) $request->total_stitching_material_used;
+        $production->total_stitching_wastage_material = (float) $production->total_stitching_wastage_material + (float) $request->total_stitching_wastage_material;
         $production->finished_user = Session::get("user_id");
         $production->remarks = $request->remarks;
-        $production->stitching_status="N";
+        $production->stitching_status = ($production->total_stitching >= $target) ? "Y" : "N";
         $production->save();
 
+        pressing_machine_allocate::truncate();
+        $stitching_machine = pressing_machine::orderBy("id", "asc")->get();
 
-
-
-        if($request->process =="Move to Pressing")
-        {
-            $production = stitching::find($request->stitching_id);
-            $production->stitching_status="Y";
-            $production->save();
-
-            pressing_machine_allocate::truncate();
-            $stitching_machine=pressing_machine::orderBy("id","asc")->get();
-
-            foreach ($stitching_machine as $stitchMachine) {
-
-                $stitch=pressing::where("machine",$stitchMachine->id)
-                    ->where("pressing_status",'=','N')
-                    ->sum("nos");
-                $stitching_machine_allocate=new pressing_machine_allocate();
-                $stitching_machine_allocate->machine=$stitchMachine->id;
-                $stitching_machine_allocate->total_socks=$stitch ?? 0;
-                $stitching_machine_allocate->save();
-            }
-            $minimumSocksMachine=pressing_machine_allocate::select("machine")->first()->min('total_socks');
-
-            $machine=pressing_machine_allocate::where("total_socks",$minimumSocksMachine)->first();
-
-
-            $stitch=new pressing();
-            $stitch->stitching_id=$production->id;
-            $stitch->machine=$machine->machine;
-            $stitch->batch_no=$production->batch_no;
-            $stitch->batch=$production->batch;
-            $stitch->customer=$production->customer;
-            $stitch->finish_product=$production->finish_product;
-            $stitch->nos=$request->total_stitching;
-            $stitch->size=$production->size;
-            $stitch->total_material=$request->total_stitching_material_used;
-            $stitch->timestamp=date('d-m-Y h:i:s a');
-            $stitch->user_id=Session::get("user_id");
-            $stitch->status="Created";
-            $stitch->pressing_status="N";
-            $stitch->save();
-
-            $url = route('admin.production.stitching.dashboard');
-            return redirect()->to($url)->with("message","This Batch send to Pressing Department");
-        }else{
-            $url = route('admin.production.stitching.move',['batch_no' => $request->batch_no]);
-            return redirect()->to($url);
+        foreach ($stitching_machine as $stitchMachine) {
+            $stitch = pressing::where("machine", $stitchMachine->id)
+                ->where("pressing_status", '=', 'N')
+                ->sum("nos");
+            $stitching_machine_allocate = new pressing_machine_allocate();
+            $stitching_machine_allocate->machine = $stitchMachine->id;
+            $stitching_machine_allocate->total_socks = $stitch ?? 0;
+            $stitching_machine_allocate->save();
         }
+        $minimumSocksMachine = pressing_machine_allocate::select("machine")->first()->min('total_socks');
+        $machine = pressing_machine_allocate::where("total_socks", $minimumSocksMachine)->first();
+
+        $stitch = new pressing();
+        $stitch->stitching_id = $production->id;
+        $stitch->machine = $machine->machine;
+        // Suffixed with this daily entry's batch_record id so each day's
+        // forward from this stitching row stays individually addressable -
+        // pressing.batch_no is used as the lookup key on the pressing
+        // screens, and would otherwise collide across multiple forwards
+        // from one stitching row.
+        $stitch->batch_no = $production->batch_no . '-' . $batch_record->id;
+        $stitch->batch = $production->batch;
+        $stitch->customer = $production->customer;
+        $stitch->finish_product = $production->finish_product;
+        $stitch->nos = $delta;
+        $stitch->size = $production->size;
+        $stitch->total_material = $request->total_stitching_material_used;
+        $stitch->timestamp = date('d-m-Y h:i:s a');
+        $stitch->user_id = Session::get("user_id");
+        $stitch->status = "Created";
+        $stitch->pressing_status = "N";
+        $stitch->save();
+
+        $url = route('admin.production.stitching.move', ['batch_no' => $request->batch_no]);
+        $message = $production->stitching_status == "Y"
+            ? "Batch fully stitched and forwarded to Pressing"
+            : "Today's stitching forwarded to Pressing";
+        return redirect()->to($url)->with("message", $message);
     }
 
     function move_to_washing(Request $request)
     {
-        $production = washing::select("washing.*",'customers.customer_name', "washing_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
+        $production = washing::select("washing.*",'customers.customer_name', "washing_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image", "production.id as production_pk")
             ->leftJoin("washing_machine", "washing_machine.id", "washing.machine")
             ->leftJoin("product", "product.id", "washing.finish_product")
             ->leftJoin("customers", "customers.id", "washing.customer")
+            // production_material is stored once per production batch, keyed on
+            // the original (unsuffixed) batch_no - washing.batch_no is now a
+            // per-daily-forward value, so resolve back to the production row via
+            // the "batch" int column instead, which stays unchanged end to end.
+            ->leftJoin("production", "production.batch", "washing.batch")
             ->orderBy("washing.id", "desc")
             ->where("washing.batch_no", $request->batch_no)
             ->first();
@@ -807,7 +905,7 @@ class ProductionController extends Controller
         $production_material = production_material::select("production_material.*", "product.product_name", "product.value1", "product.value2", "uom.uom_name")
             ->leftJoin("product", "product.id", "production_material.required_material")
             ->leftJoin("uom", "uom.id", "product.uom")
-            ->where("production_material.batch_no", $production->batch_no)
+            ->where("production_material.production_id", $production->production_pk)
             ->get();
 
         $formula_mst_item=formula_mst_item::where("size",$production->size)->get();
@@ -840,11 +938,21 @@ class ProductionController extends Controller
 
     function move_to_pressing(Request $request)
     {
-        $production = pressing::select("pressing.*","stitching.total_stitching_material_used as actualMaterialUsed", 'customers.customer_name', "pressing_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
+        $production = pressing::select("pressing.*","stitching.total_stitching_material_used as actualMaterialUsed", "production.id as production_pk", 'customers.customer_name', "pressing_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("pressing_machine", "pressing_machine.id", "pressing.machine")
             ->leftJoin("product", "product.id", "pressing.finish_product")
             ->leftJoin("customers", "customers.id", "pressing.customer")
-            ->leftJoin("stitching", "stitching.batch_no", "pressing.batch_no")
+            // Direct FK, not batch_no: pressing.stitching_id already points at
+            // the exact stitching row this pressing row was forwarded from.
+            // A stitching.batch_no==pressing.batch_no join would either miss
+            // (batch_no is now suffixed per daily forward) or fan out (many
+            // stitching rows can share the same "batch" grouping value).
+            ->leftJoin("stitching", "stitching.id", "pressing.stitching_id")
+            // production_material is stored once per production batch, keyed on
+            // the original (unsuffixed) batch_no - pressing.batch_no is now a
+            // per-daily-forward value, so resolve back to the production row via
+            // the "batch" int column instead, which stays unchanged end to end.
+            ->leftJoin("production", "production.batch", "pressing.batch")
             ->orderBy("pressing.id", "desc")
             ->where("pressing.batch_no", $request->batch_no)
             ->first();
@@ -852,7 +960,7 @@ class ProductionController extends Controller
         $production_material = production_material::select("production_material.*", "product.product_name", "product.value1", "product.value2", "uom.uom_name")
             ->leftJoin("product", "product.id", "production_material.required_material")
             ->leftJoin("uom", "uom.id", "product.uom")
-            ->where("production_material.batch_no", $production->batch_no)
+            ->where("production_material.production_id", $production->production_pk)
             ->get();
 
         $formula_mst_item=formula_mst_item::where("size",$production->size)->get();
@@ -884,19 +992,23 @@ class ProductionController extends Controller
 
     function move_to_packaging(Request $request)
     {
-        $production = packaging::select("packaging.*","production.total_material as actualMaterialUsed", 'customers.customer_name', "packaging_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
+        $production = packaging::select("packaging.*","production.total_material as actualMaterialUsed", "production.id as production_pk", 'customers.customer_name', "packaging_machine.machine_name", "product.product_name", "product.value1", "product.value2", "product.product_image")
             ->leftJoin("packaging_machine", "packaging_machine.id", "packaging.machine")
             ->leftJoin("product", "product.id", "packaging.finish_product")
             ->leftJoin("customers", "customers.id", "packaging.customer")
-            ->leftJoin("production", "production.batch_no", "packaging.batch_no")
+            ->leftJoin("production", "production.batch", "packaging.batch")
             ->orderBy("packaging.id", "desc")
             ->where("packaging.batch_no", $request->batch_no)
             ->first();
 
+        // production_material is stored once per production batch, keyed on the
+        // original (unsuffixed) batch_no - packaging.batch_no is now a
+        // per-daily-forward value, so resolve back to the production row via
+        // the "batch" int column joined above instead.
         $production_material = production_material::select("production_material.*", "product.product_name", "product.value1", "product.value2", "uom.uom_name")
             ->leftJoin("product", "product.id", "production_material.required_material")
             ->leftJoin("uom", "uom.id", "product.uom")
-            ->where("production_material.batch_no", $production->batch_no)
+            ->where("production_material.production_id", $production->production_pk)
             ->get();
 
         $formula_mst_item=formula_mst_item::where("size",$production->size)->get();
@@ -932,7 +1044,7 @@ class ProductionController extends Controller
             ->leftJoin("stitching_machine", "stitching_machine.id", "stitching.machine")
             ->leftJoin("product", "product.id", "stitching.finish_product")
             ->leftJoin("customers", "customers.id", "stitching.customer")
-            ->leftJoin("production", "production.batch_no", "stitching.batch_no")
+            ->leftJoin("production", "production.batch", "stitching.batch")
             ->orderBy("stitching.id", "desc")
             ->where("stitching.batch_no", $request->batch_no)
             ->first();
@@ -940,7 +1052,7 @@ class ProductionController extends Controller
         $production_material = production_material::select("production_material.*", "product.product_name", "product.value1", "product.value2", "uom.uom_name")
             ->leftJoin("product", "product.id", "production_material.required_material")
             ->leftJoin("uom", "uom.id", "product.uom")
-            ->where("production_material.production_id", $production->id)
+            ->where("production_material.production_id", $production->production_id)
             ->get();
 
         $formula_mst_item=formula_mst_item::where("size",$production->size)->get();
@@ -1025,8 +1137,44 @@ class ProductionController extends Controller
 
     function production_record(Request $request)
     {
-       // dd($request->all());
         date_default_timezone_set("Asia/Kolkata");
+
+        $production = production::find($request->production_id);
+
+        // Start/Pause/End are pure shift-status pings - log them but never
+        // touch the batch's accumulated quantities, since the qty inputs are
+        // blank on these clicks (they live in the same form, hidden).
+        if (in_array($request->process, ["start", "pause", "end"])) {
+            $batch_record = new batch_record();
+            $batch_record->production_id = $request->production_id;
+            $batch_record->batch_no = $request->batch_no;
+            $batch_record->process = $request->process;
+            $batch_record->remarks = $request->remarks;
+            $batch_record->time = date('h:i:s a');
+            $batch_record->date = date('Y-m-d');
+            $batch_record->operater_name = Session::get("user_id");
+            $batch_record->save();
+
+            $production->status = $request->process;
+            $production->save();
+
+            $url = route('admin.production.details', ['batch_no' => $request->batch_no]);
+            return redirect()->to($url);
+        }
+
+        // Day-by-day production entry: $request->total_production etc. are
+        // TODAY's qty, not the batch's final total. Each day's amount is
+        // accumulated onto the batch and forwarded to Stitching immediately
+        // as its own row, rather than held back until the whole batch is cut.
+        $delta = (float) $request->total_production;
+        $alreadyProduced = (float) $production->total_production;
+        $target = (float) $production->nos;
+        $remaining = $target - $alreadyProduced;
+
+        if ($delta <= 0 || $delta > $remaining) {
+            $url = route('admin.production.details', ['batch_no' => $request->batch_no]);
+            return redirect()->to($url)->with("message", "Enter a qty between 1 and the remaining " . $remaining);
+        }
 
         $batch_record = new batch_record();
         $batch_record->production_id = $request->production_id;
@@ -1042,75 +1190,59 @@ class ProductionController extends Controller
         $batch_record->total_wastage_used = $request->total_wastage_used;
         $batch_record->save();
 
-
-        $production = production::find($request->production_id);
         $production->status = $request->process;
         $production->complete_time = date('d-m-Y h:i:s a');
-        $production->total_production = $request->total_production;
-        $production->total_wastage_nos = $request->total_wastage_nos;
-        $production->total_material_used = $request->total_material_used;
-        $production->total_wastage_used = $request->total_wastage_used;
+        $production->total_production = $alreadyProduced + $delta;
+        $production->total_wastage_nos = (float) $production->total_wastage_nos + (float) $request->total_wastage_nos;
+        $production->total_material_used = (float) $production->total_material_used + (float) $request->total_material_used;
+        $production->total_wastage_used = (float) $production->total_wastage_used + (float) $request->total_wastage_used;
         $production->finished_user = Session::get("user_id");
         $production->remarks = $request->remarks;
-        $production->production_status="N";
+        $production->production_status = ($production->total_production >= $target) ? "Y" : "N";
         $production->save();
 
+        stitching_machine_allocate::truncate();
+        $stitching_machine = stitching_machine::orderBy("id", "asc")->get();
 
-
-
-        if($request->process =="Move to Stitching")
-        {
-            $production = production::find($request->production_id);
-            $production->production_status="Y";
-            $production->save();
-
-            if($production->save())
-            {
-                stitching_machine_allocate::truncate();
-                $stitching_machine=stitching_machine::orderBy("id","asc")->get();
-
-                $temp=array();
-                $m=array();
-                foreach ($stitching_machine as $stitchMachine) {
-                    echo $stitchMachine->id."<br>";
-
-                    $stitch=stitching::where("machine",$stitchMachine->id)
-                        ->Where("stitching_status","=","N")
-                        ->sum("nos");
-                    $stitching_machine_allocate=new stitching_machine_allocate();
-                    $stitching_machine_allocate->machine=$stitchMachine->id;
-                    $stitching_machine_allocate->total_socks=$stitch ?? 0;
-                    $stitching_machine_allocate->save();
-                }
-
-                $minimumSocksMachine=stitching_machine_allocate::select("machine")->first()->min('total_socks');
-
-                $machine=stitching_machine_allocate::where("total_socks",$minimumSocksMachine)->first();
-
-
-                $stitch=new stitching();
-                $stitch->production_id=$production->id;
-                $stitch->machine=$machine->machine;
-                $stitch->batch_no=$production->batch_no;
-                $stitch->batch=$production->batch;
-                $stitch->customer=$production->customer;
-                $stitch->finish_product=$production->finish_product;
-                $stitch->nos=$production->total_production;
-                $stitch->size=$production->size;
-                $stitch->total_material=$production->total_material_used;
-                $stitch->timestamp=date('d-m-Y h:i:s a');
-                $stitch->user_id=Session::get("user_id");
-                $stitch->status="Created";
-                $stitch->stitching_status="N";
-                $stitch->save();
-            }
-            return redirect()->route("admin.production.dashboard")->with("message","This Batch Production Complete");
-        }else{
-            $url = route('admin.production.details',['batch_no' => $request->batch_no]);
-            return redirect()->to($url);
+        foreach ($stitching_machine as $stitchMachine) {
+            $stitch = stitching::where("machine", $stitchMachine->id)
+                ->Where("stitching_status", "=", "N")
+                ->sum("nos");
+            $stitching_machine_allocate = new stitching_machine_allocate();
+            $stitching_machine_allocate->machine = $stitchMachine->id;
+            $stitching_machine_allocate->total_socks = $stitch ?? 0;
+            $stitching_machine_allocate->save();
         }
 
+        $minimumSocksMachine = stitching_machine_allocate::select("machine")->first()->min('total_socks');
+        $machine = stitching_machine_allocate::where("total_socks", $minimumSocksMachine)->first();
 
+        $stitch = new stitching();
+        $stitch->production_id = $production->id;
+        $stitch->machine = $machine->machine;
+        // Suffixed with this daily entry's batch_record id so each day's
+        // forward stays individually addressable - stitching.batch_no is
+        // used as the lookup key throughout the stitching/pressing/packaging
+        // screens, and would otherwise collide across multiple forwards from
+        // one production batch.
+        $stitch->batch_no = $production->batch_no . '-' . $batch_record->id;
+        $stitch->batch = $production->batch;
+        $stitch->customer = $production->customer;
+        $stitch->finish_product = $production->finish_product;
+        $stitch->nos = $delta;
+        $stitch->size = $production->size;
+        $stitch->total_material = $request->total_material_used;
+        $stitch->timestamp = date('d-m-Y h:i:s a');
+        $stitch->user_id = Session::get("user_id");
+        $stitch->status = "Created";
+        $stitch->stitching_status = "N";
+        $stitch->save();
+
+        $url = route('admin.production.details', ['batch_no' => $request->batch_no]);
+        $message = $production->production_status == "Y"
+            ? "Batch fully produced and forwarded to Stitching"
+            : "Today's production forwarded to Stitching";
+        return redirect()->to($url)->with("message", $message);
     }
 
     function pressing_all(Request $request)
