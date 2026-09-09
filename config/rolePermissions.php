@@ -264,5 +264,13 @@ return [
             'View' => 'company_view',
             'Delete' => 'company_delete'
         ]
+    ],
+    'Mentoring Program' => [
+        'Mentoring Program' => [
+            'Create' => 'mentoring_program_create',
+            'Update' => 'mentoring_program_update',
+            'View' => 'mentoring_program_view',
+            'Delete' => 'mentoring_program_delete',
+        ]
     ]
 ];
