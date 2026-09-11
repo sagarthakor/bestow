@@ -3,12 +3,10 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-use Sofa\Eloquence\Eloquence;
 
 class BuckleFormulaMst extends Model
 {
     public $table = "buckle_formula_mst";
-    use Eloquence;
 
     public function product_item(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {

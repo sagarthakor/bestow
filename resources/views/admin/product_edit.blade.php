@@ -242,6 +242,13 @@
 
                                                         <div class="col-md-3">
                                                             <div class="form-group">
+                                                                <label class="control-label">MRP</label>
+                                                                {{Form::text('mrp',null,['class'=>'form-control','placeholder'=>'MRP (shown struck-through on website)'])}}
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-3">
+                                                            <div class="form-group">
                                                                 <label class="control-label">Selling Price <span style="color:red">*</span></label>
                                                                 {{Form::text('price',null,['class'=>'form-control','placeholder'=>'unit price'])}}
                                                             </div>
@@ -480,14 +487,20 @@
                 });
             });
 
+            var editorImageUploadConfig = {
+                ckfinder: {
+                    uploadUrl: "{{ route('admin.editor.image.upload') }}"
+                }
+            };
+
             ClassicEditor
-                .create(document.querySelector('#description'))
+                .create(document.querySelector('#description'), editorImageUploadConfig)
                 .catch(error => {
                     console.error(error);
                 });
 
             ClassicEditor
-                .create(document.querySelector('#product_description'))
+                .create(document.querySelector('#product_description'), editorImageUploadConfig)
                 .catch(error => {
                     console.error(error);
                 });

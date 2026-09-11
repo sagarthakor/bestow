@@ -113,6 +113,9 @@
                                     <th>Finish Product</th>
                                     <th>Nos</th>
                                     <th>Size</th>
+                                    <th>Completed</th>
+                                    <th>Wastage</th>
+                                    <th>Remaining</th>
                                     <th>Status</th>
                                     <th>Action</th>
                                 </tr>
@@ -139,6 +142,9 @@
                                         <td  style="vertical-align: top;text-align: center"><x-product-name :row="$data" /></td>
                                         <td  style="vertical-align: top;text-align: center">{{$data->nos}}</td>
                                         <td  style="vertical-align: top;text-align: center;width: 10%">{{$data->size}}</td>
+                                        <td  style="vertical-align: top;text-align: center">{{$data->total_stitching}}</td>
+                                        <td  style="vertical-align: top;text-align: center">{{$data->total_stitching_wastage_nos}}</td>
+                                        <td  style="vertical-align: top;text-align: center">{{(float)$data->nos - (float)$data->total_stitching - (float)$data->total_stitching_wastage_nos}}</td>
                                         <td  style="vertical-align: top;text-align: center;width: 10%">@if($data->stitching_status=="Y") <i class="mdi mdi-close-box" style="color: green"></i> Complete @else Pending @endif</td>
                                         <td>
                                             <a class="btn btn-primary btn-sm" href="{{route("admin.production.stitching.move",['batch_no' => $data->batch_no] )}}">View</a>

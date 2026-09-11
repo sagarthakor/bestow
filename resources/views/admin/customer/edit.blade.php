@@ -152,6 +152,19 @@
                                                     </div>
 
                                                 </div>
+
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Website Login Password</label>
+                                                            {{Form::password('new_password',['class'=>'form-control'.$errors->first('new_password',' error'),'placeholder'=>'Leave blank to keep current password','autocomplete'=>'new-password'])}}
+                                                            <small style="color:#6c757d;">Sets this customer's storefront login password. Leave blank to leave it unchanged.</small>
+                                                            @if($errors->has('new_password'))
+                                                                <p class="help-block">{{ $errors->first('new_password') }}</p>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
                                                 <div class="row">
 
                                                     <div class="col-lg-6">

@@ -281,6 +281,9 @@ Route::middleware(['auth'])->group(function () {
     /* Photo of one picked product/size - used by belt cutting, the formulas and production */
     Route::get('product/photo', 'ProductController@product_photo')->name('admin.product.photo');
 
+    /* Image upload endpoint used by the CKEditor image button on description/notes fields */
+    Route::post('editor/image/upload', 'ProductController@editor_image_upload')->name('admin.editor.image.upload');
+
 
     Route::get("material/list","AdminController@material_list")->name("admin.material.list");
 
@@ -910,6 +913,18 @@ Route::middleware(['auth'])->group(function () {
         Route::get('inward-add',"PurchaseController@inward_add")->name('admin.stock.inward.add');
         Route::post("inward/save",['as'=>'post.stock_insert','uses'=>"InwardController@inward_save"]);
 
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | ✅ OUTWARD STOCK (manual stock adjustment)
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('outward-stock')->name('admin.outward.')->group(function () {
+        Route::get('/list', 'OutwardStockController@outward_list')->name('list');
+        Route::get('/add', 'OutwardStockController@outward_add')->name('add');
+        Route::post('/store', 'OutwardStockController@outward_store')->name('store');
+        Route::post('/cancel', 'OutwardStockController@outward_cancel')->name('cancel');
     });
 
     /*

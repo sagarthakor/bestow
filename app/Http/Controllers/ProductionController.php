@@ -30,6 +30,7 @@ use App\washing_machine;
 use App\washing_machine_allocate;
 use Illuminate\Http\Request;
 use App\production;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Session;
 use App\batch_record;
@@ -84,14 +85,14 @@ class ProductionController extends Controller
     {
         pressing::whereId($request->id)->delete();
 
-        return redirect()->route('pressing.dashboard')->with('message','pressing delete successfully');
+        return redirect()->route('admin.production.pressing.dashboard')->with('message','pressing delete successfully');
     }
 
     public function washing_delete(Request $request)
     {
         washing::whereId($request->id)->delete();
 
-        return redirect()->route('washing.dashboard')->with('message','washing delete successfully');
+        return redirect()->route('admin.production.washing.dashboard')->with('message','washing delete successfully');
     }
 
     function pressing_pending(Request $request)
@@ -478,7 +479,7 @@ class ProductionController extends Controller
             $batch_record->remarks = $request->remarks;
             $batch_record->time = date('h:i:s a');
             $batch_record->date = date('Y-m-d');
-            $batch_record->operater_name = Session::get("user_id");
+            $batch_record->operater_name = Auth::user()->id;
             $batch_record->save();
 
             $production->status = $request->process;
@@ -493,13 +494,19 @@ class ProductionController extends Controller
         // onto this washing row and sent to Packaging immediately as its own
         // row.
         $delta = (float) $request->total_washing;
+        $todayWastage = (float) $request->total_washing_wastage_nos;
         $alreadyWashed = (float) $production->total_washing;
+        $alreadyWastage = (float) $production->total_washing_wastage_nos;
         $target = (float) $production->nos;
-        $remaining = $target - $alreadyWashed;
+        // Wastage nos are pulled from the same batch pool as completed nos,
+        // so they must count against the remaining qty too - otherwise
+        // completed + wastage can exceed the batch's total nos and the
+        // batch never reaches washing_status "Y".
+        $remaining = $target - $alreadyWashed - $alreadyWastage;
 
-        if ($delta <= 0 || $delta > $remaining) {
+        if ($delta <= 0 || ($delta + $todayWastage) > $remaining) {
             $url = route('admin.production.washing.move', ['batch_no' => $request->batch_no]);
-            return redirect()->to($url)->with("message", "Enter a qty between 1 and the remaining " . $remaining);
+            return redirect()->to($url)->with("message", "Enter a qty (plus wastage) between 1 and the remaining " . $remaining);
         }
 
         $batch_record = new washing_batch_record();
@@ -509,7 +516,7 @@ class ProductionController extends Controller
         $batch_record->remarks = $request->remarks;
         $batch_record->time = date('h:i:s a');
         $batch_record->date = date('Y-m-d');
-        $batch_record->operater_name = Session::get("user_id");
+        $batch_record->operater_name = Auth::user()->id;
         $batch_record->total_washing = $request->total_washing;
         $batch_record->total_washing_wastage_nos = $request->total_washing_wastage_nos;
         $batch_record->total_washing_material_used = $request->total_washing_material_used;
@@ -522,9 +529,9 @@ class ProductionController extends Controller
         $production->total_washing_wastage_nos = (float) $production->total_washing_wastage_nos + (float) $request->total_washing_wastage_nos;
         $production->total_washing_material_used = (float) $production->total_washing_material_used + (float) $request->total_washing_material_used;
         $production->total_washing_wastage_material = (float) $production->total_washing_wastage_material + (float) $request->total_washing_wastage_material;
-        $production->finished_user = Session::get("user_id");
+        $production->finished_user = Auth::user()->id;
         $production->remarks = $request->remarks;
-        $production->washing_status = ($production->total_washing >= $target) ? "Y" : "N";
+        $production->washing_status = (($production->total_washing + $production->total_washing_wastage_nos) >= $target) ? "Y" : "N";
         $production->save();
 
         packaging_machine_allocate::truncate();
@@ -557,7 +564,7 @@ class ProductionController extends Controller
         $stitch->size = $production->size;
         $stitch->total_material = $request->total_washing_material_used;
         $stitch->timestamp = date('d-m-Y h:i:s a');
-        $stitch->user_id = Session::get("user_id");
+        $stitch->user_id = Auth::user()->id;
         $stitch->status = "Created";
         $stitch->packaging_status = "N";
         $stitch->save();
@@ -585,7 +592,7 @@ class ProductionController extends Controller
             $batch_record->remarks = $request->remarks;
             $batch_record->time = date('h:i:s a');
             $batch_record->date = date('Y-m-d');
-            $batch_record->operater_name = Session::get("user_id");
+            $batch_record->operater_name = Auth::user()->id;
             $batch_record->save();
 
             $production->status = $request->process;
@@ -600,13 +607,19 @@ class ProductionController extends Controller
         // stage, so each day's packaged qty is inward to stock immediately
         // rather than held back until the whole batch is packaged.
         $delta = (float) $request->total_packaging;
+        $todayWastage = (float) $request->total_packaging_wastage_nos;
         $alreadyPackaged = (float) $production->total_packaging;
+        $alreadyWastage = (float) $production->total_packaging_wastage_nos;
         $target = (float) $production->nos;
-        $remaining = $target - $alreadyPackaged;
+        // Wastage nos are pulled from the same batch pool as completed nos,
+        // so they must count against the remaining qty too - otherwise
+        // completed + wastage can exceed the batch's total nos and the
+        // batch never reaches packaging_status "Y".
+        $remaining = $target - $alreadyPackaged - $alreadyWastage;
 
-        if ($delta <= 0 || $delta > $remaining) {
+        if ($delta <= 0 || ($delta + $todayWastage) > $remaining) {
             $url = route('admin.production.packaging.move', ['batch_no' => $request->batch_no]);
-            return redirect()->to($url)->with("message", "Enter a qty between 1 and the remaining " . $remaining);
+            return redirect()->to($url)->with("message", "Enter a qty (plus wastage) between 1 and the remaining " . $remaining);
         }
 
         $batch_record = new packaging_batch_record();
@@ -616,7 +629,7 @@ class ProductionController extends Controller
         $batch_record->remarks = $request->remarks;
         $batch_record->time = date('h:i:s a');
         $batch_record->date = date('Y-m-d');
-        $batch_record->operater_name = Session::get("user_id");
+        $batch_record->operater_name = Auth::user()->id;
         $batch_record->total_packaging = $request->total_packaging;
         $batch_record->total_packaging_wastage_nos = $request->total_packaging_wastage_nos;
         $batch_record->total_packaging_material_used = $request->total_packaging_material_used;
@@ -629,9 +642,9 @@ class ProductionController extends Controller
         $production->total_packaging_wastage_nos = (float) $production->total_packaging_wastage_nos + (float) $request->total_packaging_wastage_nos;
         $production->total_packaging_material_used = (float) $production->total_packaging_material_used + (float) $request->total_packaging_material_used;
         $production->total_packaging_wastage_material = (float) $production->total_packaging_wastage_material + (float) $request->total_packaging_wastage_material;
-        $production->finished_user = Session::get("user_id");
+        $production->finished_user = Auth::user()->id;
         $production->remarks = $request->remarks;
-        $production->packaging_status = ($production->total_packaging >= $target) ? "Y" : "N";
+        $production->packaging_status = (($production->total_packaging + $production->total_packaging_wastage_nos) >= $target) ? "Y" : "N";
         $production->save();
 
         $checkproduct = stock_status::where("product", $production->finish_product)->first();
@@ -642,7 +655,7 @@ class ProductionController extends Controller
             $status->qty = $delta;
             $status->particular = "Inward From Production Batch : " . $request->batch_no;
             $status->inward_date = date('Y-m-d');
-            $status->user_id = Session::get("user_id");
+            $status->user_id = Auth::user()->id;
             $status->created_time = date('d-m-Y h:i:s a');
             $status->save();
         } else {
@@ -660,7 +673,7 @@ class ProductionController extends Controller
         $book->remaining_qty = $delta;
         $book->particular = "Inward From Production Batch : " . $request->batch_no;
         $book->created_time = date('d-m-Y h:i:s a');
-        $book->user_id = Session::get("user_id");
+        $book->user_id = Auth::user()->id;
         $book->save();
 
         $url = route('admin.production.packaging.move', ['batch_no' => $request->batch_no]);
@@ -685,7 +698,7 @@ class ProductionController extends Controller
             $batch_record->remarks = $request->remarks;
             $batch_record->time = date('h:i:s a');
             $batch_record->date = date('Y-m-d');
-            $batch_record->operater_name = Session::get("user_id");
+            $batch_record->operater_name = Auth::user()->id;
             $batch_record->save();
 
             $production->status = $request->process;
@@ -700,13 +713,19 @@ class ProductionController extends Controller
         // accumulated onto this pressing row and sent to Washing immediately
         // as its own row.
         $delta = (float) $request->total_pressing;
+        $todayWastage = (float) $request->total_pressing_wastage_nos;
         $alreadyPressed = (float) $production->total_pressing;
+        $alreadyWastage = (float) $production->total_pressing_wastage_nos;
         $target = (float) $production->nos;
-        $remaining = $target - $alreadyPressed;
+        // Wastage nos are pulled from the same batch pool as completed nos,
+        // so they must count against the remaining qty too - otherwise
+        // completed + wastage can exceed the batch's total nos and the
+        // batch never reaches pressing_status "Y".
+        $remaining = $target - $alreadyPressed - $alreadyWastage;
 
-        if ($delta <= 0 || $delta > $remaining) {
+        if ($delta <= 0 || ($delta + $todayWastage) > $remaining) {
             $url = route('admin.production.pressing.move', ['batch_no' => $request->batch_no]);
-            return redirect()->to($url)->with("message", "Enter a qty between 1 and the remaining " . $remaining);
+            return redirect()->to($url)->with("message", "Enter a qty (plus wastage) between 1 and the remaining " . $remaining);
         }
 
         $batch_record = new pressing_batch_record();
@@ -716,7 +735,7 @@ class ProductionController extends Controller
         $batch_record->remarks = $request->remarks;
         $batch_record->time = date('h:i:s a');
         $batch_record->date = date('Y-m-d');
-        $batch_record->operater_name = Session::get("user_id");
+        $batch_record->operater_name = Auth::user()->id;
         $batch_record->total_pressing = $request->total_pressing;
         $batch_record->total_pressing_wastage_nos = $request->total_pressing_wastage_nos;
         $batch_record->total_pressing_material_used = $request->total_pressing_material_used;
@@ -729,9 +748,9 @@ class ProductionController extends Controller
         $production->total_pressing_wastage_nos = (float) $production->total_pressing_wastage_nos + (float) $request->total_pressing_wastage_nos;
         $production->total_pressing_material_used = (float) $production->total_pressing_material_used + (float) $request->total_pressing_material_used;
         $production->total_pressing_wastage_material = (float) $production->total_pressing_wastage_material + (float) $request->total_pressing_wastage_material;
-        $production->finished_user = Session::get("user_id");
+        $production->finished_user = Auth::user()->id;
         $production->remarks = $request->remarks;
-        $production->pressing_status = ($production->total_pressing >= $target) ? "Y" : "N";
+        $production->pressing_status = (($production->total_pressing + $production->total_pressing_wastage_nos) >= $target) ? "Y" : "N";
         $production->save();
 
         washing_machine_allocate::truncate();
@@ -763,7 +782,7 @@ class ProductionController extends Controller
         $stitch->size = $production->size;
         $stitch->total_material = $request->total_pressing_material_used;
         $stitch->timestamp = date('d-m-Y h:i:s a');
-        $stitch->user_id = Session::get("user_id");
+        $stitch->user_id = Auth::user()->id;
         $stitch->status = "Created";
         $stitch->washing_status = "N";
         $stitch->save();
@@ -792,7 +811,7 @@ class ProductionController extends Controller
             $batch_record->remarks = $request->remarks;
             $batch_record->time = date('h:i:s a');
             $batch_record->date = date('Y-m-d');
-            $batch_record->operater_name = Session::get("user_id");
+            $batch_record->operater_name = Auth::user()->id;
             $batch_record->save();
 
             $production->status = $request->process;
@@ -809,13 +828,19 @@ class ProductionController extends Controller
         // batch or a single daily production forward) and sent to Pressing
         // immediately as its own row.
         $delta = (float) $request->total_stitching;
+        $todayWastage = (float) $request->total_stitching_wastage_nos;
         $alreadyStitched = (float) $production->total_stitching;
+        $alreadyWastage = (float) $production->total_stitching_wastage_nos;
         $target = (float) $production->nos;
-        $remaining = $target - $alreadyStitched;
+        // Wastage nos are pulled from the same batch pool as completed nos,
+        // so they must count against the remaining qty too - otherwise
+        // completed + wastage can exceed the batch's total nos and the
+        // batch never reaches stitching_status "Y".
+        $remaining = $target - $alreadyStitched - $alreadyWastage;
 
-        if ($delta <= 0 || $delta > $remaining) {
+        if ($delta <= 0 || ($delta + $todayWastage) > $remaining) {
             $url = route('admin.production.stitching.move', ['batch_no' => $request->batch_no]);
-            return redirect()->to($url)->with("message", "Enter a qty between 1 and the remaining " . $remaining);
+            return redirect()->to($url)->with("message", "Enter a qty (plus wastage) between 1 and the remaining " . $remaining);
         }
 
         $batch_record = new stitching_batch_record();
@@ -826,7 +851,7 @@ class ProductionController extends Controller
         $batch_record->remarks = $request->remarks;
         $batch_record->time = date('h:i:s a');
         $batch_record->date = date('Y-m-d');
-        $batch_record->operater_name = Session::get("user_id");
+        $batch_record->operater_name = Auth::user()->id;
         $batch_record->total_stitching = $request->total_stitching;
         $batch_record->total_stitching_wastage_nos = $request->total_stitching_wastage_nos;
         $batch_record->total_stitching_material_used = $request->total_stitching_material_used;
@@ -839,9 +864,9 @@ class ProductionController extends Controller
         $production->total_stitching_wastage_nos = (float) $production->total_stitching_wastage_nos + (float) $request->total_stitching_wastage_nos;
         $production->total_stitching_material_used = (float) $production->total_stitching_material_used + (float) $request->total_stitching_material_used;
         $production->total_stitching_wastage_material = (float) $production->total_stitching_wastage_material + (float) $request->total_stitching_wastage_material;
-        $production->finished_user = Session::get("user_id");
+        $production->finished_user = Auth::user()->id;
         $production->remarks = $request->remarks;
-        $production->stitching_status = ($production->total_stitching >= $target) ? "Y" : "N";
+        $production->stitching_status = (($production->total_stitching + $production->total_stitching_wastage_nos) >= $target) ? "Y" : "N";
         $production->save();
 
         pressing_machine_allocate::truncate();
@@ -875,7 +900,7 @@ class ProductionController extends Controller
         $stitch->size = $production->size;
         $stitch->total_material = $request->total_stitching_material_used;
         $stitch->timestamp = date('d-m-Y h:i:s a');
-        $stitch->user_id = Session::get("user_id");
+        $stitch->user_id = Auth::user()->id;
         $stitch->status = "Created";
         $stitch->pressing_status = "N";
         $stitch->save();
@@ -910,15 +935,15 @@ class ProductionController extends Controller
 
         $formula_mst_item=formula_mst_item::where("size",$production->size)->get();
 
-        $batch_record = washing_batch_record::select("washing_batch_record.*", "website_user.first_name", "website_user.last_name")
+        $batch_record = washing_batch_record::select("washing_batch_record.*", "users.name")
             ->where("washing_batch_record.washing_id", $production->id)
-            ->leftJoin("website_user", "website_user.id", "washing_batch_record.operater_name")
+            ->leftJoin("users", "users.id", "washing_batch_record.operater_name")
             ->orderBy("washing_batch_record.id", "desc")
             ->get();
 
-            $last_batch_record = washing_batch_record::select("washing_batch_record.*", "website_user.first_name", "website_user.last_name")
+            $last_batch_record = washing_batch_record::select("washing_batch_record.*", "users.name")
             ->where("washing_batch_record.washing_id", $production->id)
-            ->leftJoin("website_user", "website_user.id", "washing_batch_record.operater_name")
+            ->leftJoin("users", "users.id", "washing_batch_record.operater_name")
             ->orderBy("washing_batch_record.id", "desc")
             ->first();
 
@@ -965,15 +990,15 @@ class ProductionController extends Controller
 
         $formula_mst_item=formula_mst_item::where("size",$production->size)->get();
 
-        $batch_record = pressing_batch_record::select("pressing_batch_record.*", "website_user.first_name", "website_user.last_name")
+        $batch_record = pressing_batch_record::select("pressing_batch_record.*", "users.name")
             ->where("pressing_batch_record.pressing_id", $production->id)
-            ->leftJoin("website_user", "website_user.id", "pressing_batch_record.operater_name")
+            ->leftJoin("users", "users.id", "pressing_batch_record.operater_name")
             ->orderBy("pressing_batch_record.id", "desc")
             ->get();
 
-            $last_batch_record = pressing_batch_record::select("pressing_batch_record.*", "website_user.first_name", "website_user.last_name")
+            $last_batch_record = pressing_batch_record::select("pressing_batch_record.*", "users.name")
             ->where("pressing_batch_record.pressing_id", $production->id)
-            ->leftJoin("website_user", "website_user.id", "pressing_batch_record.operater_name")
+            ->leftJoin("users", "users.id", "pressing_batch_record.operater_name")
             ->orderBy("pressing_batch_record.id", "desc")
             ->first();
         //dd($batch_record);
@@ -1013,15 +1038,15 @@ class ProductionController extends Controller
 
         $formula_mst_item=formula_mst_item::where("size",$production->size)->get();
 
-        $batch_record = packaging_batch_record::select("packaging_batch_record.*", "website_user.first_name", "website_user.last_name")
+        $batch_record = packaging_batch_record::select("packaging_batch_record.*", "users.name")
             ->where("packaging_batch_record.packaging_id", $production->id)
-            ->leftJoin("website_user", "website_user.id", "packaging_batch_record.operater_name")
+            ->leftJoin("users", "users.id", "packaging_batch_record.operater_name")
             ->orderBy("packaging_batch_record.id", "desc")
             ->get();
 
-            $last_batch_record = packaging_batch_record::select("packaging_batch_record.*", "website_user.first_name", "website_user.last_name")
+            $last_batch_record = packaging_batch_record::select("packaging_batch_record.*", "users.name")
             ->where("packaging_batch_record.packaging_id", $production->id)
-            ->leftJoin("website_user", "website_user.id", "packaging_batch_record.operater_name")
+            ->leftJoin("users", "users.id", "packaging_batch_record.operater_name")
             ->orderBy("packaging_batch_record.id", "desc")
             ->first();
         //dd($batch_record);
@@ -1057,15 +1082,15 @@ class ProductionController extends Controller
 
         $formula_mst_item=formula_mst_item::where("size",$production->size)->get();
 
-        $batch_record = stitching_batch_record::select("stitching_batch_record.*", "website_user.first_name", "website_user.last_name")
+        $batch_record = stitching_batch_record::select("stitching_batch_record.*", "users.name")
             ->where("stitching_batch_record.stitching_id", $production->id)
-            ->leftJoin("website_user", "website_user.id", "stitching_batch_record.operater_name")
+            ->leftJoin("users", "users.id", "stitching_batch_record.operater_name")
             ->orderBy("stitching_batch_record.id", "desc")
             ->get();
 
-            $last_batch_record = stitching_batch_record::select("stitching_batch_record.*", "website_user.first_name", "website_user.last_name")
+            $last_batch_record = stitching_batch_record::select("stitching_batch_record.*", "users.name")
             ->where("stitching_batch_record.stitching_id", $production->id)
-            ->leftJoin("website_user", "website_user.id", "stitching_batch_record.operater_name")
+            ->leftJoin("users", "users.id", "stitching_batch_record.operater_name")
             ->orderBy("stitching_batch_record.id", "desc")
             ->first();
             if(empty($last_batch_record))
@@ -1086,7 +1111,7 @@ class ProductionController extends Controller
     {
         stitching::where('id', $request->id)->delete();
 
-        return redirect()->route("stitching.dashboard")->with("message","Stitching record deleted");
+        return redirect()->route("admin.production.stitching.dashboard")->with("message","Stitching record deleted");
     }
 
     function getproduct_image(Request $request)
@@ -1152,7 +1177,7 @@ class ProductionController extends Controller
             $batch_record->remarks = $request->remarks;
             $batch_record->time = date('h:i:s a');
             $batch_record->date = date('Y-m-d');
-            $batch_record->operater_name = Session::get("user_id");
+            $batch_record->operater_name = Auth::user()->id;
             $batch_record->save();
 
             $production->status = $request->process;
@@ -1167,13 +1192,19 @@ class ProductionController extends Controller
         // accumulated onto the batch and forwarded to Stitching immediately
         // as its own row, rather than held back until the whole batch is cut.
         $delta = (float) $request->total_production;
+        $todayWastage = (float) $request->total_wastage_nos;
         $alreadyProduced = (float) $production->total_production;
+        $alreadyWastage = (float) $production->total_wastage_nos;
         $target = (float) $production->nos;
-        $remaining = $target - $alreadyProduced;
+        // Wastage nos are pulled from the same batch pool as completed nos,
+        // so they must count against the remaining qty too - otherwise
+        // completed + wastage can exceed the batch's total nos and the
+        // batch never reaches production_status "Y".
+        $remaining = $target - $alreadyProduced - $alreadyWastage;
 
-        if ($delta <= 0 || $delta > $remaining) {
+        if ($delta <= 0 || ($delta + $todayWastage) > $remaining) {
             $url = route('admin.production.details', ['batch_no' => $request->batch_no]);
-            return redirect()->to($url)->with("message", "Enter a qty between 1 and the remaining " . $remaining);
+            return redirect()->to($url)->with("message", "Enter a qty (plus wastage) between 1 and the remaining " . $remaining);
         }
 
         $batch_record = new batch_record();
@@ -1183,7 +1214,7 @@ class ProductionController extends Controller
         $batch_record->remarks = $request->remarks;
         $batch_record->time = date('h:i:s a');
         $batch_record->date = date('Y-m-d');
-        $batch_record->operater_name = Session::get("user_id");
+        $batch_record->operater_name = Auth::user()->id;
         $batch_record->total_production = $request->total_production;
         $batch_record->total_wastage_nos = $request->total_wastage_nos;
         $batch_record->total_material_used = $request->total_material_used;
@@ -1196,9 +1227,9 @@ class ProductionController extends Controller
         $production->total_wastage_nos = (float) $production->total_wastage_nos + (float) $request->total_wastage_nos;
         $production->total_material_used = (float) $production->total_material_used + (float) $request->total_material_used;
         $production->total_wastage_used = (float) $production->total_wastage_used + (float) $request->total_wastage_used;
-        $production->finished_user = Session::get("user_id");
+        $production->finished_user = Auth::user()->id;
         $production->remarks = $request->remarks;
-        $production->production_status = ($production->total_production >= $target) ? "Y" : "N";
+        $production->production_status = (($production->total_production + $production->total_wastage_nos) >= $target) ? "Y" : "N";
         $production->save();
 
         stitching_machine_allocate::truncate();
@@ -1233,7 +1264,7 @@ class ProductionController extends Controller
         $stitch->size = $production->size;
         $stitch->total_material = $request->total_material_used;
         $stitch->timestamp = date('d-m-Y h:i:s a');
-        $stitch->user_id = Session::get("user_id");
+        $stitch->user_id = Auth::user()->id;
         $stitch->status = "Created";
         $stitch->stitching_status = "N";
         $stitch->save();
@@ -1951,15 +1982,15 @@ class ProductionController extends Controller
             ->where("production_material.production_id", $production->id)
             ->get();
 
-        $batch_record = batch_record::select("batch_record.*", "website_user.first_name", "website_user.last_name")
+        $batch_record = batch_record::select("batch_record.*", "users.name")
             ->where("batch_record.production_id", $production->id)
-            ->leftJoin("website_user", "website_user.id", "batch_record.operater_name")
+            ->leftJoin("users", "users.id", "batch_record.operater_name")
             ->orderBy("batch_record.id", "desc")
             ->get();
 
-            $last_batch_record = batch_record::select("batch_record.*", "website_user.first_name", "website_user.last_name")
+            $last_batch_record = batch_record::select("batch_record.*", "users.name")
             ->where("batch_record.production_id", $production->id)
-            ->leftJoin("website_user", "website_user.id", "batch_record.operater_name")
+            ->leftJoin("users", "users.id", "batch_record.operater_name")
             ->orderBy("batch_record.id", "desc")
             ->first();
 
@@ -2017,7 +2048,7 @@ class ProductionController extends Controller
             // Explicit rather than leaning on the column default, so the purchase
             // list can always tell a socks requirement from a belt one.
             $purchase_requirement->module = 'socks';
-            $purchase_requirement->user_id = Session::get("user_id");
+            $purchase_requirement->user_id = Auth::user()->id;
             $purchase_requirement->finish_product = $request->finish_product;
             $purchase_requirement->customer = $request->customer;
             if ($purchase_requirement->save()) {
@@ -2034,7 +2065,7 @@ class ProductionController extends Controller
                             / $this->materialConversionFactor($request->purchase_required_mat[$i]);
                         $requirement->qty = max(ceil(round($shortInStockUnit * 100, 6)) / 100, 0.01);
                         $requirement->timestamp = date('d-m-Y h:i:s a');
-                        $requirement->user_id = Session::get("user_id");
+                        $requirement->user_id = Auth::user()->id;
                         $requirement->save();
                 }
             }
@@ -2070,7 +2101,7 @@ class ProductionController extends Controller
             $production->size = $request->size;
             $production->total_material = $request->total_material;
             $production->timestamp = date('d-m-Y h:i:s a');
-            $production->user_id = Session::get("user_id");
+            $production->user_id = Auth::user()->id;
             $production->finish_product = $request->finish_product;
             $production->customer = $request->customer;
             $production->production_status ="N";
@@ -2086,7 +2117,7 @@ class ProductionController extends Controller
                     $pmaterial->avalible_stock = $request->stock_qty[$i];
                     $pmaterial->need_to_order_stock = $request->required_stock_qty[$i];
                     $pmaterial->timestamp = date('d-m-Y h:i:s a');
-                    $pmaterial->user_id = Session::get("user_id");
+                    $pmaterial->user_id = Auth::user()->id;
                     $pmaterial->finish_product = $request->finish_product;
                     $pmaterial->customer = $request->customer;
                     $pmaterial->save();
@@ -2106,7 +2137,7 @@ class ProductionController extends Controller
                     $book->remaining_qty = $actualqty;
                     $book->particular = "This Material use in Production";
                     $book->created_time = date('d-m-Y h:i:s a');
-                    $book->user_id = Session::get("user_id");
+                    $book->user_id = Auth::user()->id;
                     $book->save();
                 }
 

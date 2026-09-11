@@ -65,6 +65,13 @@ return [
             'Update' => 'service_renewal_update',
             'View' => 'service_renewal_view',
             'Delete' => 'service_renewal_delete'
+        ],
+        'Outward Stock' => [
+            'Create' => 'outward_stock_create',
+            'View' => 'outward_stock_view',
+            // Cancelling puts the qty back into stock, so it is deliberately
+            // not part of Create.
+            'Delete' => 'outward_stock_cancel',
         ]
     ],
     'Sales & Purchase' =>[

@@ -141,9 +141,29 @@ class FormulaController extends Controller
 
     function formula_list(Request $request)
     {
+        $query = formula_mst::with('product_item:id,product_name,value1,value2');
 
-        $data=formula_mst::with('product_item:id,product_name,value1,value2')
-            ->search($request->search,['product_item.product_name', 'nos', 'size'])->paginate(session('records_per_page', 30));
+        // Eloquence's ->search() scored relevance against a threshold rather
+        // than requiring every typed word to match, so a query like "navy
+        // socks white patti" matched on "socks" alone was enough to pull in
+        // every sock formula. Word-by-word AND, same rule as the product
+        // picker (product_search_options), is what the search box actually
+        // needs to narrow down to one formula.
+        $words = preg_split('/\s+/', trim((string) $request->search), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        foreach ($words as $word) {
+            $like = '%' . str_replace(['%', '_'], ['\%', '\_'], $word) . '%';
+            $query->where(function ($q) use ($like) {
+                $q->where('nos', 'like', $like)
+                    ->orWhere('size', 'like', $like)
+                    ->orWhereHas('product_item', function ($p) use ($like) {
+                        $p->where('product_name', 'like', $like)
+                            ->orWhere('value1', 'like', $like)
+                            ->orWhere('value2', 'like', $like);
+                    });
+            });
+        }
+
+        $data = $query->paginate(session('records_per_page', 30))->appends($request->all());
 
         return view("admin.formula.list",compact('data'));
     }

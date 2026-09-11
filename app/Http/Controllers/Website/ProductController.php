@@ -8,37 +8,15 @@ use App\product;
 use App\category;
 use App\subcategory;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = product::query()
-            ->where('status','product')
-            ->selectRaw('
-                MIN(id)            as id,
-                slug,
-                item_code,
-                MIN(product_name)  as product_name,
-                MIN(cover_image)   as cover_image,
-                MIN(product_image) as product_image,
-                MIN(price)         as price,
-                MIN(category)      as category,
-                MIN(subcategory)   as subcategory,
-                MIN(brand)         as brand,
-                MIN(value1)        as value1,
-                MIN(value2)        as value2,
-                (SELECT COUNT(DISTINCT p2.value1)
-                 FROM product p2
-                 WHERE p2.slug      = product.slug
-                   AND p2.item_code = product.item_code
-                   AND p2.status    = "product"
-                   AND p2.value1 IS NOT NULL
-                   AND p2.value1   != ""
-                ) as color_count
-            ')
-            ->groupBy('slug', 'item_code');
+        $query = product::query()->where('status','product');
 
         /* =======================
    KEYWORD SEARCH
@@ -130,17 +108,47 @@ class ProductController extends Controller
         }
 
         /* =======================
+           GROUP INTO ONE CARD PER PRODUCT FAMILY
+           `slug` isn't a reliable "one product" key on its own (see productFamilyKey()
+           for why — legacy imports sometimes give each size/color its own slug), so collapse
+           matching rows here the same way the details page does, instead of a SQL GROUP BY.
+        ======================= */
+        $rows = $query->get();
+
+        $cards = $rows->groupBy(fn($r) => $this->productFamilyKey($r))->map(function ($members) {
+            $rep = $members->sortBy('id')->first();
+            $cheapest = $members->sortBy('price')->first();
+            $rep->price = $cheapest->price;
+            $rep->mrp   = $cheapest->mrp;
+            $rep->product_image = $members->pluck('product_image')->first(fn($v) => !empty($v)) ?: $rep->product_image;
+            $rep->color_count = $members->pluck('value1')
+                ->map(fn($v) => trim($v ?? ''))
+                ->filter(fn($v) => $v !== '')
+                ->unique(fn($v) => strtolower($v))
+                ->count();
+            return $rep;
+        })->values();
+
+        /* =======================
            SORT
         ======================= */
         if ($request->sort == 'price_low') {
-            $query->orderBy('price','asc');
+            $cards = $cards->sortBy('price')->values();
         } elseif ($request->sort == 'price_high') {
-            $query->orderBy('price','desc');
+            $cards = $cards->sortByDesc('price')->values();
         } else {
-            $query->orderBy('id','desc');
+            $cards = $cards->sortByDesc('id')->values();
         }
 
-        $products = $query->paginate(50);
+        $perPage = 50;
+        $page = LengthAwarePaginator::resolveCurrentPage();
+        $products = new LengthAwarePaginator(
+            $cards->forPage($page, $perPage)->values(),
+            $cards->count(),
+            $perPage,
+            $page,
+            ['path' => LengthAwarePaginator::resolveCurrentPath()]
+        );
 
         $colors = product::where('status', 'product')
             ->whereNotNull('value1')->where('value1', '!=', '')
@@ -221,18 +229,38 @@ class ProductController extends Controller
         }
         if (!$anchor) abort(404);
 
-        // Always scope variants to same slug + item_code so unrelated
-        // products sharing item_code don't bleed into this product's colors/sizes.
-        $allVariants = product::where('status','product')
-            ->where('slug', $anchor->slug)
+        // Scope variants to the same product family. `slug` + item_code alone is not always
+        // reliable — legacy bulk imports left some unrelated products sharing an identical
+        // slug for the same item_code, which merges their sizes/colors together on this page
+        // (e.g. item_code "07": a "HALF TERRY" sock and several completely different sock
+        // designs all share one slug). Narrow that down using a normalized product name (any
+        // trailing "-{color}-{size}" or "-{size}" the import baked onto the name is stripped
+        // before comparing), which separates those unrelated products correctly.
+        //
+        // Some other legacy imports use a naming style this can't parse (e.g. a leading size
+        // index like "1 201 BLACK SOCKS..", "2 201 BLACK SOCKS.."), where every row would look
+        // like its own unique product and the narrowed match would wrongly find nothing else.
+        // When that happens (narrowed match count <= 1) fall back to the original, wider
+        // slug + item_code match so genuinely-fine product families are never broken.
+        $itemCodeCandidates = product::where('status','product')
             ->where('item_code', $anchor->item_code)
             ->get();
 
-        // Build color groups — each group also carries the representative product id for URL building
+        $anchorKey = $this->productFamilyKey($anchor);
+        $allVariants = $itemCodeCandidates->filter(fn($v) => $this->productFamilyKey($v) === $anchorKey)->values();
+
+        if ($allVariants->count() <= 1) {
+            $allVariants = $itemCodeCandidates->where('slug', $anchor->slug)->values();
+        }
+
+        // Build color groups — each group also carries the representative product id for URL building.
+        // $allVariants is already scoped to one product family (see productFamilyKey() above), so when
+        // color is blank every row here belongs in the same single "no color" bucket — falling back to
+        // $v->slug here would wrongly re-split them, since sibling sizes can carry different slugs.
         $colorGroups = [];
         foreach ($allVariants as $v) {
             $color = trim($v->value1 ?? '');
-            $groupKey = $color !== '' ? $color : $v->slug;
+            $groupKey = $color !== '' ? $color : '__default__';
 
             if (!isset($colorGroups[$groupKey])) {
                 $colorGroups[$groupKey] = [
@@ -240,6 +268,8 @@ class ProductController extends Controller
                     'color' => $color !== '' ? $color : $v->product_name,
                     'slug'  => $v->slug,
                     'image' => $v->cover_image ?: $v->product_image,
+                    'price' => $v->price,
+                    'mrp'   => $v->mrp,
                     'sizes' => [],
                 ];
             }
@@ -248,6 +278,7 @@ class ProductController extends Controller
                     'id'    => $v->id,
                     'size'  => $v->value2,
                     'price' => $v->price,
+                    'mrp'   => $v->mrp,
                     'image' => $v->product_image,
                 ];
             }
@@ -274,7 +305,10 @@ class ProductController extends Controller
         if ($anchorColorVal !== '') {
             $selectedColor = $anchorColorVal;
         } else {
-            $matchingGroup = collect($colorGroups)->firstWhere('slug', $selectedVariant->slug);
+            $matchingGroup = collect($colorGroups)->first(function ($grp) use ($selectedVariant) {
+                return $grp['id'] == $selectedVariant->id
+                    || collect($grp['sizes'])->contains('id', $selectedVariant->id);
+            });
             $selectedColor = $matchingGroup['color'] ?? 'Default';
         }
 
@@ -284,8 +318,38 @@ class ProductController extends Controller
             'selectedColor' => $selectedColor,
             'defaultSize'   => $selectedVariant->value2,
             'initialPrice'  => $selectedVariant->price,
+            'initialMrp'    => $selectedVariant->mrp,
             'initialImage'  => $selectedVariant->product_image,
         ]);
+    }
+
+    // Normalized identity for "same product, different size/color" grouping. Legacy imports
+    // used two different conventions for baking the size into the product name instead of
+    // relying only on the value2 column, so strip whichever one applies before comparing names
+    // — otherwise every size looks like a different product:
+    //   1) trailing: "...HALF TERRY-White-01" for size 01 (color+size, or just size, suffixed)
+    //   2) leading:  "1 211 BLACK SOCKS.." / "2 211 BLACK SOCKS.." for sizes 01/02 (a plain
+    //      numeric index prefixed, unrelated to the actual value2 string like "7JR"/"8FREE")
+    // Rows that don't follow either convention simply compare on their full (unchanged) name.
+    private function productFamilyKey($product)
+    {
+        $name  = trim($product->product_name ?? '');
+        $color = trim($product->value1 ?? '');
+        $size  = trim($product->value2 ?? '');
+
+        $stripped = $name;
+        foreach ([trim($color.'-'.$size, '-'), $size, $color] as $suffix) {
+            if ($suffix !== '' && Str::endsWith($name, '-'.$suffix)) {
+                $stripped = substr($name, 0, -strlen('-'.$suffix));
+                break;
+            }
+        }
+
+        if ($stripped === $name) {
+            $stripped = preg_replace('/^\d+\s+/', '', $name);
+        }
+
+        return $product->item_code.'|'.Str::lower(trim($stripped));
     }
 
 

@@ -3,6 +3,7 @@
     $vid        = $product->id ?? '';
     $name       = $product->clean_name ?: ($product->product_name ?? 'Product');
     $price      = $product->price ?? 0;
+    $mrp        = $product->mrp ?? 0;
     $img        = $product->product_image ?? '';
     $colorCount = $product->color_count ?? 1;
     $link       = route('website.product.details', ['slug' => $slug, 'code' => $vid]);
@@ -20,7 +21,12 @@
 
     <div class="card-body">
         <a href="{{ $link }}" class="p-title">{{ $name }}</a>
-        <div class="p-price">₹{{ number_format($price, 2) }}</div>
+        <div class="p-price">
+            ₹{{ number_format($price, 2) }}
+            @if($mrp > $price)
+                <span class="p-mrp">₹{{ number_format($mrp, 2) }}</span>
+            @endif
+        </div>
 
         <div class="p-actions">
             <a href="{{ $link }}" class="btn btn-outline-secondary btn-sm" style="font-size:11px;">Details</a>

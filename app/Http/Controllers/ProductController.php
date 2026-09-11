@@ -1950,6 +1950,7 @@ class ProductController extends Controller
             $save->make=$request->make;
             $save->model=$request->model;
             $save->price=$request->price[$i];
+            $save->mrp=$request->mrp[$i] ?? null;
             $save->gst=$request->gst;
             $save->uom=$request->uom;
             $save->category=$request->category;
@@ -2036,6 +2037,7 @@ class ProductController extends Controller
         $save->make=$request->make;
         $save->model=$request->model;
         $save->price=$request->price;
+        $save->mrp=$request->mrp;
         $save->purchase_price=$request->purchase_price;
         $save->gst=$request->gst;
         $save->uom=$request->uom;
@@ -2145,5 +2147,22 @@ class ProductController extends Controller
         }
 
         return redirect()->route('admin.product.list')->with('message','product update successfully');
+    }
+
+    function editor_image_upload(Request $request)
+    {
+        $request->validate([
+            'upload' => 'required|image',
+        ]);
+
+        $file = $request->file('upload');
+        $name = time().'_'.uniqid().'.'.$file->extension();
+        $file->move(public_path('product_image'), $name);
+
+        return response()->json([
+            'uploaded' => 1,
+            'fileName' => $name,
+            'url' => asset('product_image/'.$name),
+        ]);
     }
 }

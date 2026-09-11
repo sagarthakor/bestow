@@ -165,7 +165,7 @@
             @endif
 
             @if($user->hasAnyPermission(['product_view']))
-                @php $grpActive = request()->routeIs(['admin.stock.*','admin.product.*','admin.category.*','admin.subcategory.*','admin.uom.*','admin.brand.*','admin.material.*','admin.attribute.*','admin.variation.*','admin.raw.material.*']); @endphp
+                @php $grpActive = request()->routeIs(['admin.stock.*','admin.outward.*','admin.product.*','admin.category.*','admin.subcategory.*','admin.uom.*','admin.brand.*','admin.material.*','admin.attribute.*','admin.variation.*','admin.raw.material.*']); @endphp
                 <div class="sidebar-group {{ $grpActive ? 'open' : '' }}">
                     <button type="button" class="sidebar-link sidebar-group-toggle {{ $grpActive ? 'active' : '' }}">
                         <i class="mdi mdi-dropbox sidebar-link-icon"></i>
@@ -175,6 +175,9 @@
                     <div class="sidebar-submenu" {{ $grpActive ? '' : 'style=display:none' }}>
                         <a href="{{route('admin.stock.status')}}" class="sidebar-sublink {{ request()->routeIs('admin.stock.status') ? 'active' : '' }}">Stock Status</a>
                         <a href="{{route('admin.stock.book')}}" class="sidebar-sublink {{ request()->routeIs('admin.stock.book') ? 'active' : '' }}">Stock Book</a>
+                        @can('outward_stock_view')
+                            <a href="{{route('admin.outward.list')}}" class="sidebar-sublink {{ request()->routeIs('admin.outward.*') ? 'active' : '' }}">Outward Stock</a>
+                        @endcan
                         @can('product_view')
                             <a href="{{ route('admin.product.list') }}" class="sidebar-sublink {{ request()->routeIs('admin.product.*') ? 'active' : '' }}">Product</a>
                             <a href="{{ route('admin.category.list') }}" class="sidebar-sublink {{ request()->routeIs('admin.category.*') ? 'active' : '' }}">Category</a>

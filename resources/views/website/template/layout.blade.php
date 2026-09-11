@@ -149,6 +149,13 @@
             color: var(--brand);
             margin-bottom: 8px;
         }
+        .product-card .p-mrp {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--mid);
+            text-decoration: line-through;
+            margin-left: 6px;
+        }
         .product-card .p-actions { margin-top: auto; display: flex; gap: 6px; }
         .product-card .p-actions .btn { flex: 1; font-size: 12px; font-weight: 600; padding: 7px 4px; border-radius: 6px; }
 

@@ -104,8 +104,9 @@
                                                 </tr>
                                                 <?php
                                                     $pressedSoFar = (float) ($production->total_pressing ?? 0);
+                                                    $wastageSoFar = (float) ($production->total_pressing_wastage_nos ?? 0);
                                                     $targetNos = (float) $production->nos;
-                                                    $remainingNos = $targetNos - $pressedSoFar;
+                                                    $remainingNos = $targetNos - $pressedSoFar - $wastageSoFar;
                                                 ?>
                                                 <tr>
                                                     <td>Pressed So Far</td>
@@ -260,7 +261,7 @@
 
                                                     <table class="table table-bordered">
                                                         <tr>
-                                                            <th>#.</th><th>Process</th><th>Qty</th><th>Time & Date</th><th>Operator Name</th>
+                                                            <th>#.</th><th>Process</th><th>Qty</th><th>Wastage</th><th>Time & Date</th><th>Operator Name</th><th>Remarks</th>
                                                         <?php
                                                         $srno=0;
                                                         ?>
@@ -272,8 +273,10 @@
                                                                 <td style="width: 5%;text-align: center">{{$srno}}</td>
                                                                 <td style="text-align: center">{{$record->process}}</td>
                                                                 <td style="text-align: center">{{$record->total_pressing}}</td>
+                                                                <td style="text-align: center">{{$record->total_pressing_wastage_nos}}</td>
                                                                 <td style="text-align: center">{{$record->time}} | {{date('d-m-Y',strtotime($record->date))}}</td>
-                                                                <td style="text-align: center">{{$record->first_name}} {{$record->last_name}}</td>
+                                                                <td style="text-align: center">{{$record->name}}</td>
+                                                                <td style="text-align: center">{{$record->remarks}}</td>
                                                             </tr>
                                                             @endforeach
                                                             </tr>

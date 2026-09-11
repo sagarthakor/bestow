@@ -261,6 +261,7 @@
                                                                 <tr>
                                                                     <th style="text-align: center;">Color</th>
                                                                     <th style="text-align: center;">Size</th>
+                                                                    <th style="text-align: center;">MRP</th>
                                                                     <th style="text-align: center;">Price</th>
                                                                     <th style="text-align: center;">Image</th>
                                                                     <th>Action</th>
@@ -296,6 +297,13 @@
                                                                     <td>
                                                                         <div class="col-md-12">
                                                                             <div class="form-group">
+                                                                                <input type="text" class="form-control" name="mrp[]" placeholder="MRP">
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="col-md-12">
+                                                                            <div class="form-group">
                                                                                 <input type="text" class="form-control" name="price[]">
                                                                             </div>
                                                                         </div>
@@ -318,7 +326,7 @@
                                                                 </tbody>
                                                                 <tfoot>
                                                                 <tr>
-                                                                    <td colspan="5">
+                                                                    <td colspan="6">
                                                                         <button style="float: right" id="btnattribute" class="btn btn-purple">+ Add More</button>
                                                                     </td>
                                                                 </tr>
@@ -414,14 +422,20 @@
         });
 
         $(document).ready(function() {
+            var editorImageUploadConfig = {
+                ckfinder: {
+                    uploadUrl: "{{ route('admin.editor.image.upload') }}"
+                }
+            };
+
             ClassicEditor
-                .create(document.querySelector('#description'))
+                .create(document.querySelector('#description'), editorImageUploadConfig)
                 .catch(error => {
                     console.error(error);
                 });
 
             ClassicEditor
-                .create(document.querySelector('#product_description'))
+                .create(document.querySelector('#product_description'), editorImageUploadConfig)
                 .catch(error => {
                     console.error(error);
                 });
@@ -440,6 +454,9 @@
                 data +='<option value="">select size</option>';
                 data +='@foreach($size_value as $val1)<option value="{{ $val1->variation_name }}">{{ $val1->variation_name }}</option>@endforeach';
                 data +='</select></div></td>';
+                data +='<td><div class="col-md-12"><div class="form-group">';
+                data +="<input type='text' name='mrp[]' class='form-control' placeholder='MRP'>";
+                data +='</div></div></td>';
                 data +='<td><div class="col-md-12"><div class="form-group">';
                 data +="<input type='text' name='price[]' class='form-control'>";
                 data +="</div></div><td><div class='col-md-12'><div class='form-group'><input type='file' name='attribute_image["+variantRowIndex+"][]' class='form-control-file variant-image-input' multiple accept='image/*'><div class='variant-image-preview'></div></div></div></td>"

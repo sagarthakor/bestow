@@ -51,6 +51,7 @@ use App\salesorder;
 use App\bom;
 use App\bom_sub_product;
 use Excel;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
 use App\finacial_year;
 use App\quot_followup;
@@ -5370,8 +5371,12 @@ class AdminController extends Controller
             'shipping_state' => 'required',
             'department' => 'required',
             'designation' => 'required',
+            'new_password' => 'nullable|min:4',
         ]);
         // / dd($request->all());
+        if ($request->filled('new_password')) {
+            $save->password = Hash::make($request->new_password);
+        }
         $save->customer_name = $request->customer_name;
         $save->website = $request->website;
         $save->primary_phone = $request->primary_phone;
@@ -5744,7 +5749,21 @@ class AdminController extends Controller
 
 
         if (isset($request->product_name)) {
-            $product = $product->where('product.product_name', 'like', '%' . $request->product_name . '%');
+            // A single "LIKE %whole phrase%" required the typed words to
+            // appear in that exact order and adjacency, so a name typed with
+            // its words in a different order than stored (or with the size/
+            // colour typed alongside the name) found nothing even though the
+            // product exists. Word-by-word AND across name + variant columns,
+            // same rule as the product picker (product_search_options).
+            $words = preg_split('/\s+/', trim($request->product_name), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+            foreach ($words as $word) {
+                $like = '%' . str_replace(['%', '_'], ['\%', '\_'], $word) . '%';
+                $product = $product->where(function ($q) use ($like) {
+                    $q->where('product.product_name', 'like', $like)
+                        ->orWhere('product.value1', 'like', $like)
+                        ->orWhere('product.value2', 'like', $like);
+                });
+            }
         }
 
         if (isset($request->item_code)) {

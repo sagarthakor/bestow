@@ -385,6 +385,9 @@
 
                                 <li><a href="{{route('admin.stock.status')}}"><i class="mdi mdi-clipboard-check"></i>Stock Status</a></li>
                                 <li><a href="{{route('admin.stock.book')}}"><i class="mdi mdi-book-open-variant"></i>Stock Book</a></li>
+                                @can('outward_stock_view')
+                                    <li><a href="{{route('admin.outward.list')}}"><i class="mdi mdi-package-up"></i>Outward Stock</a></li>
+                                @endcan
                                 @can('product_view')
                                     <li><a href="{{ route('admin.product.list') }}"><i class="mdi mdi-shopping"></i>Product</a></li>
                                     {{--<li><a href="{{route('admin.bom.list')}}">Custom Product (BOM)</a></li>--}}

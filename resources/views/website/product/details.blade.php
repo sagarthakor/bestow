@@ -41,6 +41,40 @@
     .size-btn.active { border-color: var(--brand); background: var(--brand); color: #fff; }
     .size-btn.out-of-stock { opacity: .4; text-decoration: line-through; cursor: not-allowed; }
 
+    /* ─── COLOR SWATCH CARDS ─────────────── */
+    .color-swatch {
+        width: 92px;
+        padding: 6px;
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        cursor: pointer;
+        transition: all .18s;
+        text-align: center;
+    }
+    .color-swatch:hover { border-color: var(--brand); }
+    .color-swatch.active { border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand); }
+    .color-swatch img {
+        width: 100%;
+        height: 70px;
+        object-fit: contain;
+        display: block;
+        margin-bottom: 6px;
+    }
+    .color-swatch .swatch-price {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text);
+        display: block;
+    }
+    .color-swatch .swatch-mrp {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--mid);
+        text-decoration: line-through;
+        display: block;
+    }
+
     /* ─── QTY CONTROL ────────────────────── */
     .qty-wrap {
         display: flex;
@@ -147,6 +181,9 @@
                 <span style="font-size:30px; font-weight:800; color:var(--brand);">
                     ₹<span id="priceBox">{{ number_format($initialPrice, 2) }}</span>
                 </span>
+                <span id="mrpBox" style="font-size:16px; color:var(--mid); text-decoration:line-through; margin-left:8px; {{ $initialMrp > $initialPrice ? '' : 'display:none;' }}">
+                    ₹<span id="mrpValue">{{ number_format($initialMrp, 2) }}</span>
+                </span>
                 <span class="ml-2" style="font-size:13px; color:#16a34a; font-weight:600;">
                     <i class="la la-check-circle"></i> Inclusive of all taxes
                 </span>
@@ -159,14 +196,14 @@
 
             <hr style="border-color:var(--border);">
 
-            <!-- Color Selection -->
-            @if(count($colorGroups) > 1 || ($colorGroups[0]['color'] ?? 'Default') !== 'Default')
+            <!-- Color Selection (only meaningful when the product actually has more than one color) -->
+            @if(count($colorGroups) > 1)
             <div class="mb-4">
                 <label style="font-size:15px; font-weight:700; margin-bottom:10px; display:block;">
                     Color:
                     <span id="selectedColorLabel" style="color:var(--brand); font-weight:600;"></span>
                 </label>
-                <div id="colorRow" class="d-flex flex-wrap" style="gap:8px;"></div>
+                <div id="colorRow" class="d-flex flex-wrap" style="gap:10px;"></div>
             </div>
             @endif
 
@@ -235,8 +272,8 @@
                 </ul>
                 <div class="tab-content p-4">
                     <div class="tab-pane fade show active" id="desc">
-                        @if($product->description)
-                            <p style="line-height:1.8; color:var(--mid);">{{ $product->description }}</p>
+                        @if($product->product_description)
+                            <div style="line-height:1.8; color:var(--mid);">{!! $product->product_description !!}</div>
                         @else
                             <p style="color:var(--mid);">Premium quality product. Comfortable and durable.</p>
                         @endif
@@ -276,11 +313,24 @@
     const DEFAULT_SIZE    = @json($defaultSize);
     const PRODUCT_ID      = {{ $product->id }};
     const INITIAL_PRICE   = {{ $initialPrice }};
+    const INITIAL_MRP     = {{ $initialMrp ?? 0 }};
 
     const hasSizes = COLOR_GROUPS.some(g => g.sizes && g.sizes.length > 0);
 
     let activeColor   = SELECTED_COLOR;
-    let selectedVariant = hasSizes ? null : { id: PRODUCT_ID, price: INITIAL_PRICE };
+    let selectedVariant = hasSizes ? null : { id: PRODUCT_ID, price: INITIAL_PRICE, mrp: INITIAL_MRP };
+
+    /* ── Price + struck-through MRP display ── */
+    function updatePriceDisplay(price, mrp) {
+        document.getElementById('priceBox').textContent = Number(price).toFixed(2);
+        const mrpBox = document.getElementById('mrpBox');
+        if (mrp && Number(mrp) > Number(price)) {
+            document.getElementById('mrpValue').textContent = Number(mrp).toFixed(2);
+            mrpBox.style.display = '';
+        } else {
+            mrpBox.style.display = 'none';
+        }
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
         if (hasSizes) {
@@ -299,10 +349,27 @@
         COLOR_GROUPS.forEach(grp => {
             const btn = document.createElement('button');
             btn.type      = 'button';
-            btn.className = 'size-btn' + (grp.color === activeColor ? ' active' : '');
-            btn.textContent = grp.color;
+            btn.className = 'color-swatch' + (grp.color === activeColor ? ' active' : '');
             btn.title       = grp.color;
             btn.onclick     = () => selectColor(grp.color, btn);
+
+            const img = document.createElement('img');
+            img.src = grp.image ? '/product_image/' + grp.image : '';
+            img.alt = grp.color;
+            btn.appendChild(img);
+
+            const price = document.createElement('span');
+            price.className   = 'swatch-price';
+            price.textContent = '₹' + Number(grp.price).toFixed(2);
+            btn.appendChild(price);
+
+            if (grp.mrp && Number(grp.mrp) > Number(grp.price)) {
+                const mrp = document.createElement('span');
+                mrp.className   = 'swatch-mrp';
+                mrp.textContent = '₹' + Number(grp.mrp).toFixed(2);
+                btn.appendChild(mrp);
+            }
+
             wrap.appendChild(btn);
         });
 
@@ -313,7 +380,7 @@
 
     function selectColor(color, btn) {
         activeColor = color;
-        document.querySelectorAll('#colorRow .size-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#colorRow .color-swatch').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
 
         const lbl = document.getElementById('selectedColorLabel');
@@ -351,7 +418,8 @@
         if (!grp || !grp.sizes.length) {
             // No sizes — use the color group's own product id directly
             if (grp && grp.id) {
-                selectedVariant = { id: grp.id, price: INITIAL_PRICE };
+                selectedVariant = { id: grp.id, price: grp.price, mrp: grp.mrp };
+                updatePriceDisplay(grp.price, grp.mrp);
             }
             return;
         }
@@ -363,6 +431,7 @@
             btn.textContent = size.size;
             btn.dataset.id    = size.id;
             btn.dataset.price = size.price;
+            btn.dataset.mrp   = size.mrp;
             btn.dataset.image = size.image;
             btn.onclick = () => selectSize(btn);
             wrap.appendChild(btn);
@@ -381,10 +450,11 @@
         selectedVariant = {
             id:    btn.dataset.id,
             price: parseFloat(btn.dataset.price),
+            mrp:   parseFloat(btn.dataset.mrp),
             image: btn.dataset.image,
         };
 
-        document.getElementById('priceBox').textContent = selectedVariant.price.toFixed(2);
+        updatePriceDisplay(selectedVariant.price, selectedVariant.mrp);
         document.getElementById('selectedSizeLabel').textContent = btn.textContent;
 
         // Each size can have its own photo, so switch the main image too.
